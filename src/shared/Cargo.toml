@@ -1,0 +1,12 @@
+[package]
+name = "voting-shared"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[lib]
+crate-type = ["lib"]
+name = "voting_shared"
+path = "src/lib.rs"

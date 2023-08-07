@@ -1,5 +1,5 @@
 use graph::prelude::{page_rank, CsrLayout, DirectedCsrGraph, GraphBuilder, PageRankConfig};
-use soroban_sdk::{Env, Map, String, Vec};
+use soroban_sdk::{Env, Map, String, Vec, log};
 
 use crate::{
   types::{DecimalNumber, ProjectUUID, UserUUID},
@@ -10,7 +10,7 @@ use super::Neuron;
 
 type MappingId = u32;
 
-struct TrustGraphNeuron {
+pub struct TrustGraphNeuron {
   // the format will be a vector of edges, but it's possible to construct it
   // from the format map(uid => list(uids))
   // trust_graph: Vec<(UserUUID, UserUUID)>,
@@ -21,18 +21,18 @@ struct TrustGraphNeuron {
 }
 
 impl TrustGraphNeuron {
-  pub fn new(env: Env, edges: Vec<(UserUUID, UserUUID)>) -> TrustGraphNeuron {
+  pub fn new(env: &Env, edges: Vec<(UserUUID, UserUUID)>) -> TrustGraphNeuron {
     let mut result = TrustGraphNeuron {
       trust_graph: None,
-      mapping_num_to_uid: Map::new(&env),
-      mapping_uid_to_num: Map::new(&env),
+      mapping_num_to_uid: Map::new(env),
+      mapping_uid_to_num: Map::new(env),
     };
     // TODO fix this code, maybe create a separate structure/wrapper for this graph
     // prepare mapping
 
     // set of user ids (created as map since soroban doesn't have set per se)
     // we need a set of unique ids that appeared in the input `edges`
-    let mut set: Map<UserUUID, Option<bool>> = Map::new(&env);
+    let mut set: Map<UserUUID, Option<bool>> = Map::new(env);
     for edge in edges.clone() {
       // set.set does this: create or if exists, update, so that's ok
       set.set(edge.0, None);
@@ -52,7 +52,7 @@ impl TrustGraphNeuron {
     }
     // create mapped edges, we have to operate on `MappingId`,
     // which is not a soroban type so the lib graph will work with it
-    let mut mapped_edges: Vec<(MappingId, MappingId)> = Vec::new(&env);
+    let mut mapped_edges: Vec<(MappingId, MappingId)> = Vec::new(env);
     for edge in edges {
       mapped_edges.push_back((
         result.mapping_uid_to_num.get(edge.0).unwrap(),
@@ -70,8 +70,8 @@ impl TrustGraphNeuron {
   }
 
   // TODO maybe convert this to `From` or sth
-  pub fn new_from_map(env: Env, map_edges: Map<UserUUID, Vec<UserUUID>>) -> TrustGraphNeuron {
-    let mut vec_edges: Vec<(UserUUID, UserUUID)> = Vec::new(&env);
+  pub fn new_from_map(env: &Env, map_edges: Map<UserUUID, Vec<UserUUID>>) -> TrustGraphNeuron {
+    let mut vec_edges: Vec<(UserUUID, UserUUID)> = Vec::new(env);
     for (trusting_user_id, trusted_users_ids) in map_edges {
       for trusted_user_id in trusted_users_ids {
         vec_edges.push_back((trusting_user_id.clone(), trusted_user_id));
@@ -121,6 +121,7 @@ impl Neuron for TrustGraphNeuron {
     _project_id: ProjectUUID,
     _previous_layer_vote: &Option<DecimalNumber>,
   ) -> DecimalNumber {
+    log!(&env, "======================= Hello {}", voter_id);
     self
       .compute_trust_score(env)
       .get(voter_id)
