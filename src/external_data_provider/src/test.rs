@@ -11,15 +11,15 @@ pub fn test() {
     ExternalDataProviderClient::new(&env, &external_data_provider_id);
 
   let reputation = external_data_provider_client
-    .get_reputation_category_for_user(&String::from_slice(&env, "user001"));
+    .get_user_reputation_category(&String::from_slice(&env, "user001"));
   assert!(reputation.is_none());
 
   external_data_provider_client.mock_sample_data();
 
   let reputation = external_data_provider_client
-    .get_reputation_category_for_user(&String::from_slice(&env, "user001"));
+    .get_user_reputation_category(&String::from_slice(&env, "user001"));
   assert!(reputation.unwrap() == 0);
   let reputation = external_data_provider_client
-    .get_reputation_category_for_user(&String::from_slice(&env, "user002"));
+    .get_user_reputation_category(&String::from_slice(&env, "user002"));
   assert!(reputation.unwrap() == 1);
 }

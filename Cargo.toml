@@ -5,6 +5,7 @@ members = [
     "./src/external_data_provider",
     "./src/simple_neuron",
     "./src/assigned_reputation_neuron",
+    "./src/prior_voting_history_neuron",
     "./src/layer",
     "./src/neural_governance",
 ]

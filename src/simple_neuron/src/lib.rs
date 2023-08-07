@@ -9,6 +9,7 @@ use voting_shared::types::{DecimalNumber, Neuron, ProjectUUID, UserUUID};
 #[contract]
 pub struct SimpleNeuron;
 
+#[contractimpl]
 impl SimpleNeuron {}
 
 #[contractimpl]

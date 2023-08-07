@@ -1,5 +1,5 @@
 [package]
-name = "voting-external_data_provider"
+name = "voting-external-data-provider"
 version = "0.1.0"
 edition = "2021"
 
