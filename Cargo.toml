@@ -2,7 +2,9 @@
 resolver = "2"
 members = [
     "./src/shared",
+    "./src/external_data_provider",
     "./src/simple_neuron",
+    "./src/assigned_reputation_neuron",
     "./src/layer",
     "./src/neural_governance",
 ]

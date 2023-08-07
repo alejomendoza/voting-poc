@@ -1,6 +1,8 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
+// This is a template for any future neurons, it doesn't use macros like unimplemented!() or todo!() so the tests may pass
+
 use soroban_sdk::{contract, contractimpl, Env};
 use voting_shared::types::{DecimalNumber, Neuron, ProjectUUID, UserUUID};
 
