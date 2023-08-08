@@ -1,7 +1,7 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
-use soroban_sdk::{contract, contractimpl, log, symbol_short, Address, Env, String, Symbol};
+use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol};
 use voting_shared::{
   decimal_number_persist::DecimalNumberPersist,
   types::{DecimalNumber, Neuron, ProjectUUID, UserUUID},

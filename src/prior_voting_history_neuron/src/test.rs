@@ -1,4 +1,4 @@
-use soroban_sdk::{log, testutils::Logs, Env, String};
+use soroban_sdk::{Env, String};
 use voting_shared::types::DecimalNumber;
 
 use crate::{

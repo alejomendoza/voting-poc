@@ -1,11 +1,7 @@
-use soroban_sdk::{log, testutils::Logs, Env};
-
 use crate::decimal_number_persist::DecimalNumberPersist;
 
 #[test]
 pub fn test_add() {
-  let env = Env::default();
-
   assert!(
     DecimalNumberPersist::add(
       DecimalNumberPersist::new(4, 800),
