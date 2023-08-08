@@ -22,6 +22,7 @@ mod layer_contract {
 }
 
 const LAYERS: Symbol = symbol_short!("LAYERS");
+const VOTES: Symbol = symbol_short!("VOTES");
 
 #[contract]
 pub struct NeuralGovernance;
@@ -58,4 +59,4 @@ impl NeuralGovernance {
 }
 
 #[cfg(test)]
-mod test;
+mod neural_governance_test;

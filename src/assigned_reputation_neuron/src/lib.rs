@@ -63,4 +63,4 @@ impl Neuron for AssignedReputationNeuron {
 }
 
 #[cfg(test)]
-mod test;
+mod assigned_reputation_neuron_test;

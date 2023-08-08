@@ -79,4 +79,4 @@ impl ExternalDataProvider {
 }
 
 #[cfg(test)]
-mod test;
+mod external_data_provider_test;

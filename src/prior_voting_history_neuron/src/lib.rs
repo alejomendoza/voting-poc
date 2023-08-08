@@ -75,4 +75,4 @@ impl Neuron for PriorVotingHistoryNeuron {
 }
 
 #[cfg(test)]
-mod test;
+mod prior_voting_history_neuron_test;

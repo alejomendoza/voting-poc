@@ -32,4 +32,4 @@ impl Neuron for SimpleNeuron {
 }
 
 #[cfg(test)]
-mod test;
+mod simple_neuron_test;
