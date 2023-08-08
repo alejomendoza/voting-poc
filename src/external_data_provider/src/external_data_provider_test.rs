@@ -1,4 +1,5 @@
 use soroban_sdk::{Env, String};
+use voting_shared::types::ReputationCategory;
 
 use crate::{ExternalDataProvider, ExternalDataProviderClient};
 
@@ -12,14 +13,14 @@ pub fn test() {
 
   let reputation = external_data_provider_client
     .get_user_reputation_category(&String::from_slice(&env, "user001"));
-  assert!(reputation.is_none());
+  assert!(reputation == ReputationCategory::Uncategorized);
 
   external_data_provider_client.mock_sample_data();
 
   let reputation = external_data_provider_client
     .get_user_reputation_category(&String::from_slice(&env, "user001"));
-  assert!(reputation.unwrap() == 0);
+  assert!(reputation == ReputationCategory::Poor);
   let reputation = external_data_provider_client
     .get_user_reputation_category(&String::from_slice(&env, "user002"));
-  assert!(reputation.unwrap() == 1);
+  assert!(reputation == ReputationCategory::Average);
 }
