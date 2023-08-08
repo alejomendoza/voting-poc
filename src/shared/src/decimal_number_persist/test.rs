@@ -1,29 +1,29 @@
-use crate::decimal_number_persist::DecimalNumberPersist;
+use crate::decimal_number_persist::DecimalNumberWrapper;
 
 #[test]
 pub fn test_add() {
   assert!(
-    DecimalNumberPersist::add(
-      DecimalNumberPersist::new(4, 800),
-      DecimalNumberPersist::new(5, 500)
+    DecimalNumberWrapper::add(
+      DecimalNumberWrapper::new(4, 800),
+      DecimalNumberWrapper::new(5, 500)
     )
     .as_tuple()
       == (10, 300)
   );
 
   assert!(
-    DecimalNumberPersist::add(
-      DecimalNumberPersist::new(0, 1),
-      DecimalNumberPersist::new(0, 100)
+    DecimalNumberWrapper::add(
+      DecimalNumberWrapper::new(0, 1),
+      DecimalNumberWrapper::new(0, 100)
     )
     .as_tuple()
       == (0, 101)
   );
 
   assert!(
-    DecimalNumberPersist::add(
-      DecimalNumberPersist::new(0, 1),
-      DecimalNumberPersist::new(0, 20)
+    DecimalNumberWrapper::add(
+      DecimalNumberWrapper::new(0, 1),
+      DecimalNumberWrapper::new(0, 20)
     )
     .as_tuple()
       == (0, 21)
@@ -33,36 +33,36 @@ pub fn test_add() {
 #[test]
 pub fn test_multiply() {
   assert!(
-    DecimalNumberPersist::mul(
-      DecimalNumberPersist::new(5, 0),
-      DecimalNumberPersist::new(7, 0)
+    DecimalNumberWrapper::mul(
+      DecimalNumberWrapper::new(5, 0),
+      DecimalNumberWrapper::new(7, 0)
     )
     .as_tuple()
       == (35, 0)
   );
 
   assert!(
-    DecimalNumberPersist::mul(
-      DecimalNumberPersist::new(1, 500),
-      DecimalNumberPersist::new(2, 800)
+    DecimalNumberWrapper::mul(
+      DecimalNumberWrapper::new(1, 500),
+      DecimalNumberWrapper::new(2, 800)
     )
     .as_tuple()
       == (4, 200)
   );
 
   assert!(
-    DecimalNumberPersist::mul(
-      DecimalNumberPersist::new(1, 5),
-      DecimalNumberPersist::new(2, 8)
+    DecimalNumberWrapper::mul(
+      DecimalNumberWrapper::new(1, 5),
+      DecimalNumberWrapper::new(2, 8)
     )
     .as_tuple()
       == (2, 18)
   );
 
   assert!(
-    DecimalNumberPersist::mul(
-      DecimalNumberPersist::new(1, 320),
-      DecimalNumberPersist::new(0, 30)
+    DecimalNumberWrapper::mul(
+      DecimalNumberWrapper::new(1, 320),
+      DecimalNumberWrapper::new(0, 30)
     )
     .as_tuple()
       == (0, 39)

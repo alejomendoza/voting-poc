@@ -3,7 +3,7 @@
 
 use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, String, Symbol, Vec};
 use voting_shared::{
-  decimal_number_persist::DecimalNumberPersist,
+  decimal_number_persist::DecimalNumberWrapper,
   types::{DecimalNumber, LayerAggregator, ProjectUUID, UserUUID},
 };
 
@@ -81,17 +81,17 @@ impl Layer {
       LayerAggregator::SUM => neuron_votes
         .iter()
         .reduce(|acc, item| {
-          let acc = DecimalNumberPersist::from(acc);
-          let item = DecimalNumberPersist::from(item);
-          DecimalNumberPersist::add(acc, item).as_tuple()
+          let acc = DecimalNumberWrapper::from(acc);
+          let item = DecimalNumberWrapper::from(item);
+          DecimalNumberWrapper::add(acc, item).as_tuple()
         })
         .expect("failed to reduce neuron votes for SUM aggregator"),
       LayerAggregator::PRODUCT => neuron_votes
         .iter()
         .reduce(|acc, item| {
-          let acc = DecimalNumberPersist::from(acc);
-          let item = DecimalNumberPersist::from(item);
-          DecimalNumberPersist::mul(acc, item).as_tuple()
+          let acc = DecimalNumberWrapper::from(acc);
+          let item = DecimalNumberWrapper::from(item);
+          DecimalNumberWrapper::mul(acc, item).as_tuple()
         })
         .expect("failed to reduce neuron votes for PRODUCT aggregator"),
     }

@@ -3,7 +3,7 @@
 
 use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol};
 use voting_shared::{
-  decimal_number_persist::DecimalNumberPersist,
+  decimal_number_persist::DecimalNumberWrapper,
   types::{DecimalNumber, Neuron, ProjectUUID, UserUUID},
 };
 
@@ -54,18 +54,18 @@ impl Neuron for PriorVotingHistoryNeuron {
       external_data_provider_client.get_user_prior_voting_history(&voter_id);
     let round_bonus_map = external_data_provider_client.get_round_bonus_map();
     let previous_layer_vote = maybe_previous_layer_vote.unwrap_or((0, 0));
-    let previous_layer_vote: DecimalNumberPersist = DecimalNumberPersist::from(previous_layer_vote);
-    let mut bonus_result = DecimalNumberPersist::from(previous_layer_vote.as_tuple());
+    let previous_layer_vote: DecimalNumberWrapper = DecimalNumberWrapper::from(previous_layer_vote);
+    let mut bonus_result = DecimalNumberWrapper::from(previous_layer_vote.as_tuple());
     for round in voter_active_rounds {
       let bonus: DecimalNumber = round_bonus_map
         .get(round)
         .expect("given round not found in round bonus map");
-      bonus_result = DecimalNumberPersist::mul(
-        DecimalNumberPersist::from(bonus_result),
-        DecimalNumberPersist::from(bonus),
+      bonus_result = DecimalNumberWrapper::mul(
+        DecimalNumberWrapper::from(bonus_result),
+        DecimalNumberWrapper::from(bonus),
       );
     }
-    bonus_result = DecimalNumberPersist::add(previous_layer_vote, bonus_result);
+    bonus_result = DecimalNumberWrapper::add(previous_layer_vote, bonus_result);
     bonus_result.as_tuple()
   }
 

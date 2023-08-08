@@ -1,14 +1,14 @@
 static DECIMAL_POINTS: u32 = 3;
 static DECIMAL_MODIFIER: u32 = (10 as u32).pow(DECIMAL_POINTS);
 
-pub struct DecimalNumberPersist {
+pub struct DecimalNumberWrapper {
   pub whole: u32,
   pub fractional: u32,
 }
 
-impl DecimalNumberPersist {
+impl DecimalNumberWrapper {
   pub fn new(whole: u32, fractional: u32) -> Self {
-    let res = DecimalNumberPersist { whole, fractional };
+    let res = DecimalNumberWrapper { whole, fractional };
     res.validate()
   }
 
@@ -19,28 +19,28 @@ impl DecimalNumberPersist {
     self
   }
 
-  fn prepare_number(number: DecimalNumberPersist) -> u32 {
+  fn prepare_number(number: DecimalNumberWrapper) -> u32 {
     number.whole * DECIMAL_MODIFIER + number.fractional
   }
 
-  pub fn add(a: DecimalNumberPersist, b: DecimalNumberPersist) -> DecimalNumberPersist {
-    let result = DecimalNumberPersist::prepare_number(a.validate())
-      + DecimalNumberPersist::prepare_number(b.validate());
+  pub fn add(a: DecimalNumberWrapper, b: DecimalNumberWrapper) -> DecimalNumberWrapper {
+    let result = DecimalNumberWrapper::prepare_number(a.validate())
+      + DecimalNumberWrapper::prepare_number(b.validate());
     let whole = result / DECIMAL_MODIFIER;
 
-    DecimalNumberPersist {
+    DecimalNumberWrapper {
       whole,
       fractional: result - (whole * DECIMAL_MODIFIER),
     }
     .validate()
   }
 
-  pub fn mul(a: DecimalNumberPersist, b: DecimalNumberPersist) -> DecimalNumberPersist {
-    let result = DecimalNumberPersist::prepare_number(a.validate())
-      * DecimalNumberPersist::prepare_number(b.validate());
+  pub fn mul(a: DecimalNumberWrapper, b: DecimalNumberWrapper) -> DecimalNumberWrapper {
+    let result = DecimalNumberWrapper::prepare_number(a.validate())
+      * DecimalNumberWrapper::prepare_number(b.validate());
     let result = result / DECIMAL_MODIFIER;
     let whole = result / DECIMAL_MODIFIER;
-    DecimalNumberPersist {
+    DecimalNumberWrapper {
       whole,
       fractional: result - (whole * DECIMAL_MODIFIER),
     }
@@ -52,9 +52,9 @@ impl DecimalNumberPersist {
   }
 }
 
-impl From<(u32, u32)> for DecimalNumberPersist {
+impl From<(u32, u32)> for DecimalNumberWrapper {
   fn from(value: (u32, u32)) -> Self {
-    DecimalNumberPersist {
+    DecimalNumberWrapper {
       whole: value.0,
       fractional: value.1,
     }
