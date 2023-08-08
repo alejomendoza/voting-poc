@@ -11,6 +11,7 @@ mod external_data_provider_contract {
   );
 }
 
+// Address of external data provider contract
 const EXTERNAL_DATA_PROVIDER: Symbol = symbol_short!("EXTDTPVD");
 
 #[contract]

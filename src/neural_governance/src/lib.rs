@@ -21,6 +21,7 @@ mod layer_contract {
   );
 }
 
+// Vec<Address> of layers contracts
 const LAYERS: Symbol = symbol_short!("LAYERS");
 
 #[contract]
