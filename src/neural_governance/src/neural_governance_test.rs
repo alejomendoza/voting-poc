@@ -24,6 +24,7 @@ pub fn test_setting_layers() {
 #[test]
 pub fn test_execute() {
   let env = Env::default();
+  env.budget().reset_unlimited();
 
   let neural_governance_id = env.register_contract(None, NeuralGovernance);
   let neural_governance_client = NeuralGovernanceClient::new(&env, &neural_governance_id);
@@ -35,7 +36,7 @@ pub fn test_execute() {
 
   layer_client.set_layer_aggregator(&LayerAggregator::PRODUCT);
 
-  let number_of_neurons = 2; // bigger number causes `ExceededLimit` error
+  let number_of_neurons = 10;
 
   for _ in 0..number_of_neurons {
     layer_client.add_neuron(&neuron_id);
