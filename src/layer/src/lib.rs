@@ -1,7 +1,7 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
-use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, String, Symbol, Vec};
+use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, Symbol, Vec};
 use voting_shared::{
   decimal_number_persist::DecimalNumberWrapper,
   types::{DecimalNumber, LayerAggregator, ProjectUUID, UserUUID},
@@ -46,7 +46,12 @@ impl Layer {
     env.storage().instance().get(&NEURONS).unwrap_or(vec![&env])
   }
 
-  pub fn execute(env: Env, previous_layer_vote: Option<DecimalNumber>) -> Vec<DecimalNumber> {
+  pub fn execute(
+    env: Env,
+    voter_id: UserUUID,
+    project_id: ProjectUUID,
+    previous_layer_vote: Option<DecimalNumber>,
+  ) -> Vec<DecimalNumber> {
     let aggregator: LayerAggregator = Layer::get_layer_aggregator(env.clone());
     if aggregator == LayerAggregator::UNKNOWN {
       panic!("executing layer without layer aggregator");
@@ -61,9 +66,8 @@ impl Layer {
       let neuron_client = simple_neuron_contract::Client::new(&env, &neuron);
 
       let raw_neuron_vote = neuron_client.oracle_function(
-        // TODO ARGS
-        &String::from_slice(&env, "voter id"),
-        &String::from_slice(&env, "project id"),
+        &voter_id,
+        &project_id,
         &previous_layer_vote,
       );
       let neuron_vote = neuron_client.weight_function(&raw_neuron_vote);

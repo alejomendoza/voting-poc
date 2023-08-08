@@ -15,21 +15,20 @@ mod simple_neuron_contract {
 }
 
 mod layer_contract {
-  use crate::DecimalNumber;
+  use crate::{DecimalNumber, ProjectUUID, UserUUID};
   soroban_sdk::contractimport!(
     file = "../../target/wasm32-unknown-unknown/release/voting_layer.wasm"
   );
 }
 
 const LAYERS: Symbol = symbol_short!("LAYERS");
-const VOTES: Symbol = symbol_short!("VOTES");
 
 #[contract]
 pub struct NeuralGovernance;
 
 #[contractimpl]
 impl NeuralGovernance {
-  pub fn execute(env: Env) -> DecimalNumber {
+  pub fn execute(env: Env, voter_id: UserUUID, project_id: ProjectUUID) -> DecimalNumber {
     let mut current_layer_result: Option<DecimalNumber> = None;
 
     let layers: Vec<Address> = NeuralGovernance::get_layers(env.clone());
@@ -38,7 +37,7 @@ impl NeuralGovernance {
     }
     for layer in layers {
       let layer_client = layer_contract::Client::new(&env, &layer);
-      let layer_result: Vec<DecimalNumber> = layer_client.execute(&None);
+      let layer_result: Vec<DecimalNumber> = layer_client.execute(&voter_id, &project_id, &None);
       current_layer_result = Some(layer_client.run_layer_aggregator(&layer_result));
     }
     current_layer_result
