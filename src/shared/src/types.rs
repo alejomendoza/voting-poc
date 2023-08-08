@@ -24,19 +24,19 @@ pub enum Vote {
 #[contracttype]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ReputationCategory {
-    Excellent = 5,
-    VeryGood = 4,
-    Good = 3,
-    Average = 2,
-    Poor = 1,
-    Uncategorized = 0,
+  Excellent = 5,
+  VeryGood = 4,
+  Good = 3,
+  Average = 2,
+  Poor = 1,
+  Uncategorized = 0,
 }
 
 // todo maybe move this outside of "types"
 pub fn get_reputation_category_bonus(reputation_category: ReputationCategory) -> u32 {
   match reputation_category {
-      ReputationCategory::Uncategorized | ReputationCategory::Poor => 0,
-      other => other as u32,
+    ReputationCategory::Uncategorized | ReputationCategory::Poor => 0,
+    other => other as u32,
   }
 }
 

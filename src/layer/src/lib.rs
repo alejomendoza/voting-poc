@@ -65,11 +65,8 @@ impl Layer {
     for neuron in neurons.iter() {
       let neuron_client = simple_neuron_contract::Client::new(&env, &neuron);
 
-      let raw_neuron_vote = neuron_client.oracle_function(
-        &voter_id,
-        &project_id,
-        &previous_layer_vote,
-      );
+      let raw_neuron_vote =
+        neuron_client.oracle_function(&voter_id, &project_id, &previous_layer_vote);
       let neuron_vote = neuron_client.weight_function(&raw_neuron_vote);
       neuron_votes.push_back(neuron_vote);
     }

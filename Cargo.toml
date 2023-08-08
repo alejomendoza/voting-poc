@@ -8,6 +8,7 @@ members = [
     "./src/prior_voting_history_neuron",
     "./src/layer",
     "./src/neural_governance",
+    "./src/voting_system",
 ]
 
 [workspace.dependencies]

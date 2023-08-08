@@ -1,0 +1,149 @@
+#![no_std]
+#![allow(non_upper_case_globals)]
+
+use voting_shared::{
+  decimal_number_persist::DecimalNumberWrapper,
+  types::{DecimalNumber, Vote},
+};
+
+use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Map, Symbol, Vec};
+
+use voting_shared::types::{ProjectUUID, UserUUID};
+
+mod neural_governance_contract {
+  use crate::{DecimalNumber, ProjectUUID, UserUUID};
+  soroban_sdk::contractimport!(
+    file = "../../target/wasm32-unknown-unknown/release/voting_neural_governance.wasm"
+  );
+}
+
+mod simple_neuron_contract {
+  use crate::{DecimalNumber, ProjectUUID, UserUUID};
+  soroban_sdk::contractimport!(
+    file = "../../target/wasm32-unknown-unknown/release/voting_simple_neuron.wasm"
+  );
+}
+
+mod layer_contract {
+  use crate::{DecimalNumber, ProjectUUID, UserUUID};
+  soroban_sdk::contractimport!(
+    file = "../../target/wasm32-unknown-unknown/release/voting_layer.wasm"
+  );
+}
+
+// Address of neural governance contract
+const NUERAL_GOVERNANCE: Symbol = symbol_short!("NEURALGOV");
+// Map<ProjectUUID, Map<UserUUID, (Vote, DecimalNumber)>>
+const VOTES: Symbol = symbol_short!("VOTES");
+// Vec<ProjectUUID>
+const PROJECTS: Symbol = symbol_short!("PROJECTS");
+
+// This contract will be responsible for storing the voting data as well as exposing any needed interface to the users
+
+#[contract]
+pub struct VotingSystem;
+
+#[contractimpl]
+impl VotingSystem {
+  pub fn get_neural_governance(env: Env) -> Address {
+    env
+      .storage()
+      .instance()
+      .get(&NUERAL_GOVERNANCE)
+      .expect("neural governance not set")
+  }
+
+  pub fn set_neural_governance(env: Env, neural_governance_address: Address) {
+    env
+      .storage()
+      .instance()
+      .set(&NUERAL_GOVERNANCE, &neural_governance_address);
+  }
+
+  pub fn vote(env: Env, voter_id: UserUUID, project_id: ProjectUUID, vote: Vote) {
+    if !VotingSystem::get_projects(env.clone()).contains(project_id.clone()) {
+      panic!("project does not exist");
+    }
+
+    let neural_governance_address = VotingSystem::get_neural_governance(env.clone());
+    let neural_governance_client =
+      neural_governance_contract::Client::new(&env, &neural_governance_address);
+
+    let voting_power = match vote {
+      Vote::ABSTAIN => (0, 0),
+      _ => neural_governance_client.execute(&voter_id, &project_id),
+    };
+
+    let mut votes = VotingSystem::get_votes(env.clone());
+    let mut project_votes: Map<UserUUID, (Vote, DecimalNumber)> =
+      votes.get(project_id.clone()).unwrap_or(Map::new(&env));
+    if project_votes.contains_key(voter_id.clone()) {
+      panic!("this user's already voted");
+    }
+    project_votes.set(voter_id, (vote, voting_power));
+    votes.set(project_id, project_votes);
+
+    env.storage().instance().set(&VOTES, &votes);
+  }
+
+  pub fn get_votes(env: Env) -> Map<ProjectUUID, Map<UserUUID, (Vote, DecimalNumber)>> {
+    env
+      .storage()
+      .instance()
+      .get(&VOTES)
+      .unwrap_or(Map::new(&env))
+  }
+
+  pub fn get_projects(env: Env) -> Vec<ProjectUUID> {
+    env
+      .storage()
+      .instance()
+      .get(&NUERAL_GOVERNANCE)
+      .expect("neural governance not set")
+  }
+
+  pub fn add_project(env: Env, project_id: ProjectUUID) {
+    let mut projects = VotingSystem::get_projects(env.clone());
+    if projects.contains(project_id.clone()) {
+      panic!("project already added");
+    }
+    projects.push_back(project_id);
+    env.storage().instance().set(&PROJECTS, &projects);
+  }
+
+  pub fn get_projects_current_results(env: Env) -> Map<ProjectUUID, DecimalNumber> {
+    let votes = VotingSystem::get_votes(env.clone());
+    let mut result: Map<ProjectUUID, DecimalNumber> = Map::new(&env);
+    // ProjectUUID, Map<UserUUID, (Vote, DecimalNumber)>
+    for (project_id, votes) in votes {
+      let mut project_voting_power_plus: DecimalNumberWrapper = Default::default();
+      let mut project_voting_power_minus: DecimalNumberWrapper = Default::default();
+      // UserUUID, (Vote, DecimalNumber)
+      for (_user_id, (vote, vote_power)) in votes {
+        match vote {
+          Vote::YES => {
+            project_voting_power_plus = DecimalNumberWrapper::add(
+              project_voting_power_plus,
+              DecimalNumberWrapper::from(vote_power),
+            )
+          }
+          Vote::NO => {
+            project_voting_power_minus = DecimalNumberWrapper::add(
+              project_voting_power_minus,
+              DecimalNumberWrapper::from(vote_power),
+            )
+          }
+          _ => (),
+        };
+      }
+      result.set(
+        project_id,
+        DecimalNumberWrapper::sub(project_voting_power_plus, project_voting_power_minus).as_tuple(),
+      )
+    }
+    result
+  }
+}
+
+#[cfg(test)]
+mod voting_system_test;

@@ -1,0 +1,19 @@
+[package]
+name = "voting-system"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = { git = "https://github.com/karol-bisztyga/rs-soroban-sdk.git", branch = "kb/fork" }
+serde-json-core = "0.5.1"
+voting-layer = { path = "../layer" }
+voting-shared = { path = "../shared" }
+
+[dev_dependencies]
+soroban-sdk = { git = "https://github.com/karol-bisztyga/rs-soroban-sdk.git", branch = "kb/fork", features = ["testutils"] }
+
+[features]
+testutils = ["soroban-sdk/testutils"]

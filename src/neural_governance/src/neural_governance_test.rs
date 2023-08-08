@@ -43,10 +43,16 @@ pub fn test_execute() {
   }
 
   neural_governance_client.add_layer(&layer_id);
-  let final_result = neural_governance_client.execute(&String::from_slice(&env, "user001"), &String::from_slice(&env, "project001"));
+  let final_result = neural_governance_client.execute(
+    &String::from_slice(&env, "user001"),
+    &String::from_slice(&env, "project001"),
+  );
   assert!(final_result == (((2 as u32).pow(number_of_neurons)), 0));
   layer_client.set_layer_aggregator(&LayerAggregator::SUM);
-  let final_result = neural_governance_client.execute(&String::from_slice(&env, "user001"), &String::from_slice(&env, "project001"));
+  let final_result = neural_governance_client.execute(
+    &String::from_slice(&env, "user001"),
+    &String::from_slice(&env, "project001"),
+  );
   assert!(final_result == (2 * number_of_neurons, 0));
   env.logs().print();
 }

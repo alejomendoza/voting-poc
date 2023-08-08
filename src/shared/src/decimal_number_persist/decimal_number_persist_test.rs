@@ -68,3 +68,85 @@ pub fn test_multiply() {
       == (0, 39)
   );
 }
+
+#[test]
+pub fn test_cmp() {
+  assert!(
+    DecimalNumberWrapper::cmp(
+      DecimalNumberWrapper::new(14, 450),
+      DecimalNumberWrapper::new(14, 450)
+    ) == 0
+  );
+
+  assert!(
+    DecimalNumberWrapper::cmp(
+      DecimalNumberWrapper::new(15, 450),
+      DecimalNumberWrapper::new(14, 450)
+    ) == 1
+  );
+
+  assert!(
+    DecimalNumberWrapper::cmp(
+      DecimalNumberWrapper::new(14, 450),
+      DecimalNumberWrapper::new(114, 450)
+    ) == 2
+  );
+
+  assert!(
+    DecimalNumberWrapper::cmp(
+      DecimalNumberWrapper::new(14, 460),
+      DecimalNumberWrapper::new(14, 450)
+    ) == 1
+  );
+
+  assert!(
+    DecimalNumberWrapper::cmp(
+      DecimalNumberWrapper::new(14, 450),
+      DecimalNumberWrapper::new(14, 460)
+    ) == 2
+  );
+}
+
+#[test]
+pub fn test_sub() {
+  assert!(
+    DecimalNumberWrapper::sub(
+      DecimalNumberWrapper::new(12, 360),
+      DecimalNumberWrapper::new(12, 340)
+    )
+    .as_tuple()
+      == (0, 20)
+  );
+  assert!(
+    DecimalNumberWrapper::sub(
+      DecimalNumberWrapper::new(12, 360),
+      DecimalNumberWrapper::new(12, 361)
+    )
+    .as_tuple()
+      == (0, 0)
+  );
+  assert!(
+    DecimalNumberWrapper::sub(
+      DecimalNumberWrapper::new(13, 360),
+      DecimalNumberWrapper::new(12, 360)
+    )
+    .as_tuple()
+      == (1, 0)
+  );
+  assert!(
+    DecimalNumberWrapper::sub(
+      DecimalNumberWrapper::new(13, 360),
+      DecimalNumberWrapper::new(14, 360)
+    )
+    .as_tuple()
+      == (0, 0)
+  );
+  assert!(
+    DecimalNumberWrapper::sub(
+      DecimalNumberWrapper::new(14, 360),
+      DecimalNumberWrapper::new(14, 360)
+    )
+    .as_tuple()
+      == (0, 0)
+  );
+}

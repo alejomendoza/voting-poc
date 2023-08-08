@@ -22,11 +22,26 @@ impl ExternalDataProvider {}
 impl ExternalDataProvider {
   pub fn mock_sample_data(env: Env) {
     let mut reputation_map: Map<UserUUID, ReputationCategory> = Map::new(&env);
-    reputation_map.set(String::from_slice(&env, "user001"), ReputationCategory::Poor);
-    reputation_map.set(String::from_slice(&env, "user002"), ReputationCategory::Average);
-    reputation_map.set(String::from_slice(&env, "user003"), ReputationCategory::Good);
-    reputation_map.set(String::from_slice(&env, "user004"), ReputationCategory::VeryGood);
-    reputation_map.set(String::from_slice(&env, "user005"), ReputationCategory::Excellent);
+    reputation_map.set(
+      String::from_slice(&env, "user001"),
+      ReputationCategory::Poor,
+    );
+    reputation_map.set(
+      String::from_slice(&env, "user002"),
+      ReputationCategory::Average,
+    );
+    reputation_map.set(
+      String::from_slice(&env, "user003"),
+      ReputationCategory::Good,
+    );
+    reputation_map.set(
+      String::from_slice(&env, "user004"),
+      ReputationCategory::VeryGood,
+    );
+    reputation_map.set(
+      String::from_slice(&env, "user005"),
+      ReputationCategory::Excellent,
+    );
     env.storage().instance().set(&REPUTATION, &reputation_map);
 
     let mut voting_history_set: Map<UserUUID, Vec<u32>> = Map::new(&env);
