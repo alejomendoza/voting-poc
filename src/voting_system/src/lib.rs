@@ -6,7 +6,7 @@ use voting_shared::{
   types::{DecimalNumber, Vote},
 };
 
-use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Map, Symbol, Vec};
+use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, Map, Symbol, Vec};
 
 use voting_shared::types::{ProjectUUID, UserUUID};
 
@@ -14,20 +14,6 @@ mod neural_governance_contract {
   use crate::{DecimalNumber, ProjectUUID, UserUUID};
   soroban_sdk::contractimport!(
     file = "../../target/wasm32-unknown-unknown/release/voting_neural_governance.wasm"
-  );
-}
-
-mod simple_neuron_contract {
-  use crate::{DecimalNumber, ProjectUUID, UserUUID};
-  soroban_sdk::contractimport!(
-    file = "../../target/wasm32-unknown-unknown/release/voting_simple_neuron.wasm"
-  );
-}
-
-mod layer_contract {
-  use crate::{DecimalNumber, ProjectUUID, UserUUID};
-  soroban_sdk::contractimport!(
-    file = "../../target/wasm32-unknown-unknown/release/voting_layer.wasm"
   );
 }
 
@@ -98,8 +84,8 @@ impl VotingSystem {
     env
       .storage()
       .instance()
-      .get(&NUERAL_GOVERNANCE)
-      .expect("neural governance not set")
+      .get(&PROJECTS)
+      .unwrap_or(vec![&env])
   }
 
   pub fn add_project(env: Env, project_id: ProjectUUID) {
