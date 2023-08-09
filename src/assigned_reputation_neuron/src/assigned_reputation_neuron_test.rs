@@ -19,7 +19,13 @@ pub fn test_execute() {
     external_data_provider_contract::Client::new(&env, &external_data_provider_id);
   external_data_provider_client.mock_sample_data();
 
+  assert!(assigned_reputation_neuron_client
+    .get_external_data_provider()
+    .is_none());
   assigned_reputation_neuron_client.set_external_data_provider(&external_data_provider_id);
+  assert!(assigned_reputation_neuron_client
+    .get_external_data_provider()
+    .is_some());
 
   let raw_neuron_vote: DecimalNumber = assigned_reputation_neuron_client.oracle_function(
     &String::from_slice(&env, "user001"),

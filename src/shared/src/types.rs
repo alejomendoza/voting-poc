@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Env, String};
+use soroban_sdk::{contracterror, contracttype, Env, String};
 
 pub type DecimalNumber = (u32, u32);
 
@@ -46,12 +46,31 @@ pub enum RoundAction {
   ABSTAIN,
 }
 
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+pub enum VotingSystemError {
+  UnknownError = 0,
+  ExternalDataProviderNotSet = 1,
+  LayerAggregatorNotSet = 2,
+  NoNeuronsExist = 3,
+  CannotRunUnknownLayerAggregator = 4,
+  NoLayersExist = 5,
+  ProjectDoesNotExist = 6,
+  UserAlreadyVoted = 7,
+  ProjectAlreadyAdded = 8,
+  ReducingvotesForSumAggregatorFailed = 9,
+  ReducingvotesForProductAggregatorFailed = 10,
+  ResultExpected = 11,
+  NeuralGovernanceNotSet = 12,
+  RoundNotFoundInRoundBonusMap = 13,
+}
+
 pub trait Neuron {
   fn oracle_function(
     env: Env,
     voter_id: UserUUID,
     project_id: ProjectUUID,
     maybe_previous_layer_vote: Option<DecimalNumber>,
-  ) -> DecimalNumber;
+  ) -> Result<DecimalNumber, VotingSystemError>;
   fn weight_function(env: Env, raw_neuron_vote: DecimalNumber) -> DecimalNumber;
 }

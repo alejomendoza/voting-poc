@@ -2,7 +2,7 @@
 #![allow(non_upper_case_globals)]
 
 use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol};
-use voting_shared::types::{DecimalNumber, Neuron, ProjectUUID, UserUUID};
+use voting_shared::types::{DecimalNumber, Neuron, ProjectUUID, UserUUID, VotingSystemError};
 
 mod external_data_provider_contract {
   use crate::{DecimalNumber, UserUUID};
@@ -41,11 +41,11 @@ impl Neuron for AssignedReputationNeuron {
     voter_id: UserUUID,
     _project_id: ProjectUUID,
     maybe_previous_layer_vote: Option<DecimalNumber>,
-  ) -> DecimalNumber {
+  ) -> Result<DecimalNumber, VotingSystemError> {
     let external_data_provider_id =
       AssignedReputationNeuron::get_external_data_provider(env.clone());
     if external_data_provider_id.is_none() {
-      panic!("executing AssignedReputationNeuron without external data provider");
+      return Err(VotingSystemError::ExternalDataProviderNotSet);
     }
     let external_data_provider_client =
       external_data_provider_contract::Client::new(&env, &external_data_provider_id.unwrap());
@@ -57,7 +57,7 @@ impl Neuron for AssignedReputationNeuron {
     };
     let previous_layer_vote = maybe_previous_layer_vote.unwrap_or((0, 0));
     // todo fixme
-    (previous_layer_vote.0 * bonus, previous_layer_vote.1)
+    Ok((previous_layer_vote.0 * bonus, previous_layer_vote.1))
   }
 
   fn weight_function(_env: Env, raw_neuron_vote: DecimalNumber) -> DecimalNumber {

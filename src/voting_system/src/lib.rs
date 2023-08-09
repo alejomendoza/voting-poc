@@ -3,7 +3,7 @@
 
 use voting_shared::{
   decimal_number_persist::DecimalNumberWrapper,
-  types::{DecimalNumber, Vote},
+  types::{DecimalNumber, Vote, VotingSystemError},
 };
 
 use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, Map, Symbol, Vec};
@@ -31,12 +31,12 @@ pub struct VotingSystem;
 
 #[contractimpl]
 impl VotingSystem {
-  pub fn get_neural_governance(env: Env) -> Address {
+  pub fn get_neural_governance(env: Env) -> Result<Address, VotingSystemError> {
     env
       .storage()
       .instance()
       .get(&NUERAL_GOVERNANCE)
-      .expect("neural governance not set")
+      .ok_or(VotingSystemError::NeuralGovernanceNotSet)
   }
 
   pub fn set_neural_governance(env: Env, neural_governance_address: Address) {
@@ -46,12 +46,17 @@ impl VotingSystem {
       .set(&NUERAL_GOVERNANCE, &neural_governance_address);
   }
 
-  pub fn vote(env: Env, voter_id: UserUUID, project_id: ProjectUUID, vote: Vote) {
+  pub fn vote(
+    env: Env,
+    voter_id: UserUUID,
+    project_id: ProjectUUID,
+    vote: Vote,
+  ) -> Result<(), VotingSystemError> {
     if !VotingSystem::get_projects(env.clone()).contains(project_id.clone()) {
-      panic!("project does not exist");
+      return Err(VotingSystemError::ProjectDoesNotExist);
     }
 
-    let neural_governance_address = VotingSystem::get_neural_governance(env.clone());
+    let neural_governance_address = VotingSystem::get_neural_governance(env.clone())?;
     let neural_governance_client =
       neural_governance_contract::Client::new(&env, &neural_governance_address);
 
@@ -64,12 +69,14 @@ impl VotingSystem {
     let mut project_votes: Map<UserUUID, (Vote, DecimalNumber)> =
       votes.get(project_id.clone()).unwrap_or(Map::new(&env));
     if project_votes.contains_key(voter_id.clone()) {
-      panic!("this user's already voted");
+      return Err(VotingSystemError::UserAlreadyVoted);
     }
     project_votes.set(voter_id, (vote, voting_power));
     votes.set(project_id, project_votes);
 
     env.storage().instance().set(&VOTES, &votes);
+
+    Ok(())
   }
 
   pub fn get_votes(env: Env) -> Map<ProjectUUID, Map<UserUUID, (Vote, DecimalNumber)>> {
@@ -88,13 +95,15 @@ impl VotingSystem {
       .unwrap_or(vec![&env])
   }
 
-  pub fn add_project(env: Env, project_id: ProjectUUID) {
+  pub fn add_project(env: Env, project_id: ProjectUUID) -> Result<(), VotingSystemError> {
     let mut projects = VotingSystem::get_projects(env.clone());
     if projects.contains(project_id.clone()) {
-      panic!("project already added");
+      return Err(VotingSystemError::ProjectAlreadyAdded);
     }
     projects.push_back(project_id);
     env.storage().instance().set(&PROJECTS, &projects);
+
+    Ok(())
   }
 
   pub fn get_projects_current_results(env: Env) -> Map<ProjectUUID, DecimalNumber> {

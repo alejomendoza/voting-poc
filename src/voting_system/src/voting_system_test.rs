@@ -1,4 +1,4 @@
-use soroban_sdk::{log, testutils::Logs, Env, String};
+use soroban_sdk::{testutils::Logs, Env, String};
 use voting_shared::types::Vote;
 
 use crate::{neural_governance_contract, VotingSystem, VotingSystemClient};
@@ -20,17 +20,6 @@ mod layer_contract {
 }
 
 #[test]
-#[should_panic]
-pub fn test_get_neural_governance_fail() {
-  let env = Env::default();
-
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
-
-  voting_system_client.get_neural_governance();
-}
-
-#[test]
 pub fn test_set_neural_governance() {
   let env = Env::default();
 
@@ -38,6 +27,7 @@ pub fn test_set_neural_governance() {
   let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
 
   let neural_governance_id = env.register_contract_wasm(None, neural_governance_contract::WASM);
+  assert!(voting_system_client.try_get_neural_governance().is_err());
 
   voting_system_client.set_neural_governance(&neural_governance_id);
   voting_system_client.get_neural_governance();
@@ -78,40 +68,10 @@ pub fn test_add_project() {
   voting_system_client.add_project(&String::from_slice(&env, "project003"));
 
   assert!(voting_system_client.get_projects().len() == 3);
-}
 
-#[test]
-#[should_panic]
-pub fn test_add_project_exists_fail() {
-  let env = Env::default();
-
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
-
-  let neural_governance_id = env.register_contract_wasm(None, neural_governance_contract::WASM);
-  let neural_governance_client =
-    neural_governance_contract::Client::new(&env, &neural_governance_id);
-
-  let layer_id = env.register_contract_wasm(None, layer_contract::WASM);
-  let layer_client = layer_contract::Client::new(&env, &layer_id);
-
-  let neuron_id = env.register_contract_wasm(None, simple_neuron_contract::WASM);
-
-  layer_client.set_layer_aggregator(&LayerAggregator::SUM);
-
-  layer_client.add_neuron(&neuron_id);
-
-  neural_governance_client.add_layer(&layer_id);
-
-  voting_system_client.set_neural_governance(&neural_governance_id);
-
-  assert!(voting_system_client.get_projects().is_empty());
   assert!(voting_system_client
-    .get_projects_current_results()
-    .is_empty());
-
-  voting_system_client.add_project(&String::from_slice(&env, "project001"));
-  voting_system_client.add_project(&String::from_slice(&env, "project001"));
+    .try_add_project(&String::from_slice(&env, "project001"))
+    .is_err());
 }
 
 #[test]

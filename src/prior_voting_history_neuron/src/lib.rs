@@ -4,7 +4,7 @@
 use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol};
 use voting_shared::{
   decimal_number_persist::DecimalNumberWrapper,
-  types::{DecimalNumber, Neuron, ProjectUUID, UserUUID},
+  types::{DecimalNumber, Neuron, ProjectUUID, UserUUID, VotingSystemError},
 };
 
 mod external_data_provider_contract {
@@ -44,7 +44,7 @@ impl Neuron for PriorVotingHistoryNeuron {
     voter_id: UserUUID,
     _project_id: ProjectUUID,
     maybe_previous_layer_vote: Option<DecimalNumber>,
-  ) -> DecimalNumber {
+  ) -> Result<DecimalNumber, VotingSystemError> {
     let external_data_provider_id =
       PriorVotingHistoryNeuron::get_external_data_provider(env.clone());
     let external_data_provider_client =
@@ -59,14 +59,14 @@ impl Neuron for PriorVotingHistoryNeuron {
     for round in voter_active_rounds {
       let bonus: DecimalNumber = round_bonus_map
         .get(round)
-        .expect("given round not found in round bonus map");
+        .ok_or(VotingSystemError::RoundNotFoundInRoundBonusMap)?;
       bonus_result = DecimalNumberWrapper::mul(
         DecimalNumberWrapper::from(bonus_result),
         DecimalNumberWrapper::from(bonus),
       );
     }
     bonus_result = DecimalNumberWrapper::add(previous_layer_vote, bonus_result);
-    bonus_result.as_tuple()
+    Ok(bonus_result.as_tuple())
   }
 
   fn weight_function(_env: Env, raw_neuron_vote: DecimalNumber) -> DecimalNumber {

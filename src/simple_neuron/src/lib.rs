@@ -4,7 +4,7 @@
 // This is a template for any future neurons, it doesn't use macros like unimplemented!() or todo!() so the tests may pass
 
 use soroban_sdk::{contract, contractimpl, Env};
-use voting_shared::types::{DecimalNumber, Neuron, ProjectUUID, UserUUID};
+use voting_shared::types::{DecimalNumber, Neuron, ProjectUUID, UserUUID, VotingSystemError};
 
 #[contract]
 pub struct SimpleNeuron;
@@ -19,11 +19,11 @@ impl Neuron for SimpleNeuron {
     _voter_id: UserUUID,
     _project_id: ProjectUUID,
     maybe_previous_layer_vote: Option<DecimalNumber>,
-  ) -> DecimalNumber {
+  ) -> Result<DecimalNumber, VotingSystemError> {
     if let Some(previous_layer_vote) = maybe_previous_layer_vote {
-      return (previous_layer_vote.0 + 1, previous_layer_vote.1 + 1);
+      return Ok((previous_layer_vote.0 + 1, previous_layer_vote.1 + 1));
     }
-    (1, 0)
+    Ok((1, 0))
   }
 
   fn weight_function(_env: Env, raw_neuron_vote: DecimalNumber) -> DecimalNumber {
