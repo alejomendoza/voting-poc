@@ -5,6 +5,8 @@ pub type DecimalNumber = (u32, u32);
 pub type UserUUID = String;
 pub type ProjectUUID = String;
 
+pub static DEFAULT_WEIGHT: DecimalNumber = (1, 0);
+
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum LayerAggregator {
@@ -73,4 +75,5 @@ pub trait Neuron {
     maybe_previous_layer_vote: Option<DecimalNumber>,
   ) -> Result<DecimalNumber, VotingSystemError>;
   fn weight_function(env: Env, raw_neuron_vote: DecimalNumber) -> DecimalNumber;
+  fn set_weight(env: Env, new_weight: DecimalNumber);
 }

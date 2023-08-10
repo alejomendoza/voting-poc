@@ -53,11 +53,11 @@ pub fn test_execute() {
     &None,
   );
 
-  assert!(neuron_votes == vec![&env, (2, 0), (2, 0)]);
+  assert!(neuron_votes == vec![&env, (1, 0), (1, 0)]);
 
   let result: DecimalNumber = layer_client.run_layer_aggregator(&neuron_votes);
 
-  assert!(result == (4, 0));
+  assert!(result == (2, 0));
 
   let neuron_votes: Vec<DecimalNumber> = layer_client.execute_layer(
     &String::from_slice(&env, "user001"),
@@ -66,5 +66,5 @@ pub fn test_execute() {
   );
   let result: DecimalNumber = layer_client.run_layer_aggregator(&neuron_votes);
 
-  assert!(result == (20, 400));
+  assert!(result == (6, 200));
 }

@@ -3,8 +3,13 @@
 
 // This is a template for any future neurons, it doesn't use macros like unimplemented!() or todo!() so the tests may pass
 
-use soroban_sdk::{contract, contractimpl, Env};
-use voting_shared::types::{DecimalNumber, Neuron, ProjectUUID, UserUUID, VotingSystemError};
+use soroban_sdk::{contract, contractimpl, symbol_short, Env, Symbol};
+use voting_shared::{
+  decimal_number_wrapper::DecimalNumberWrapper,
+  types::{DecimalNumber, Neuron, ProjectUUID, UserUUID, VotingSystemError, DEFAULT_WEIGHT},
+};
+
+const WEIGHT: Symbol = symbol_short!("WEIGHT");
 
 #[contract]
 pub struct SimpleNeuron;
@@ -26,8 +31,25 @@ impl Neuron for SimpleNeuron {
     Ok((1, 0))
   }
 
-  fn weight_function(_env: Env, raw_neuron_vote: DecimalNumber) -> DecimalNumber {
-    (raw_neuron_vote.0 * 2, raw_neuron_vote.1 * 2)
+  fn weight_function(env: Env, raw_neuron_vote: DecimalNumber) -> DecimalNumber {
+    let weight: DecimalNumber = env
+      .storage()
+      .instance()
+      .get(&WEIGHT)
+      .unwrap_or(DEFAULT_WEIGHT);
+
+    DecimalNumberWrapper::mul(
+      DecimalNumberWrapper::from(raw_neuron_vote),
+      DecimalNumberWrapper::from(weight),
+    )
+    .as_tuple()
+  }
+
+  fn set_weight(env: Env, new_weight: DecimalNumber) {
+    env
+      .storage()
+      .instance()
+      .set(&WEIGHT, &DecimalNumberWrapper::from(new_weight).as_tuple());
   }
 }
 

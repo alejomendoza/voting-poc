@@ -92,6 +92,7 @@ impl From<(u32, u32)> for DecimalNumberWrapper {
       whole: value.0,
       fractional: value.1,
     }
+    .validate()
   }
 }
 

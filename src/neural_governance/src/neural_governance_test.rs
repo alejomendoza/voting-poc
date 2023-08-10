@@ -1,4 +1,4 @@
-use soroban_sdk::{testutils::Logs, Env, String};
+use soroban_sdk::{Env, String};
 
 use crate::{
   layer_contract::{self, LayerAggregator},
@@ -47,14 +47,13 @@ pub fn test_execute() {
     &String::from_slice(&env, "user001"),
     &String::from_slice(&env, "project001"),
   );
-  assert!(final_result == (((2 as u32).pow(number_of_neurons)), 0));
+  assert!(final_result == (1, 0));
   layer_client.set_layer_aggregator(&LayerAggregator::SUM);
   let final_result = neural_governance_client.execute_neural_governance(
     &String::from_slice(&env, "user001"),
     &String::from_slice(&env, "project001"),
   );
-  assert!(final_result == (2 * number_of_neurons, 0));
-  env.logs().print();
+  assert!(final_result == (number_of_neurons, 0));
 }
 
 #[test]
@@ -87,5 +86,5 @@ pub fn test_execute_multiple_layers() {
     &String::from_slice(&env, "project001"),
   );
 
-  assert!(final_result == (20, 400));
+  assert!(final_result == (4, 200));
 }

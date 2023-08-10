@@ -1,4 +1,4 @@
-use soroban_sdk::{testutils::Logs, Env, String};
+use soroban_sdk::{Env, String};
 use voting_shared::types::{Vote, VotingSystemError};
 
 use crate::{neural_governance_contract, VotingSystem, VotingSystemClient};
@@ -146,8 +146,9 @@ pub fn test_vote() -> Result<(), VotingSystemError> {
   }
 
   let results = voting_system_client.tally();
-  assert!(results.get(project001_id).unwrap() == (6, 0));
-  assert!(results.get(project002_id).unwrap() == (2, 0));
+
+  assert!(results.get(project001_id).unwrap() == (3, 0));
+  assert!(results.get(project002_id).unwrap() == (1, 0));
   assert!(results.get(project003_id).unwrap() == (0, 0));
 
   Ok(())
@@ -292,11 +293,9 @@ pub fn test_vote_with_different_options() -> Result<(), VotingSystemError> {
     .map_err(|err| err.unwrap())?
     .unwrap();
 
-  assert!(results.get(project001_id).unwrap() == (28, 52));
-  assert!(results.get(project002_id).unwrap() == (10, 372));
-  assert!(results.get(project003_id).unwrap() == (1, 988));
-
-  env.logs().print();
+  assert!(results.get(project001_id).unwrap() == (11, 26));
+  assert!(results.get(project002_id).unwrap() == (4, 186));
+  assert!(results.get(project003_id).unwrap() == (0, 994));
 
   Ok(())
 }

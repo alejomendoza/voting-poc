@@ -16,7 +16,8 @@ pub fn test_execute() {
     &None,
   );
   let neuron_vote: DecimalNumber = simple_neuron_client.weight_function(&raw_neuron_vote);
-  assert!(neuron_vote == (2, 0));
+
+  assert!(neuron_vote == (1, 0));
 
   let raw_neuron_vote: DecimalNumber = simple_neuron_client.oracle_function(
     &String::from_slice(&env, "user001"),
@@ -24,5 +25,6 @@ pub fn test_execute() {
     &Some(neuron_vote),
   );
   let neuron_vote: DecimalNumber = simple_neuron_client.weight_function(&raw_neuron_vote);
-  assert!(neuron_vote == (6, 200));
+
+  assert!(neuron_vote == (2, 100));
 }
