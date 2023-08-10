@@ -2,7 +2,7 @@
 #![allow(non_upper_case_globals)]
 
 use voting_shared::{
-  decimal_number_persist::DecimalNumberWrapper,
+  decimal_number_wrapper::DecimalNumberWrapper,
   types::{DecimalNumber, Vote, VotingSystemError},
 };
 

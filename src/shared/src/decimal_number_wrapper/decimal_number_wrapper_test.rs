@@ -1,4 +1,4 @@
-use crate::decimal_number_persist::DecimalNumberWrapper;
+use crate::decimal_number_wrapper::DecimalNumberWrapper;
 
 #[test]
 pub fn test_add() {

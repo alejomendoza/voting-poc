@@ -66,5 +66,5 @@ pub fn test_execute() {
   );
   let result: DecimalNumber = layer_client.run_layer_aggregator(&neuron_votes);
 
-  assert!(result == (20, 4));
+  assert!(result == (20, 400));
 }

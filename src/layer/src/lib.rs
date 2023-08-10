@@ -3,7 +3,7 @@
 
 use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, Symbol, Vec};
 use voting_shared::{
-  decimal_number_persist::DecimalNumberWrapper,
+  decimal_number_wrapper::DecimalNumberWrapper,
   types::{DecimalNumber, LayerAggregator, ProjectUUID, UserUUID, VotingSystemError},
 };
 

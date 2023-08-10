@@ -96,4 +96,4 @@ impl From<(u32, u32)> for DecimalNumberWrapper {
 }
 
 #[cfg(test)]
-mod decimal_number_persist_test;
+mod decimal_number_wrapper_test;
