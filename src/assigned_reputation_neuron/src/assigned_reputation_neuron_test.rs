@@ -30,18 +30,20 @@ pub fn test_execute() {
   let raw_neuron_vote: DecimalNumber = assigned_reputation_neuron_client.oracle_function(
     &String::from_slice(&env, "user001"),
     &String::from_slice(&env, "project001"),
-    &Some((4, 4)),
+    &Some((4, 400)),
   );
   let neuron_vote: DecimalNumber =
     assigned_reputation_neuron_client.weight_function(&raw_neuron_vote);
-  assert!(neuron_vote == (0, 4));
+
+  assert!(neuron_vote == (1, 320));
 
   let raw_neuron_vote: DecimalNumber = assigned_reputation_neuron_client.oracle_function(
     &String::from_slice(&env, "user003"),
     &String::from_slice(&env, "project001"),
-    &Some((4, 4)),
+    &Some((4, 400)),
   );
   let neuron_vote: DecimalNumber =
     assigned_reputation_neuron_client.weight_function(&raw_neuron_vote);
-  assert!(neuron_vote == (8, 4));
+
+  assert!(neuron_vote == (0, 880));
 }

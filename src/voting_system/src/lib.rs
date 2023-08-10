@@ -19,7 +19,7 @@ mod neural_governance_contract {
 
 // Address of neural governance contract
 const NUERAL_GOVERNANCE: Symbol = symbol_short!("NEURALGOV");
-// Map<ProjectUUID, Map<UserUUID, (Vote, DecimalNumber)>>
+// Map<ProjectUUID, Map<UserUUID, Vote>>
 const VOTES: Symbol = symbol_short!("VOTES");
 // Vec<ProjectUUID>
 const PROJECTS: Symbol = symbol_short!("PROJECTS");
@@ -56,22 +56,13 @@ impl VotingSystem {
       return Err(VotingSystemError::ProjectDoesNotExist);
     }
 
-    let neural_governance_address = VotingSystem::get_neural_governance(env.clone())?;
-    let neural_governance_client =
-      neural_governance_contract::Client::new(&env, &neural_governance_address);
-
-    let voting_power = match vote {
-      Vote::ABSTAIN => (0, 0),
-      _ => neural_governance_client.execute(&voter_id, &project_id),
-    };
-
     let mut votes = VotingSystem::get_votes(env.clone());
-    let mut project_votes: Map<UserUUID, (Vote, DecimalNumber)> =
+    let mut project_votes: Map<UserUUID, Vote> =
       votes.get(project_id.clone()).unwrap_or(Map::new(&env));
     if project_votes.contains_key(voter_id.clone()) {
       return Err(VotingSystemError::UserAlreadyVoted);
     }
-    project_votes.set(voter_id, (vote, voting_power));
+    project_votes.set(voter_id, vote);
     votes.set(project_id, project_votes);
 
     env.storage().instance().set(&VOTES, &votes);
@@ -79,7 +70,7 @@ impl VotingSystem {
     Ok(())
   }
 
-  pub fn get_votes(env: Env) -> Map<ProjectUUID, Map<UserUUID, (Vote, DecimalNumber)>> {
+  pub fn get_votes(env: Env) -> Map<ProjectUUID, Map<UserUUID, Vote>> {
     env
       .storage()
       .instance()
@@ -106,7 +97,11 @@ impl VotingSystem {
     Ok(())
   }
 
-  pub fn get_projects_current_results(env: Env) -> Map<ProjectUUID, DecimalNumber> {
+  pub fn tally(env: Env) -> Result<Map<ProjectUUID, DecimalNumber>, VotingSystemError> {
+    let neural_governance_address = VotingSystem::get_neural_governance(env.clone())?;
+    let neural_governance_client =
+      neural_governance_contract::Client::new(&env, &neural_governance_address);
+
     let votes = VotingSystem::get_votes(env.clone());
     let mut result: Map<ProjectUUID, DecimalNumber> = Map::new(&env);
     // ProjectUUID, Map<UserUUID, (Vote, DecimalNumber)>
@@ -114,18 +109,22 @@ impl VotingSystem {
       let mut project_voting_power_plus: DecimalNumberWrapper = Default::default();
       let mut project_voting_power_minus: DecimalNumberWrapper = Default::default();
       // UserUUID, (Vote, DecimalNumber)
-      for (_user_id, (vote, vote_power)) in votes {
+      for (voter_id, vote) in votes {
+        let voting_power = match vote {
+          Vote::ABSTAIN => (0, 0),
+          _ => neural_governance_client.execute_neural_governance(&voter_id, &project_id),
+        };
         match vote {
           Vote::YES => {
             project_voting_power_plus = DecimalNumberWrapper::add(
               project_voting_power_plus,
-              DecimalNumberWrapper::from(vote_power),
+              DecimalNumberWrapper::from(voting_power),
             )
           }
           Vote::NO => {
             project_voting_power_minus = DecimalNumberWrapper::add(
               project_voting_power_minus,
-              DecimalNumberWrapper::from(vote_power),
+              DecimalNumberWrapper::from(voting_power),
             )
           }
           _ => (),
@@ -136,7 +135,7 @@ impl VotingSystem {
         DecimalNumberWrapper::sub(project_voting_power_plus, project_voting_power_minus).as_tuple(),
       )
     }
-    result
+    Ok(result)
   }
 }
 

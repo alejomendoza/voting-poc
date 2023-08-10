@@ -46,7 +46,7 @@ impl Layer {
     env.storage().instance().get(&NEURONS).unwrap_or(vec![&env])
   }
 
-  pub fn execute(
+  pub fn execute_layer(
     env: Env,
     voter_id: UserUUID,
     project_id: ProjectUUID,

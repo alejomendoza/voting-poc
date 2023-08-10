@@ -47,7 +47,7 @@ pub fn test_execute() {
   layer_client.add_neuron(&neuron_id);
   layer_client.add_neuron(&neuron_id);
 
-  let neuron_votes: Vec<DecimalNumber> = layer_client.execute(
+  let neuron_votes: Vec<DecimalNumber> = layer_client.execute_layer(
     &String::from_slice(&env, "user001"),
     &String::from_slice(&env, "project001"),
     &None,
@@ -59,7 +59,7 @@ pub fn test_execute() {
 
   assert!(result == (4, 0));
 
-  let neuron_votes: Vec<DecimalNumber> = layer_client.execute(
+  let neuron_votes: Vec<DecimalNumber> = layer_client.execute_layer(
     &String::from_slice(&env, "user001"),
     &String::from_slice(&env, "project001"),
     &Some(result),

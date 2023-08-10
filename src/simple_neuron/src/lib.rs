@@ -21,7 +21,7 @@ impl Neuron for SimpleNeuron {
     maybe_previous_layer_vote: Option<DecimalNumber>,
   ) -> Result<DecimalNumber, VotingSystemError> {
     if let Some(previous_layer_vote) = maybe_previous_layer_vote {
-      return Ok((previous_layer_vote.0 + 1, previous_layer_vote.1 + 1));
+      return Ok((previous_layer_vote.0 + 1, previous_layer_vote.1 + 100));
     }
     Ok((1, 0))
   }

@@ -2,7 +2,10 @@
 #![allow(non_upper_case_globals)]
 
 use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol};
-use voting_shared::types::{DecimalNumber, Neuron, ProjectUUID, UserUUID, VotingSystemError};
+use voting_shared::{
+  decimal_number_persist::DecimalNumberWrapper,
+  types::{DecimalNumber, Neuron, ProjectUUID, UserUUID, VotingSystemError},
+};
 
 mod external_data_provider_contract {
   use crate::{DecimalNumber, UserUUID};
@@ -50,14 +53,16 @@ impl Neuron for AssignedReputationNeuron {
     let external_data_provider_client =
       external_data_provider_contract::Client::new(&env, &external_data_provider_id.unwrap());
     let reputation_category = external_data_provider_client.get_user_reputation_category(&voter_id);
-    let bonus = match reputation_category {
-      external_data_provider_contract::ReputationCategory::Uncategorized
-      | external_data_provider_contract::ReputationCategory::Poor => 0,
-      other => (other as u32) - 1, // -1 to match with the specification
-    };
     let previous_layer_vote = maybe_previous_layer_vote.unwrap_or((0, 0));
     // todo fixme
-    Ok((previous_layer_vote.0 * bonus, previous_layer_vote.1))
+    let bonus = external_data_provider_client.get_reputation_score(&reputation_category);
+    let res = DecimalNumberWrapper::mul(
+      DecimalNumberWrapper::from(previous_layer_vote),
+      DecimalNumberWrapper::from(bonus),
+    )
+    .as_tuple();
+
+    Ok(res)
   }
 
   fn weight_function(_env: Env, raw_neuron_vote: DecimalNumber) -> DecimalNumber {

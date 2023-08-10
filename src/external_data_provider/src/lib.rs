@@ -24,11 +24,11 @@ impl ExternalDataProvider {
     let mut reputation_map: Map<UserUUID, ReputationCategory> = Map::new(&env);
     reputation_map.set(
       String::from_slice(&env, "user001"),
-      ReputationCategory::Poor,
+      ReputationCategory::Excellent,
     );
     reputation_map.set(
       String::from_slice(&env, "user002"),
-      ReputationCategory::Average,
+      ReputationCategory::VeryGood,
     );
     reputation_map.set(
       String::from_slice(&env, "user003"),
@@ -36,11 +36,11 @@ impl ExternalDataProvider {
     );
     reputation_map.set(
       String::from_slice(&env, "user004"),
-      ReputationCategory::VeryGood,
+      ReputationCategory::Average,
     );
     reputation_map.set(
       String::from_slice(&env, "user005"),
-      ReputationCategory::Excellent,
+      ReputationCategory::Poor,
     );
     env.storage().instance().set(&REPUTATION, &reputation_map);
 
@@ -63,6 +63,7 @@ impl ExternalDataProvider {
       .set(&ROUND_BONUS_MAP, &round_bonus_map);
   }
 
+  // for assigned reputation neuron
   pub fn get_user_reputation_category(env: Env, user_id: UserUUID) -> ReputationCategory {
     let map: Map<UserUUID, ReputationCategory> = Map::new(&env);
     let reputation_map: Map<UserUUID, ReputationCategory> =
@@ -72,6 +73,16 @@ impl ExternalDataProvider {
       .unwrap_or(ReputationCategory::Uncategorized)
   }
 
+  pub fn get_reputation_score(reputation_category: ReputationCategory) -> DecimalNumber {
+    match reputation_category {
+      ReputationCategory::Uncategorized => (0, 0),
+      ReputationCategory::Poor | ReputationCategory::Average => (0, 100),
+      ReputationCategory::Good | ReputationCategory::VeryGood => (0, 200),
+      ReputationCategory::Excellent => (0, 300),
+    }
+  }
+
+  // for prior history neuron
   pub fn get_user_prior_voting_history(env: Env, user_id: UserUUID) -> Vec<u32> {
     let map: Map<UserUUID, Vec<u32>> = Map::new(&env);
     let voting_history_set: Map<UserUUID, Vec<u32>> = env

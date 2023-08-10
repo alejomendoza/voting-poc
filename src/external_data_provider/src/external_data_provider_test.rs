@@ -19,8 +19,8 @@ pub fn test() {
 
   let reputation = external_data_provider_client
     .get_user_reputation_category(&String::from_slice(&env, "user001"));
-  assert!(reputation == ReputationCategory::Poor);
+  assert!(reputation == ReputationCategory::Excellent);
   let reputation = external_data_provider_client
     .get_user_reputation_category(&String::from_slice(&env, "user002"));
-  assert!(reputation == ReputationCategory::Average);
+  assert!(reputation == ReputationCategory::VeryGood);
 }

@@ -67,6 +67,15 @@ pub fn test_multiply() {
     .as_tuple()
       == (0, 39)
   );
+
+  assert!(
+    DecimalNumberWrapper::mul(
+      DecimalNumberWrapper::new(4, 400),
+      DecimalNumberWrapper::new(0, 200)
+    )
+    .as_tuple()
+      == (0, 880)
+  );
 }
 
 #[test]

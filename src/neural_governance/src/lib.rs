@@ -29,7 +29,7 @@ pub struct NeuralGovernance;
 
 #[contractimpl]
 impl NeuralGovernance {
-  pub fn execute(
+  pub fn execute_neural_governance(
     env: Env,
     voter_id: UserUUID,
     project_id: ProjectUUID,
@@ -42,7 +42,8 @@ impl NeuralGovernance {
     }
     for layer in layers {
       let layer_client = layer_contract::Client::new(&env, &layer);
-      let layer_result: Vec<DecimalNumber> = layer_client.execute(&voter_id, &project_id, &None);
+      let layer_result: Vec<DecimalNumber> =
+        layer_client.execute_layer(&voter_id, &project_id, &current_layer_result);
       current_layer_result = Some(layer_client.run_layer_aggregator(&layer_result));
     }
     current_layer_result.ok_or(VotingSystemError::ResultExpected)
