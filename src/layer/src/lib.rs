@@ -7,10 +7,10 @@ use voting_shared::{
   types::{DecimalNumber, LayerAggregator, ProjectUUID, UserUUID, VotingSystemError},
 };
 
-mod simple_neuron_contract {
+mod template_neuron_contract {
   use crate::{DecimalNumber, ProjectUUID, UserUUID};
   soroban_sdk::contractimport!(
-    file = "../../target/wasm32-unknown-unknown/release/voting_simple_neuron.wasm"
+    file = "../../target/wasm32-unknown-unknown/release/voting_template_neuron.wasm"
   );
 }
 
@@ -63,7 +63,7 @@ impl Layer {
       return Err(VotingSystemError::NoNeuronsExist);
     }
     for neuron in neurons.iter() {
-      let neuron_client = simple_neuron_contract::Client::new(&env, &neuron);
+      let neuron_client = template_neuron_contract::Client::new(&env, &neuron);
 
       let raw_neuron_vote =
         neuron_client.oracle_function(&voter_id, &project_id, &previous_layer_vote);

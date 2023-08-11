@@ -3,7 +3,7 @@ extern crate std;
 use soroban_sdk::{vec, Env, String, Vec};
 use voting_shared::types::DecimalNumber;
 
-use crate::{simple_neuron_contract, Layer, LayerAggregator, LayerClient};
+use crate::{template_neuron_contract, Layer, LayerAggregator, LayerClient};
 
 #[test]
 pub fn test_setting_layer_aggregator() {
@@ -26,7 +26,7 @@ pub fn test_setting_neurons() {
   let layer_id = env.register_contract(None, Layer);
   let layer_client = LayerClient::new(&env, &layer_id);
 
-  let neuron_id = env.register_contract_wasm(None, simple_neuron_contract::WASM);
+  let neuron_id = env.register_contract_wasm(None, template_neuron_contract::WASM);
 
   assert!(layer_client.get_neurons().is_empty());
   layer_client.add_neuron(&neuron_id);
@@ -41,7 +41,7 @@ pub fn test_execute() {
   let layer_id = env.register_contract(None, Layer);
   let layer_client = LayerClient::new(&env, &layer_id);
 
-  let neuron_id = env.register_contract_wasm(None, simple_neuron_contract::WASM);
+  let neuron_id = env.register_contract_wasm(None, template_neuron_contract::WASM);
 
   layer_client.set_layer_aggregator(&LayerAggregator::SUM);
   layer_client.add_neuron(&neuron_id);

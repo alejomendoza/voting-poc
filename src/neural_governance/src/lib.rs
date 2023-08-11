@@ -7,10 +7,10 @@ use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, Symbo
 
 use voting_shared::types::{ProjectUUID, UserUUID};
 
-mod simple_neuron_contract {
+mod template_neuron_contract {
   use crate::{DecimalNumber, ProjectUUID, UserUUID};
   soroban_sdk::contractimport!(
-    file = "../../target/wasm32-unknown-unknown/release/voting_simple_neuron.wasm"
+    file = "../../target/wasm32-unknown-unknown/release/voting_template_neuron.wasm"
   );
 }
 

@@ -1,5 +1,5 @@
 [package]
-name = "voting-simple-neuron"
+name = "voting-template-neuron"
 version = "0.1.0"
 edition = "2021"
 

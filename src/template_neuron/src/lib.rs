@@ -12,13 +12,13 @@ use voting_shared::{
 const WEIGHT: Symbol = symbol_short!("WEIGHT");
 
 #[contract]
-pub struct SimpleNeuron;
+pub struct TemplateNeuron;
 
 #[contractimpl]
-impl SimpleNeuron {}
+impl TemplateNeuron {}
 
 #[contractimpl]
-impl Neuron for SimpleNeuron {
+impl Neuron for TemplateNeuron {
   fn oracle_function(
     _env: Env,
     _voter_id: UserUUID,
@@ -54,4 +54,4 @@ impl Neuron for SimpleNeuron {
 }
 
 #[cfg(test)]
-mod simple_neuron_test;
+mod template_neuron_test;

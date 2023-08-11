@@ -2,7 +2,7 @@ use soroban_sdk::{Env, String};
 
 use crate::{
   layer_contract::{self, LayerAggregator},
-  simple_neuron_contract, NeuralGovernance, NeuralGovernanceClient,
+  template_neuron_contract, NeuralGovernance, NeuralGovernanceClient,
 };
 
 #[test]
@@ -32,7 +32,7 @@ pub fn test_execute() {
   let layer_id = env.register_contract_wasm(None, layer_contract::WASM);
   let layer_client = layer_contract::Client::new(&env, &layer_id);
 
-  let neuron_id = env.register_contract_wasm(None, simple_neuron_contract::WASM);
+  let neuron_id = env.register_contract_wasm(None, template_neuron_contract::WASM);
 
   layer_client.set_layer_aggregator(&LayerAggregator::PRODUCT);
 
@@ -64,7 +64,7 @@ pub fn test_execute_multiple_layers() {
   let neural_governance_id = env.register_contract(None, NeuralGovernance);
   let neural_governance_client = NeuralGovernanceClient::new(&env, &neural_governance_id);
 
-  let neuron_id = env.register_contract_wasm(None, simple_neuron_contract::WASM);
+  let neuron_id = env.register_contract_wasm(None, template_neuron_contract::WASM);
 
   let layer_1_id = env.register_contract_wasm(None, layer_contract::WASM);
   let layer_1_client = layer_contract::Client::new(&env, &layer_1_id);

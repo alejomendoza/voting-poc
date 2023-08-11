@@ -12,10 +12,10 @@ mod external_data_provider_contract {
   );
 }
 
-mod simple_neuron_contract {
+mod template_neuron_contract {
   use crate::{DecimalNumber, ProjectUUID, UserUUID};
   soroban_sdk::contractimport!(
-    file = "../../target/wasm32-unknown-unknown/release/voting_simple_neuron.wasm"
+    file = "../../target/wasm32-unknown-unknown/release/voting_template_neuron.wasm"
   );
 }
 
@@ -87,11 +87,11 @@ pub fn test_vote() -> Result<(), VotingSystemError> {
   let layer_id = env.register_contract_wasm(None, layer_contract::WASM);
   let layer_client = layer_contract::Client::new(&env, &layer_id);
 
-  let simple_neuron_id = env.register_contract_wasm(None, simple_neuron_contract::WASM);
+  let template_neuron_id = env.register_contract_wasm(None, template_neuron_contract::WASM);
 
   layer_client.set_layer_aggregator(&LayerAggregator::SUM);
 
-  layer_client.add_neuron(&simple_neuron_id);
+  layer_client.add_neuron(&template_neuron_id);
 
   neural_governance_client.add_layer(&layer_id);
 
@@ -177,7 +177,7 @@ pub fn test_vote_with_different_options() -> Result<(), VotingSystemError> {
   let layer_1_id = env.register_contract_wasm(None, layer_contract::WASM);
   let layer_1_client = layer_contract::Client::new(&env, &layer_1_id);
   {
-    let simple_neuron_id = env.register_contract_wasm(None, simple_neuron_contract::WASM);
+    let template_neuron_id = env.register_contract_wasm(None, template_neuron_contract::WASM);
 
     let assigned_reputation_neuron_id =
       env.register_contract_wasm(None, assigned_reputation_neuron_contract::WASM);
@@ -186,7 +186,7 @@ pub fn test_vote_with_different_options() -> Result<(), VotingSystemError> {
     assigned_reputation_neuron_client.set_external_data_provider(&external_data_provider_id);
 
     layer_1_client.set_layer_aggregator(&LayerAggregator::SUM);
-    layer_1_client.add_neuron(&simple_neuron_id);
+    layer_1_client.add_neuron(&template_neuron_id);
     layer_1_client.add_neuron(&assigned_reputation_neuron_id);
   }
 
@@ -194,7 +194,7 @@ pub fn test_vote_with_different_options() -> Result<(), VotingSystemError> {
   let layer_2_id = env.register_contract_wasm(None, layer_contract::WASM);
   let layer_2_client = layer_contract::Client::new(&env, &layer_2_id);
   {
-    let simple_neuron_id = env.register_contract_wasm(None, simple_neuron_contract::WASM);
+    let template_neuron_id = env.register_contract_wasm(None, template_neuron_contract::WASM);
     let assigned_reputation_neuron_id =
       env.register_contract_wasm(None, assigned_reputation_neuron_contract::WASM);
     let assigned_reputation_neuron_client =
@@ -208,7 +208,7 @@ pub fn test_vote_with_different_options() -> Result<(), VotingSystemError> {
     prior_voting_history_neuron_client.set_external_data_provider(&external_data_provider_id);
 
     layer_2_client.set_layer_aggregator(&LayerAggregator::SUM);
-    layer_2_client.add_neuron(&simple_neuron_id);
+    layer_2_client.add_neuron(&template_neuron_id);
     layer_2_client.add_neuron(&assigned_reputation_neuron_id);
     layer_2_client.add_neuron(&prior_voting_history_neuron_id);
   }
