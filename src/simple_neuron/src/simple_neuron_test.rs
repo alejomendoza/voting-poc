@@ -25,6 +25,10 @@ pub fn test_execute() {
     &Some(neuron_vote),
   );
   let neuron_vote: DecimalNumber = simple_neuron_client.weight_function(&raw_neuron_vote);
-
   assert!(neuron_vote == (2, 100));
+
+
+  simple_neuron_client.set_weight(&(2, 420));
+  let neuron_vote: DecimalNumber = simple_neuron_client.weight_function(&raw_neuron_vote);
+  assert!(neuron_vote == (5, 82));
 }

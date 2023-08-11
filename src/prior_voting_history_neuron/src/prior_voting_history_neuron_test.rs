@@ -37,4 +37,9 @@ pub fn test_execute() {
   let neuron_vote: DecimalNumber =
     prior_voting_history_neuron_client.weight_function(&raw_neuron_vote);
   assert!(neuron_vote == (5, 79));
+
+  prior_voting_history_neuron_client.set_weight(&(4, 100));
+  let neuron_vote: DecimalNumber =
+    prior_voting_history_neuron_client.weight_function(&raw_neuron_vote);
+  assert!(neuron_vote == (20, 823));
 }

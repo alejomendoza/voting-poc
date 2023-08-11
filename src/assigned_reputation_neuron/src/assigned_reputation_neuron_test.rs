@@ -46,4 +46,11 @@ pub fn test_execute() {
     assigned_reputation_neuron_client.weight_function(&raw_neuron_vote);
 
   assert!(neuron_vote == (0, 880));
+
+
+  assigned_reputation_neuron_client.set_weight(&(2, 500));
+  let neuron_vote: DecimalNumber =
+    assigned_reputation_neuron_client.weight_function(&raw_neuron_vote);
+
+  assert!(neuron_vote == (2, 200));
 }
