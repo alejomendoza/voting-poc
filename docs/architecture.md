@@ -15,6 +15,10 @@ This workspace consists of the following packages:
 
 They are described below. All of them are smart contracts apart of `shared` which stands for the code that's mutual for multiple other packages.
 
+The structure of relations between the smart contracts is shown on the following diagram:
+
+![voting-poc-diagram](../assets/voting-poc-diagram.png)
+
 ## Implementation notes
 
 ### Storage
