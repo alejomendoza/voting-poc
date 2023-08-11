@@ -213,6 +213,7 @@ pub fn test_vote_with_different_options() -> Result<(), VotingSystemError> {
     layer_2_client.add_neuron(&prior_voting_history_neuron_id);
   }
 
+  // add layers to neural governance
   neural_governance_client.add_layer(&layer_1_id);
   neural_governance_client.add_layer(&layer_2_id);
 
@@ -225,6 +226,7 @@ pub fn test_vote_with_different_options() -> Result<(), VotingSystemError> {
   let project002_id = String::from_slice(&env, "project002");
   let project003_id = String::from_slice(&env, "project003");
 
+  // add projects
   let _ = voting_system_client
     .try_add_project(&project001_id)
     .map_err(|err| err.unwrap())?;
@@ -234,6 +236,7 @@ pub fn test_vote_with_different_options() -> Result<(), VotingSystemError> {
   let _ = voting_system_client
     .try_add_project(&project003_id)
     .map_err(|err| err.unwrap())?;
+  // add votes for user001
   let user001_id = String::from_slice(&env, "user001");
   {
     let _ = voting_system_client
@@ -246,6 +249,7 @@ pub fn test_vote_with_different_options() -> Result<(), VotingSystemError> {
       .try_vote(&user001_id, &project003_id, &Vote::ABSTAIN)
       .map_err(|err| err.unwrap())?;
   }
+  // add votes for user002
   let user002_id = String::from_slice(&env, "user002");
   {
     let _ = voting_system_client
@@ -258,6 +262,7 @@ pub fn test_vote_with_different_options() -> Result<(), VotingSystemError> {
       .try_vote(&user002_id, &project003_id, &Vote::YES)
       .map_err(|err| err.unwrap())?;
   }
+  // add votes for user003
   let user003_id = String::from_slice(&env, "user003");
   {
     let _ = voting_system_client

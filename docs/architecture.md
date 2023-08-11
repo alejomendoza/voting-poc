@@ -126,3 +126,7 @@ If you wish to implement a new neuron, you should do the following steps:
 - In the `src/new_neuron/Cargo.toml` change the package's name
 - Start coding! You can now fill the `oracle_function` with your neuron's logic
 - You can also write tests for your neuron
+
+## Example how it works
+
+A good example of how to properly prepare the whole infrastructure to work can be found in the [voting system test](../src/voting_system/src/voting_system_test.rs).
