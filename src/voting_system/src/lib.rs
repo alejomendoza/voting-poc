@@ -3,15 +3,12 @@
 
 use voting_shared::{
   decimal_number_wrapper::DecimalNumberWrapper,
-  types::{DecimalNumber, Vote, VotingSystemError},
+  types::{Vote, VotingSystemError},
 };
 
-use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, Map, Symbol, Vec};
-
-use voting_shared::types::{ProjectUUID, UserUUID};
+use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, Map, Symbol, Vec, String};
 
 mod neural_governance_contract {
-  use crate::{DecimalNumber, ProjectUUID, UserUUID};
   soroban_sdk::contractimport!(
     file = "../../target/wasm32-unknown-unknown/release/voting_neural_governance.wasm"
   );
@@ -19,9 +16,9 @@ mod neural_governance_contract {
 
 // Address of neural governance contract
 const NUERAL_GOVERNANCE: Symbol = symbol_short!("NEURALGOV");
-// Map<ProjectUUID, Map<UserUUID, Vote>>
+// Map<String, Map<String, Vote>>
 const VOTES: Symbol = symbol_short!("VOTES");
-// Vec<ProjectUUID>
+// Vec<String>
 const PROJECTS: Symbol = symbol_short!("PROJECTS");
 
 // This contract will be responsible for storing the voting data as well as exposing any needed interface to the users
@@ -48,8 +45,8 @@ impl VotingSystem {
 
   pub fn vote(
     env: Env,
-    voter_id: UserUUID,
-    project_id: ProjectUUID,
+    voter_id: String,
+    project_id: String,
     vote: Vote,
   ) -> Result<(), VotingSystemError> {
     if !VotingSystem::get_projects(env.clone()).contains(project_id.clone()) {
@@ -57,7 +54,7 @@ impl VotingSystem {
     }
 
     let mut votes = VotingSystem::get_votes(env.clone());
-    let mut project_votes: Map<UserUUID, Vote> =
+    let mut project_votes: Map<String, Vote> =
       votes.get(project_id.clone()).unwrap_or(Map::new(&env));
     if project_votes.contains_key(voter_id.clone()) {
       return Err(VotingSystemError::UserAlreadyVoted);
@@ -70,7 +67,7 @@ impl VotingSystem {
     Ok(())
   }
 
-  pub fn get_votes(env: Env) -> Map<ProjectUUID, Map<UserUUID, Vote>> {
+  pub fn get_votes(env: Env) -> Map<String, Map<String, Vote>> {
     env
       .storage()
       .instance()
@@ -78,7 +75,7 @@ impl VotingSystem {
       .unwrap_or(Map::new(&env))
   }
 
-  pub fn get_projects(env: Env) -> Vec<ProjectUUID> {
+  pub fn get_projects(env: Env) -> Vec<String> {
     env
       .storage()
       .instance()
@@ -86,7 +83,7 @@ impl VotingSystem {
       .unwrap_or(vec![&env])
   }
 
-  pub fn add_project(env: Env, project_id: ProjectUUID) -> Result<(), VotingSystemError> {
+  pub fn add_project(env: Env, project_id: String) -> Result<(), VotingSystemError> {
     let mut projects = VotingSystem::get_projects(env.clone());
     if projects.contains(project_id.clone()) {
       return Err(VotingSystemError::ProjectAlreadyAdded);
@@ -97,18 +94,18 @@ impl VotingSystem {
     Ok(())
   }
 
-  pub fn tally(env: Env) -> Result<Map<ProjectUUID, DecimalNumber>, VotingSystemError> {
+  pub fn tally(env: Env) -> Result<Map<String, (u32, u32)>, VotingSystemError> {
     let neural_governance_address = VotingSystem::get_neural_governance(env.clone())?;
     let neural_governance_client =
       neural_governance_contract::Client::new(&env, &neural_governance_address);
 
     let votes = VotingSystem::get_votes(env.clone());
-    let mut result: Map<ProjectUUID, DecimalNumber> = Map::new(&env);
-    // ProjectUUID, Map<UserUUID, (Vote, DecimalNumber)>
+    let mut result: Map<String, (u32, u32)> = Map::new(&env);
+    // String, Map<String, (Vote, (u32, u32))>
     for (project_id, votes) in votes {
       let mut project_voting_power_plus: DecimalNumberWrapper = Default::default();
       let mut project_voting_power_minus: DecimalNumberWrapper = Default::default();
-      // UserUUID, (Vote, DecimalNumber)
+      // String, (Vote, (u32, u32))
       for (voter_id, vote) in votes {
         let voting_power = match vote {
           Vote::ABSTAIN => (0, 0),
