@@ -2,7 +2,11 @@
 
 ## Neuron template
 
-There is a neuron template in `src/template_neuron`, you can just copy-paste the entire folder, change all the names and implement custom logic. Also, you need to add its entry to the root's  `Cargo.toml`.
+There is a neuron template in `src/template_neuron`. In order to add new neuron, please do the following things:
+- copy-paste the template neuron folder
+- rename the folder and all the names inside it (from template neuron to [your_neuron_name])
+- add its entry (workspace member) to the `Cargo.toml` in the root folder of the project
+- implement your neuron's logic
 
 ## Useful commands:
 - `soroban contract build`
