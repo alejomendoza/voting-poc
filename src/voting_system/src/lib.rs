@@ -16,9 +16,9 @@ mod neural_governance_contract {
 
 // Address of neural governance contract
 const NUERAL_GOVERNANCE: Symbol = symbol_short!("NEURALGOV");
-// Map<String, Map<String, Vote>>
+// Map<ProjectUUID, Map<UserUUID, Vote>>
 const VOTES: Symbol = symbol_short!("VOTES");
-// Vec<String>
+// Vec<ProjectUUID>
 const PROJECTS: Symbol = symbol_short!("PROJECTS");
 
 // This contract will be responsible for storing the voting data as well as exposing any needed interface to the users

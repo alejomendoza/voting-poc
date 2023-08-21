@@ -6,11 +6,11 @@
 use soroban_sdk::{contract, contractimpl, symbol_short, vec, Env, Map, String, Symbol, Vec};
 use voting_shared::types::ReputationCategory;
 
-// Map<String, ReputationCategory> - users to their categories
+// Map<UserUUID, ReputationCategory> - users to their categories
 const REPUTATION: Symbol = symbol_short!("RPUTATION");
-// Map<String, Vec<u32>> - users to the vector of rounds they participated in
+// Map<UserUUID, Vec<u32>> - users to the vector of rounds they participated in
 const PRIOR_VOTING_HISTORY: Symbol = symbol_short!("PRVTHSTR");
-// Map<u32, (u32, u32)> - (connected to PRIOR_VOTING_HISTORY) rounds to their bonus (for participation)
+// Map<u32, DecimalNumber> - (connected to PRIOR_VOTING_HISTORY) rounds to their bonus (for participation)
 const ROUND_BONUS_MAP: Symbol = symbol_short!("RDBNSMAP");
 
 #[contract]
