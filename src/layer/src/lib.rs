@@ -1,14 +1,13 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
-use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, Symbol, Vec};
+use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, Symbol, Vec, String};
 use voting_shared::{
   decimal_number_wrapper::DecimalNumberWrapper,
-  types::{DecimalNumber, LayerAggregator, ProjectUUID, UserUUID, VotingSystemError},
+  types::{LayerAggregator, VotingSystemError},
 };
 
 mod template_neuron_contract {
-  use crate::{DecimalNumber, ProjectUUID, UserUUID};
   soroban_sdk::contractimport!(
     file = "../../target/wasm32-unknown-unknown/release/voting_template_neuron.wasm"
   );
@@ -48,21 +47,24 @@ impl Layer {
 
   pub fn execute_layer(
     env: Env,
-    voter_id: UserUUID,
-    project_id: ProjectUUID,
-    previous_layer_vote: Option<DecimalNumber>,
-  ) -> Result<Vec<DecimalNumber>, VotingSystemError> {
+    voter_id: String,
+    project_id: String,
+    previous_layer_vote: Option<(u32, u32)>,
+  ) -> Result<Vec<(u32, u32)>, VotingSystemError> {
     let aggregator: LayerAggregator = Layer::get_layer_aggregator(env.clone());
     if aggregator == LayerAggregator::UNKNOWN {
       return Err(VotingSystemError::LayerAggregatorNotSet);
     }
 
-    let mut neuron_votes: Vec<DecimalNumber> = Vec::new(&env);
+    let mut neuron_votes: Vec<(u32, u32)> = Vec::new(&env);
     let neurons: Vec<Address> = Layer::get_neurons(env.clone());
     if neurons.is_empty() {
       return Err(VotingSystemError::NoNeuronsExist);
     }
     for neuron in neurons.iter() {
+      // even though wemay use different types of neurons here, rust type does not matter
+      // in other words, we can inject here any type of neuron and execute it as a template
+      // neuron and it seems to work just fine (the functions invoked here are mutual for all neurons)
       let neuron_client = template_neuron_contract::Client::new(&env, &neuron);
 
       let raw_neuron_vote =
@@ -75,8 +77,8 @@ impl Layer {
 
   pub fn run_layer_aggregator(
     env: Env,
-    neuron_votes: Vec<DecimalNumber>,
-  ) -> Result<DecimalNumber, VotingSystemError> {
+    neuron_votes: Vec<(u32, u32)>,
+  ) -> Result<(u32, u32), VotingSystemError> {
     let aggregator: LayerAggregator = Layer::get_layer_aggregator(env.clone());
     match aggregator {
       LayerAggregator::UNKNOWN => {

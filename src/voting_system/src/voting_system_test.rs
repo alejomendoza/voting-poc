@@ -6,35 +6,30 @@ use crate::{neural_governance_contract, VotingSystem, VotingSystemClient};
 use self::layer_contract::LayerAggregator;
 
 mod external_data_provider_contract {
-  use crate::{DecimalNumber, UserUUID};
   soroban_sdk::contractimport!(
     file = "../../target/wasm32-unknown-unknown/release/voting_external_data_provider.wasm"
   );
 }
 
 mod template_neuron_contract {
-  use crate::{DecimalNumber, ProjectUUID, UserUUID};
   soroban_sdk::contractimport!(
     file = "../../target/wasm32-unknown-unknown/release/voting_template_neuron.wasm"
   );
 }
 
 mod assigned_reputation_neuron_contract {
-  use crate::{DecimalNumber, ProjectUUID, UserUUID};
   soroban_sdk::contractimport!(
     file = "../../target/wasm32-unknown-unknown/release/voting_assigned_reputation_neuron.wasm"
   );
 }
 
 mod prior_voting_history_neuron_contract {
-  use crate::{DecimalNumber, ProjectUUID, UserUUID};
   soroban_sdk::contractimport!(
     file = "../../target/wasm32-unknown-unknown/release/voting_prior_voting_history_neuron.wasm"
   );
 }
 
 mod layer_contract {
-  use crate::{DecimalNumber, ProjectUUID, UserUUID};
   soroban_sdk::contractimport!(
     file = "../../target/wasm32-unknown-unknown/release/voting_layer.wasm"
   );

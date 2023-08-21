@@ -1,21 +1,17 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
-use voting_shared::types::{DecimalNumber, VotingSystemError};
+use voting_shared::types::VotingSystemError;
 
-use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, Symbol, Vec};
-
-use voting_shared::types::{ProjectUUID, UserUUID};
+use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, Symbol, Vec, String};
 
 mod template_neuron_contract {
-  use crate::{DecimalNumber, ProjectUUID, UserUUID};
   soroban_sdk::contractimport!(
     file = "../../target/wasm32-unknown-unknown/release/voting_template_neuron.wasm"
   );
 }
 
 mod layer_contract {
-  use crate::{DecimalNumber, ProjectUUID, UserUUID};
   soroban_sdk::contractimport!(
     file = "../../target/wasm32-unknown-unknown/release/voting_layer.wasm"
   );
@@ -31,10 +27,10 @@ pub struct NeuralGovernance;
 impl NeuralGovernance {
   pub fn execute_neural_governance(
     env: Env,
-    voter_id: UserUUID,
-    project_id: ProjectUUID,
-  ) -> Result<DecimalNumber, VotingSystemError> {
-    let mut current_layer_result: Option<DecimalNumber> = None;
+    voter_id: String,
+    project_id: String,
+  ) -> Result<(u32, u32), VotingSystemError> {
+    let mut current_layer_result: Option<(u32, u32)> = None;
 
     let layers: Vec<Address> = NeuralGovernance::get_layers(env.clone());
     if layers.is_empty() {
@@ -42,7 +38,7 @@ impl NeuralGovernance {
     }
     for layer in layers {
       let layer_client = layer_contract::Client::new(&env, &layer);
-      let layer_result: Vec<DecimalNumber> =
+      let layer_result: Vec<(u32, u32)> =
         layer_client.execute_layer(&voter_id, &project_id, &current_layer_result);
       current_layer_result = Some(layer_client.run_layer_aggregator(&layer_result));
     }

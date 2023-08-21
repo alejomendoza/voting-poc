@@ -1,14 +1,13 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
-use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol};
+use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Symbol, String};
 use voting_shared::{
   decimal_number_wrapper::DecimalNumberWrapper,
-  types::{DecimalNumber, Neuron, ProjectUUID, UserUUID, VotingSystemError, DEFAULT_WEIGHT},
+  types::{Neuron, VotingSystemError, DEFAULT_WEIGHT},
 };
 
 mod external_data_provider_contract {
-  use crate::{DecimalNumber, UserUUID};
   soroban_sdk::contractimport!(
     file = "../../target/wasm32-unknown-unknown/release/voting_external_data_provider.wasm"
   );
@@ -42,10 +41,10 @@ impl AssignedReputationNeuron {
 impl Neuron for AssignedReputationNeuron {
   fn oracle_function(
     env: Env,
-    voter_id: UserUUID,
-    _project_id: ProjectUUID,
-    maybe_previous_layer_vote: Option<DecimalNumber>,
-  ) -> Result<DecimalNumber, VotingSystemError> {
+    voter_id: String,
+    _project_id: String,
+    maybe_previous_layer_vote: Option<(u32, u32)>,
+  ) -> Result<(u32, u32), VotingSystemError> {
     let external_data_provider_id =
       AssignedReputationNeuron::get_external_data_provider(env.clone());
     if external_data_provider_id.is_none() {
@@ -66,8 +65,8 @@ impl Neuron for AssignedReputationNeuron {
     Ok(res)
   }
 
-  fn weight_function(env: Env, raw_neuron_vote: DecimalNumber) -> DecimalNumber {
-    let weight: DecimalNumber = env
+  fn weight_function(env: Env, raw_neuron_vote: (u32, u32)) -> (u32, u32) {
+    let weight: (u32, u32) = env
       .storage()
       .instance()
       .get(&WEIGHT)
@@ -80,7 +79,7 @@ impl Neuron for AssignedReputationNeuron {
     .as_tuple()
   }
 
-  fn set_weight(env: Env, new_weight: DecimalNumber) {
+  fn set_weight(env: Env, new_weight: (u32, u32)) {
     env
       .storage()
       .instance()

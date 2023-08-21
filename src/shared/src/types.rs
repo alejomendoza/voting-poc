@@ -18,9 +18,9 @@ pub enum LayerAggregator {
 #[contracttype]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Vote {
-  YES = 2,
-  NO = 1,
-  ABSTAIN = 0,
+  ABSTAIN,
+  NO,
+  YES,
 }
 
 #[contracttype]
