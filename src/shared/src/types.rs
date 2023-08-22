@@ -1,4 +1,4 @@
-use soroban_sdk::{contracterror, contracttype, Env, String};
+use soroban_sdk::{contracterror, contracttype, Env, String, Vec, Address};
 
 pub type DecimalNumber = (u32, u32);
 
@@ -8,19 +8,11 @@ pub type ProjectUUID = String;
 pub static DEFAULT_WEIGHT: DecimalNumber = (1, 0);
 
 #[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum LayerAggregator {
-  UNKNOWN,
-  SUM,
-  PRODUCT,
-}
-
-#[contracttype]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Vote {
-  ABSTAIN,
-  NO,
-  YES,
+  Yes,
+  No,
+  Abstain,
 }
 
 #[contracttype]
@@ -40,12 +32,6 @@ pub fn get_reputation_category_bonus(reputation_category: ReputationCategory) ->
     ReputationCategory::Uncategorized | ReputationCategory::Poor => 0,
     other => other as u32,
   }
-}
-
-pub enum RoundAction {
-  VOTE,
-  DELEGATE,
-  ABSTAIN,
 }
 
 #[contracterror]

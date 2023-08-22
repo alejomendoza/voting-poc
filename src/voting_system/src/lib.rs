@@ -1,12 +1,16 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
-use voting_shared::{
-  decimal_number_wrapper::DecimalNumberWrapper,
-  types::{Vote, VotingSystemError},
-};
+mod decimal_number_wrapper;
+mod layer;
+mod neural_governance;
 
-use soroban_sdk::{contract, contractimpl, symbol_short, vec, Address, Env, Map, Symbol, Vec, String};
+use crate::decimal_number_wrapper::DecimalNumberWrapper;
+
+use layer::Layer;
+use neural_governance::NeuralGovernance;
+use soroban_sdk::{contract, contractimpl, contracttype, vec, Address, Env, Map, String, Vec};
+use voting_shared::types::{Vote, VotingSystemError};
 
 mod neural_governance_contract {
   soroban_sdk::contractimport!(
@@ -14,33 +18,26 @@ mod neural_governance_contract {
   );
 }
 
-// Address of neural governance contract
-const NUERAL_GOVERNANCE: Symbol = symbol_short!("NEURALGOV");
-// Map<ProjectUUID, Map<UserUUID, Vote>>
-const VOTES: Symbol = symbol_short!("VOTES");
-// Vec<ProjectUUID>
-const PROJECTS: Symbol = symbol_short!("PROJECTS");
-
-// This contract will be responsible for storing the voting data as well as exposing any needed interface to the users
+#[derive(Clone)]
+#[contracttype]
+pub enum DataKey {
+  Votes,
+  Projects,
+  NeuralGovernance,
+}
 
 #[contract]
 pub struct VotingSystem;
 
 #[contractimpl]
 impl VotingSystem {
-  pub fn get_neural_governance(env: Env) -> Result<Address, VotingSystemError> {
-    env
-      .storage()
-      .instance()
-      .get(&NUERAL_GOVERNANCE)
-      .ok_or(VotingSystemError::NeuralGovernanceNotSet)
+  pub fn initialize(env: Env) {
+    let ng = NeuralGovernance { layers: Vec::new(&env) };
+    env.storage().instance().set(&DataKey::NeuralGovernance, &ng);
   }
 
-  pub fn set_neural_governance(env: Env, neural_governance_address: Address) {
-    env
-      .storage()
-      .instance()
-      .set(&NUERAL_GOVERNANCE, &neural_governance_address);
+  pub fn get_neural_governance(env: Env) -> Result<NeuralGovernance, VotingSystemError> {
+    env.storage().instance().get(&DataKey::NeuralGovernance).ok_or(VotingSystemError::NeuralGovernanceNotSet)
   }
 
   pub fn vote(
@@ -62,7 +59,7 @@ impl VotingSystem {
     project_votes.set(voter_id, vote);
     votes.set(project_id, project_votes);
 
-    env.storage().instance().set(&VOTES, &votes);
+    env.storage().instance().set(&DataKey::Votes, &votes);
 
     Ok(())
   }
@@ -71,7 +68,7 @@ impl VotingSystem {
     env
       .storage()
       .instance()
-      .get(&VOTES)
+      .get(&DataKey::Votes)
       .unwrap_or(Map::new(&env))
   }
 
@@ -79,7 +76,7 @@ impl VotingSystem {
     env
       .storage()
       .instance()
-      .get(&PROJECTS)
+      .get(&DataKey::Projects)
       .unwrap_or(vec![&env])
   }
 
@@ -89,16 +86,17 @@ impl VotingSystem {
       return Err(VotingSystemError::ProjectAlreadyAdded);
     }
     projects.push_back(project_id);
-    env.storage().instance().set(&PROJECTS, &projects);
+    env.storage().instance().set(&DataKey::Projects, &projects);
 
     Ok(())
   }
 
-  pub fn tally(env: Env) -> Result<Map<String, (u32, u32)>, VotingSystemError> {
-    let neural_governance_address = VotingSystem::get_neural_governance(env.clone())?;
-    let neural_governance_client =
-      neural_governance_contract::Client::new(&env, &neural_governance_address);
+  pub fn get_layers(env: Env) -> Result<Vec<Layer>, VotingSystemError> {
+    let ng = VotingSystem::get_neural_governance(env.clone())?;
+    Ok(ng.layers)
+  }
 
+  pub fn tally(env: Env) -> Result<Map<String, (u32, u32)>, VotingSystemError> {
     let votes = VotingSystem::get_votes(env.clone());
     let mut result: Map<String, (u32, u32)> = Map::new(&env);
     // String, Map<String, (Vote, (u32, u32))>
@@ -108,17 +106,17 @@ impl VotingSystem {
       // String, (Vote, (u32, u32))
       for (voter_id, vote) in votes {
         let voting_power = match vote {
-          Vote::ABSTAIN => (0, 0),
-          _ => neural_governance_client.execute_neural_governance(&voter_id, &project_id),
+          Vote::Abstain => (0, 0),
+          _ => VotingSystem::get_neural_governance(env.clone())?.execute_neural_governance(env.clone(), voter_id, project_id.clone())?,
         };
         match vote {
-          Vote::YES => {
+          Vote::Yes => {
             project_voting_power_plus = DecimalNumberWrapper::add(
               project_voting_power_plus,
               DecimalNumberWrapper::from(voting_power),
             )
           }
-          Vote::NO => {
+          Vote::No => {
             project_voting_power_minus = DecimalNumberWrapper::add(
               project_voting_power_minus,
               DecimalNumberWrapper::from(voting_power),
