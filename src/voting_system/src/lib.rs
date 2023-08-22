@@ -4,6 +4,7 @@
 mod decimal_number_wrapper;
 mod layer;
 mod neural_governance;
+mod neurons;
 
 use crate::decimal_number_wrapper::DecimalNumberWrapper;
 
@@ -89,11 +90,6 @@ impl VotingSystem {
     env.storage().instance().set(&DataKey::Projects, &projects);
 
     Ok(())
-  }
-
-  pub fn get_layers(env: Env) -> Result<Vec<Layer>, VotingSystemError> {
-    let ng = VotingSystem::get_neural_governance(env.clone())?;
-    Ok(ng.layers)
   }
 
   pub fn tally(env: Env) -> Result<Map<String, (u32, u32)>, VotingSystemError> {

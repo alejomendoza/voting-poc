@@ -63,3 +63,5 @@ pub trait Neuron {
   fn weight_function(env: Env, raw_neuron_vote: DecimalNumber) -> DecimalNumber;
   fn set_weight(env: Env, new_weight: DecimalNumber);
 }
+
+
