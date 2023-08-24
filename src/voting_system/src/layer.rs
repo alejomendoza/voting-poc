@@ -28,6 +28,7 @@ pub enum NeuronType {
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Layer {
+  pub id: u32,
   // neuron type, neuron raw weight
   pub neurons: Map<NeuronType, u32>,
   pub aggregator: LayerAggregator,

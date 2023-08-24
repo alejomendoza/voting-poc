@@ -51,6 +51,7 @@ pub enum VotingSystemError {
   ResultExpected = 11,
   NeuralGovernanceNotSet = 12,
   RoundNotFoundInRoundBonusMap = 13,
+  NoSuchLayer = 14,
 }
 
 pub trait Neuron {
