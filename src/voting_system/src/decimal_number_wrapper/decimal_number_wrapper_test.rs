@@ -10,7 +10,6 @@ pub fn test_from_to() {
   let dnw: DecimalNumberWrapper = (12, 74).into();
   assert!(dnw.as_tuple() == (12, 74));
   assert!(dnw.as_raw() == 12074);
-
 }
 
 #[test]

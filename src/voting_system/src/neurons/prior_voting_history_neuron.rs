@@ -1,5 +1,5 @@
-use soroban_sdk::{Env, String};
 use crate::types::VotingSystemError;
+use soroban_sdk::{Env, String};
 
 pub fn oracle_function(
   _env: Env,

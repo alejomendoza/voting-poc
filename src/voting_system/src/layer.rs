@@ -1,5 +1,5 @@
-use soroban_sdk::{contracttype, Env, Map, String, Vec};
 use crate::types::{DecimalNumber, VotingSystemError};
+use soroban_sdk::{contracttype, Env, Map, String, Vec};
 
 use crate::{
   decimal_number_wrapper::DecimalNumberWrapper,

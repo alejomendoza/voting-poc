@@ -1,5 +1,5 @@
-use soroban_sdk::{Env, String};
 use crate::types::Vote;
+use soroban_sdk::{Env, String};
 
 use crate::{
   layer::{LayerAggregator, NeuronType},

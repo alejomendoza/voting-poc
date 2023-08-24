@@ -2,9 +2,7 @@
 
 use crate::types::{DecimalNumber, VotingSystemError, DEFAULT_WEIGHT};
 
-use soroban_sdk::{
-  contracttype, Env, Map, String, Vec,
-};
+use soroban_sdk::{contracttype, Env, Map, String, Vec};
 
 use crate::{
   decimal_number_wrapper::DecimalNumberWrapper,
@@ -36,11 +34,7 @@ impl NeuralGovernance {
     result
   }
 
-  pub fn add_neuron(
-    &mut self,
-    layer_id: u32,
-    neuron: NeuronType,
-  ) -> Result<(), VotingSystemError> {
+  pub fn add_neuron(&mut self, layer_id: u32, neuron: NeuronType) -> Result<(), VotingSystemError> {
     // todo try to fix modifying layer
     let mut i = 0;
     let mut index = None;
@@ -53,13 +47,12 @@ impl NeuralGovernance {
     }
     let index = index.ok_or(VotingSystemError::NoSuchLayer)?;
     let mut new_layer = self.layers.get(index).unwrap().clone();
-    new_layer.neurons.set(
-      neuron,
-      DecimalNumberWrapper::from(DEFAULT_WEIGHT).as_raw(),
-    );
+    new_layer
+      .neurons
+      .set(neuron, DecimalNumberWrapper::from(DEFAULT_WEIGHT).as_raw());
     self.layers.remove(index);
     self.layers.insert(index, new_layer.clone());
-    
+
     Ok(())
   }
 
@@ -104,7 +97,9 @@ impl NeuralGovernance {
     }
     let index = index.ok_or(VotingSystemError::NoSuchLayer)?;
     let mut new_layer = self.layers.get(index).unwrap().clone();
-    new_layer.neurons.set(neuron, DecimalNumberWrapper::from(weight).as_raw());
+    new_layer
+      .neurons
+      .set(neuron, DecimalNumberWrapper::from(weight).as_raw());
     self.layers.remove(index);
     self.layers.insert(index, new_layer.clone());
     Ok(())

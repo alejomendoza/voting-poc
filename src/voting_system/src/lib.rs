@@ -1,18 +1,18 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
-mod types;
 mod decimal_number_wrapper;
 mod layer;
 mod neural_governance;
 mod neurons;
+mod types;
 
 use crate::decimal_number_wrapper::DecimalNumberWrapper;
 
+use crate::types::{Vote, VotingSystemError};
 use layer::{LayerAggregator, NeuronType};
 use neural_governance::NeuralGovernance;
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Env, Map, String, Vec};
-use crate::types::{Vote, VotingSystemError};
 
 mod neural_governance_contract {
   soroban_sdk::contractimport!(
@@ -34,16 +34,29 @@ pub struct VotingSystem;
 #[contractimpl]
 impl VotingSystem {
   pub fn initialize(env: Env) {
-    let ng = NeuralGovernance { layers: Vec::new(&env), current_layer_id: 0 };
-    env.storage().instance().set(&DataKey::NeuralGovernance, &ng);
+    let ng = NeuralGovernance {
+      layers: Vec::new(&env),
+      current_layer_id: 0,
+    };
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::NeuralGovernance, &ng);
   }
 
   pub fn get_neural_governance(env: Env) -> Result<NeuralGovernance, VotingSystemError> {
-    env.storage().instance().get(&DataKey::NeuralGovernance).ok_or(VotingSystemError::NeuralGovernanceNotSet)
+    env
+      .storage()
+      .instance()
+      .get(&DataKey::NeuralGovernance)
+      .ok_or(VotingSystemError::NeuralGovernanceNotSet)
   }
 
   pub fn set_neural_governance(env: Env, neural_governance: NeuralGovernance) {
-    env.storage().instance().set(&DataKey::NeuralGovernance, &neural_governance);
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::NeuralGovernance, &neural_governance);
   }
 
   pub fn vote(
@@ -109,7 +122,11 @@ impl VotingSystem {
       for (voter_id, vote) in votes {
         let voting_power = match vote {
           Vote::Abstain => (0, 0),
-          _ => VotingSystem::get_neural_governance(env.clone())?.execute_neural_governance(env.clone(), voter_id, project_id.clone())?,
+          _ => VotingSystem::get_neural_governance(env.clone())?.execute_neural_governance(
+            env.clone(),
+            voter_id,
+            project_id.clone(),
+          )?,
         };
         match vote {
           Vote::Yes => {
@@ -144,7 +161,11 @@ impl VotingSystem {
     Ok(new_layer_id)
   }
 
-  pub fn set_layer_aggregator(env: Env, layer_id: u32, aggregator: LayerAggregator) -> Result<(), VotingSystemError> {
+  pub fn set_layer_aggregator(
+    env: Env,
+    layer_id: u32,
+    aggregator: LayerAggregator,
+  ) -> Result<(), VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone())?;
     neural_governance.set_layer_aggregator(layer_id, aggregator)?;
     VotingSystem::set_neural_governance(env, neural_governance);
@@ -158,7 +179,12 @@ impl VotingSystem {
     Ok(())
   }
 
-  pub fn set_neuron_weight(env: Env, layer_id: u32, neuron: NeuronType, weight: (u32, u32)) -> Result<(), VotingSystemError> {
+  pub fn set_neuron_weight(
+    env: Env,
+    layer_id: u32,
+    neuron: NeuronType,
+    weight: (u32, u32),
+  ) -> Result<(), VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone())?;
     neural_governance.set_neuron_weight(layer_id, neuron, weight)?;
     VotingSystem::set_neural_governance(env, neural_governance);
