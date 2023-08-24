@@ -8,7 +8,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = { git = "https://github.com/karol-bisztyga/rs-soroban-sdk.git", branch = "kb/fork" }
-voting-shared = { path = "../shared" }
 
 [dev_dependencies]
 soroban-sdk = { git = "https://github.com/karol-bisztyga/rs-soroban-sdk.git", branch = "kb/fork", features = ["testutils"] }

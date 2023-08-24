@@ -1,6 +1,7 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
+mod types;
 mod decimal_number_wrapper;
 mod layer;
 mod neural_governance;
@@ -11,7 +12,7 @@ use crate::decimal_number_wrapper::DecimalNumberWrapper;
 use layer::{LayerAggregator, NeuronType};
 use neural_governance::NeuralGovernance;
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Env, Map, String, Vec};
-use voting_shared::types::{Vote, VotingSystemError};
+use crate::types::{Vote, VotingSystemError};
 
 mod neural_governance_contract {
   soroban_sdk::contractimport!(

@@ -4,7 +4,17 @@
 // This contract's going to be responsible for fetching the data from any external resources
 
 use soroban_sdk::{contract, contractimpl, symbol_short, vec, Env, Map, String, Symbol, Vec};
-use voting_shared::types::ReputationCategory;
+
+#[contracttype]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+enum ReputationCategory {
+  Excellent = 5,
+  VeryGood = 4,
+  Good = 3,
+  Average = 2,
+  Poor = 1,
+  Uncategorized = 0,
+}
 
 // Map<UserUUID, ReputationCategory> - users to their categories
 const REPUTATION: Symbol = symbol_short!("RPUTATION");
