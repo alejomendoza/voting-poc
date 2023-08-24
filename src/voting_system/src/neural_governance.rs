@@ -3,7 +3,7 @@
 use voting_shared::types::{DecimalNumber, VotingSystemError, DEFAULT_WEIGHT};
 
 use soroban_sdk::{
-  contract, contractimpl, contracttype, symbol_short, vec, Address, Env, Map, String, Symbol, Vec,
+  contracttype, Env, Map, String, Vec,
 };
 
 use crate::{
@@ -128,7 +128,7 @@ impl NeuralGovernance {
         project_id.clone(),
         current_layer_result,
       )?;
-      current_layer_result = Some(layer.run_layer_aggregator(env.clone(), layer_result)?);
+      current_layer_result = Some(layer.run_layer_aggregator(layer_result)?);
     }
     current_layer_result.ok_or(VotingSystemError::ResultExpected)
   }

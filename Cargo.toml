@@ -1,10 +1,6 @@
 [workspace]
 resolver = "2"
 members = [
-    "./src/shared",
-    "./src/template_neuron",
-    "./src/assigned_reputation_neuron",
-    "./src/prior_voting_history_neuron",
     "./src/voting_system",
 ]
 

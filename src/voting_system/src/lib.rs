@@ -8,9 +8,9 @@ mod neurons;
 
 use crate::decimal_number_wrapper::DecimalNumberWrapper;
 
-use layer::{Layer, LayerAggregator, NeuronType};
+use layer::{LayerAggregator, NeuronType};
 use neural_governance::NeuralGovernance;
-use soroban_sdk::{contract, contractimpl, contracttype, vec, Address, Env, Map, String, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, vec, Env, Map, String, Vec};
 use voting_shared::types::{Vote, VotingSystemError};
 
 mod neural_governance_contract {

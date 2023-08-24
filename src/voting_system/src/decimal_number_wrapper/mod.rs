@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 static DECIMAL_POINTS: u32 = 3;
 static DECIMAL_MODIFIER: u32 = (10 as u32).pow(DECIMAL_POINTS);
 

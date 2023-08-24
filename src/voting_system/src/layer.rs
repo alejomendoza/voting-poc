@@ -1,7 +1,10 @@
-use soroban_sdk::{contracttype, vec, Address, Env, Map, String, TryFromVal, Vec};
+use soroban_sdk::{contracttype, Env, Map, String, Vec};
 use voting_shared::types::{DecimalNumber, VotingSystemError};
 
-use crate::{decimal_number_wrapper::DecimalNumberWrapper, neurons::dummy_neuron};
+use crate::{
+  decimal_number_wrapper::DecimalNumberWrapper,
+  neurons::{assigned_reputation_neuron, dummy_neuron, prior_voting_history_neuron},
+};
 
 mod template_neuron_contract {
   soroban_sdk::contractimport!(
@@ -51,14 +54,6 @@ impl Layer {
       return Err(VotingSystemError::NoNeuronsExist);
     }
     for (neuron, raw_weight) in self.neurons.iter() {
-      // even though wemay use different types of neurons here, rust type does not matter
-      // in other words, we can inject here any type of neuron and execute it as a template
-      // neuron and it seems to work just fine (the functions invoked here are mutual for all neurons)
-      // let neuron_client = template_neuron_contract::Client::new(&env, &neuron);
-
-      // let raw_neuron_vote =
-      //   neuron_client.oracle_function(&voter_id, &project_id, &previous_layer_vote);
-      // let neuron_vote = neuron_client.weight_function(&raw_neuron_vote);
       let raw_neuron_vote: DecimalNumber = match neuron {
         NeuronType::Dummy => dummy_neuron::oracle_function(
           env.clone(),
@@ -66,11 +61,20 @@ impl Layer {
           project_id.clone(),
           previous_layer_vote,
         )?,
-        NeuronType::AssignedReputation => unimplemented!(),
-        NeuronType::PriorVotingHistory => unimplemented!(),
+        NeuronType::AssignedReputation => assigned_reputation_neuron::oracle_function(
+          env.clone(),
+          voter_id.clone(),
+          project_id.clone(),
+          previous_layer_vote,
+        )?,
+        NeuronType::PriorVotingHistory => prior_voting_history_neuron::oracle_function(
+          env.clone(),
+          voter_id.clone(),
+          project_id.clone(),
+          previous_layer_vote,
+        )?,
       };
       let neuron_vote = self.run_neuron_weight_function(
-        env.clone(),
         raw_neuron_vote,
         DecimalNumberWrapper::from(raw_weight).as_tuple(),
       );
@@ -81,7 +85,6 @@ impl Layer {
 
   fn run_neuron_weight_function(
     &self,
-    env: Env,
     raw_neuron_vote: (u32, u32),
     weight: DecimalNumber,
   ) -> (u32, u32) {
@@ -94,7 +97,6 @@ impl Layer {
 
   pub fn run_layer_aggregator(
     &self,
-    env: Env,
     neuron_votes: Vec<(u32, u32)>,
   ) -> Result<(u32, u32), VotingSystemError> {
     match self.aggregator {
