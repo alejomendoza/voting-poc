@@ -66,7 +66,7 @@ pub fn test_simple() {
 }
 
 #[test]
-pub fn test_different_neurons() {
+pub fn test_assigned_reputation_neuron() {
   let env = Env::default();
 
   let voting_system_id = env.register_contract(None, VotingSystem);
@@ -79,7 +79,6 @@ pub fn test_different_neurons() {
 
   voting_system_client.add_neuron(&0, &NeuronType::Dummy);
   voting_system_client.add_neuron(&0, &NeuronType::AssignedReputation);
-  // user001 has bonus 0.300
 
   let external_data_provider_id =
     env.register_contract_wasm(None, external_data_provider_contract::WASM);
@@ -114,5 +113,43 @@ pub fn test_different_neurons() {
       .get(project_id.clone())
       .unwrap()
       == (0, 200)
+  );
+}
+
+#[test]
+pub fn test_prior_voting_history_neuron() {
+  let env = Env::default();
+
+  let voting_system_id = env.register_contract(None, VotingSystem);
+  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+
+  voting_system_client.initialize();
+  assert!(voting_system_client.add_layer() == 0);
+
+  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
+
+  voting_system_client.add_neuron(&0, &NeuronType::PriorVotingHistory);
+
+  let external_data_provider_id =
+    env.register_contract_wasm(None, external_data_provider_contract::WASM);
+  let external_data_provider_client =
+    external_data_provider_contract::Client::new(&env, &external_data_provider_id);
+  external_data_provider_client.mock_sample_data();
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
+
+  let voter_id_1 = String::from_slice(&env, "user001"); // active rounds: [2, 3], bonusses: [0, 100], [0, 200]
+  let voter_id_2 = String::from_slice(&env, "user003"); // active rounds: [2, 3, 4], bonusses: [0, 100], [0, 200], [0, 300]
+  let project_id = String::from_slice(&env, "project001");
+
+  voting_system_client.add_project(&project_id);
+  voting_system_client.vote(&voter_id_1, &project_id, &Vote::No);
+  voting_system_client.vote(&voter_id_2, &project_id, &Vote::Yes);
+
+  assert!(
+    voting_system_client
+      .tally()
+      .get(project_id.clone())
+      .unwrap()
+      == (0, 300)
   );
 }
