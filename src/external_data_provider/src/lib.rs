@@ -3,11 +3,11 @@
 
 // This contract's going to be responsible for fetching the data from any external resources
 
-use soroban_sdk::{contract, contractimpl, symbol_short, vec, Env, Map, String, Symbol, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, vec, Env, Map, String, Vec};
 
 #[contracttype]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-enum ReputationCategory {
+pub enum ReputationCategory {
   Excellent = 5,
   VeryGood = 4,
   Good = 3,
@@ -16,12 +16,16 @@ enum ReputationCategory {
   Uncategorized = 0,
 }
 
-// Map<UserUUID, ReputationCategory> - users to their categories
-const REPUTATION: Symbol = symbol_short!("RPUTATION");
-// Map<UserUUID, Vec<u32>> - users to the vector of rounds they participated in
-const PRIOR_VOTING_HISTORY: Symbol = symbol_short!("PRVTHSTR");
-// Map<u32, DecimalNumber> - (connected to PRIOR_VOTING_HISTORY) rounds to their bonus (for participation)
-const ROUND_BONUS_MAP: Symbol = symbol_short!("RDBNSMAP");
+#[derive(Clone)]
+#[contracttype]
+pub enum DataKey {
+  // Map<UserUUID, ReputationCategory> - users to their categories
+  Reputation,
+  // Map<UserUUID, Vec<u32>> - users to the vector of rounds they participated in
+  PriorVotingHistory,
+  // Map<u32, DecimalNumber> - (connected to PRIOR_VOTING_HISTORY) rounds to their bonus (for participation)
+  RoundBonusMap,
+}
 
 #[contract]
 pub struct ExternalDataProvider;
@@ -52,7 +56,10 @@ impl ExternalDataProvider {
       String::from_slice(&env, "user005"),
       ReputationCategory::Poor,
     );
-    env.storage().instance().set(&REPUTATION, &reputation_map);
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::Reputation, &reputation_map);
 
     let mut voting_history_set: Map<String, Vec<u32>> = Map::new(&env);
     voting_history_set.set(String::from_slice(&env, "user001"), vec![&env, 2, 3]);
@@ -60,7 +67,7 @@ impl ExternalDataProvider {
     env
       .storage()
       .instance()
-      .set(&PRIOR_VOTING_HISTORY, &voting_history_set);
+      .set(&DataKey::PriorVotingHistory, &voting_history_set);
 
     let mut round_bonus_map: Map<u32, (u32, u32)> = Map::new(&env);
     round_bonus_map.set(1, (0, 0));
@@ -70,14 +77,17 @@ impl ExternalDataProvider {
     env
       .storage()
       .instance()
-      .set(&ROUND_BONUS_MAP, &round_bonus_map);
+      .set(&DataKey::RoundBonusMap, &round_bonus_map);
   }
 
   // for assigned reputation neuron
   pub fn get_user_reputation_category(env: Env, user_id: String) -> ReputationCategory {
     let map: Map<String, ReputationCategory> = Map::new(&env);
-    let reputation_map: Map<String, ReputationCategory> =
-      env.storage().instance().get(&REPUTATION).unwrap_or(map);
+    let reputation_map: Map<String, ReputationCategory> = env
+      .storage()
+      .instance()
+      .get(&DataKey::Reputation)
+      .unwrap_or(map);
     reputation_map
       .get(user_id)
       .unwrap_or(ReputationCategory::Uncategorized)
@@ -98,7 +108,7 @@ impl ExternalDataProvider {
     let voting_history_set: Map<String, Vec<u32>> = env
       .storage()
       .instance()
-      .get(&PRIOR_VOTING_HISTORY)
+      .get(&DataKey::PriorVotingHistory)
       .unwrap_or(map);
     voting_history_set.get(user_id).unwrap_or(vec![&env])
   }
@@ -108,7 +118,7 @@ impl ExternalDataProvider {
     let round_bonus_map: Map<u32, (u32, u32)> = env
       .storage()
       .instance()
-      .get(&ROUND_BONUS_MAP)
+      .get(&DataKey::RoundBonusMap)
       .unwrap_or(map);
     round_bonus_map
   }

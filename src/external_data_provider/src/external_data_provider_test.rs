@@ -1,7 +1,6 @@
 use soroban_sdk::{Env, String};
-use voting_shared::types::ReputationCategory;
 
-use crate::{ExternalDataProvider, ExternalDataProviderClient};
+use crate::{ExternalDataProvider, ExternalDataProviderClient, ReputationCategory};
 
 #[test]
 pub fn test() {

@@ -12,11 +12,11 @@ use crate::decimal_number_wrapper::DecimalNumberWrapper;
 use crate::types::{Vote, VotingSystemError};
 use layer::{LayerAggregator, NeuronType};
 use neural_governance::NeuralGovernance;
-use soroban_sdk::{contract, contractimpl, contracttype, vec, Env, Map, String, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, vec, Address, Env, Map, String, Vec};
 
-mod neural_governance_contract {
+mod external_data_provider_contract {
   soroban_sdk::contractimport!(
-    file = "../../target/wasm32-unknown-unknown/release/voting_neural_governance.wasm"
+    file = "../../target/wasm32-unknown-unknown/release/voting_external_data_provider.wasm"
   );
 }
 
@@ -26,6 +26,7 @@ pub enum DataKey {
   Votes,
   Projects,
   NeuralGovernance,
+  ExternalDataProvider,
 }
 
 #[contract]
@@ -189,6 +190,21 @@ impl VotingSystem {
     neural_governance.set_neuron_weight(layer_id, neuron, weight)?;
     VotingSystem::set_neural_governance(env, neural_governance);
     Ok(())
+  }
+
+  pub fn set_external_data_provider(env: Env, external_data_provider_address: Address) {
+    env.storage().instance().set(
+      &DataKey::ExternalDataProvider,
+      &external_data_provider_address,
+    );
+  }
+
+  pub fn get_external_data_provider(env: Env) -> Result<Address, VotingSystemError> {
+    env
+      .storage()
+      .instance()
+      .get(&DataKey::ExternalDataProvider)
+      .ok_or(VotingSystemError::ExternalDataProviderNotSet)?
   }
 }
 

@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "./src/voting_system",
+    "./src/external_data_provider",
 ]
 
 [workspace.dependencies]
