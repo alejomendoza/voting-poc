@@ -1,4 +1,8 @@
-use crate::{external_data_provider_contract, types::Vote};
+use crate::{
+  decimal_number_wrapper::DecimalNumberWrapper,
+  external_data_provider_contract,
+  types::{Vote, DEFAULT_WEIGHT},
+};
 use soroban_sdk::{Env, String};
 
 use crate::{
@@ -25,13 +29,110 @@ mod prior_voting_history_neuron_contract {
 }
 
 #[test]
-pub fn test_simple() {
+pub fn test_setting_up_neural_governance() {
   let env = Env::default();
 
   let voting_system_id = env.register_contract(None, VotingSystem);
   let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
-
   voting_system_client.initialize();
+
+  assert!(voting_system_client.add_layer() == 0);
+  assert!(voting_system_client.add_layer() == 1);
+  assert!(voting_system_client.add_layer() == 2);
+
+  assert!(voting_system_client.get_neural_governance().layers.len() == 3);
+  voting_system_client.remove_layer(&1);
+  assert!(voting_system_client.get_neural_governance().layers.len() == 2);
+
+  assert!(
+    voting_system_client
+      .get_neural_governance()
+      .layers
+      .get(0)
+      .unwrap()
+      .aggregator
+      == LayerAggregator::Unknown
+  );
+  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
+  assert!(
+    voting_system_client
+      .get_neural_governance()
+      .layers
+      .get(0)
+      .unwrap()
+      .aggregator
+      == LayerAggregator::Sum
+  );
+
+  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
+  voting_system_client.add_neuron(&0, &NeuronType::AssignedReputation);
+  voting_system_client.add_neuron(&0, &NeuronType::PriorVotingHistory);
+  assert!(
+    voting_system_client
+      .get_neural_governance()
+      .layers
+      .get(0)
+      .unwrap()
+      .neurons
+      .len()
+      == 3
+  );
+  assert!(
+    voting_system_client
+      .get_neural_governance()
+      .layers
+      .get(1)
+      .unwrap()
+      .neurons
+      .len()
+      == 0
+  );
+
+  voting_system_client.remove_neuron(&0, &NeuronType::PriorVotingHistory);
+  assert!(
+    voting_system_client
+      .get_neural_governance()
+      .layers
+      .get(0)
+      .unwrap()
+      .neurons
+      .len()
+      == 2
+  );
+
+  voting_system_client.set_neuron_weight(&0, &NeuronType::AssignedReputation, &(4, 700));
+  assert!(
+    voting_system_client
+      .get_neural_governance()
+      .layers
+      .get(0)
+      .unwrap()
+      .neurons
+      .get(NeuronType::Dummy)
+      .unwrap()
+      == DecimalNumberWrapper::from(DEFAULT_WEIGHT).as_raw()
+  );
+  assert!(
+    voting_system_client
+      .get_neural_governance()
+      .layers
+      .get(0)
+      .unwrap()
+      .neurons
+      .get(NeuronType::AssignedReputation)
+      .unwrap()
+      == DecimalNumberWrapper::from((4, 700)).as_raw()
+  );
+}
+
+#[test]
+pub fn test_simple_voting() {
+  let env = Env::default();
+
+  let voting_system_id = env.register_contract(None, VotingSystem);
+  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+  voting_system_client.initialize();
+
   assert!(voting_system_client.add_layer() == 0);
   assert!(voting_system_client.add_layer() == 1);
 

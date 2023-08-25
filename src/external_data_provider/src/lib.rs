@@ -93,6 +93,13 @@ impl ExternalDataProvider {
       .unwrap_or(ReputationCategory::Uncategorized)
   }
 
+  pub fn set_user_reputation_categories(env: Env, reputation_map: Map<String, ReputationCategory>) {
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::Reputation, &reputation_map);
+  }
+
   pub fn get_reputation_score(reputation_category: ReputationCategory) -> (u32, u32) {
     match reputation_category {
       ReputationCategory::Uncategorized => (0, 0),
@@ -113,6 +120,13 @@ impl ExternalDataProvider {
     voting_history_set.get(user_id).unwrap_or(vec![&env])
   }
 
+  pub fn set_user_prior_voting_history(env: Env, voting_history_set: Map<String, Vec<u32>>) {
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::PriorVotingHistory, &voting_history_set);
+  }
+
   pub fn get_round_bonus_map(env: Env) -> Map<u32, (u32, u32)> {
     let map: Map<u32, (u32, u32)> = Map::new(&env);
     let round_bonus_map: Map<u32, (u32, u32)> = env
@@ -121,6 +135,13 @@ impl ExternalDataProvider {
       .get(&DataKey::RoundBonusMap)
       .unwrap_or(map);
     round_bonus_map
+  }
+
+  pub fn set_round_bonus_map(env: Env, round_bonus_map: Map<u32, (u32, u32)>) {
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::RoundBonusMap, &round_bonus_map);
   }
 }
 

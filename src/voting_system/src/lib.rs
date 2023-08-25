@@ -162,6 +162,13 @@ impl VotingSystem {
     Ok(new_layer_id)
   }
 
+  pub fn remove_layer(env: Env, layer_id: u32) -> Result<(), VotingSystemError> {
+    let mut neural_governance = VotingSystem::get_neural_governance(env.clone())?;
+    neural_governance.remove_layer(layer_id)?;
+    VotingSystem::set_neural_governance(env, neural_governance);
+    Ok(())
+  }
+
   pub fn set_layer_aggregator(
     env: Env,
     layer_id: u32,
@@ -176,6 +183,17 @@ impl VotingSystem {
   pub fn add_neuron(env: Env, layer_id: u32, neuron: NeuronType) -> Result<(), VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone())?;
     neural_governance.add_neuron(layer_id, neuron)?;
+    VotingSystem::set_neural_governance(env, neural_governance);
+    Ok(())
+  }
+
+  pub fn remove_neuron(
+    env: Env,
+    layer_id: u32,
+    neuron: NeuronType,
+  ) -> Result<(), VotingSystemError> {
+    let mut neural_governance = VotingSystem::get_neural_governance(env.clone()).unwrap();
+    neural_governance.remove_neuron(layer_id, neuron)?;
     VotingSystem::set_neural_governance(env, neural_governance);
     Ok(())
   }

@@ -34,8 +34,13 @@ impl NeuralGovernance {
     result
   }
 
-  pub fn add_neuron(&mut self, layer_id: u32, neuron: NeuronType) -> Result<(), VotingSystemError> {
-    // todo try to fix modifying layer
+  pub fn remove_layer(&mut self, layer_id: u32) -> Result<(), VotingSystemError> {
+    let index = self.get_layer_index(layer_id)?;
+    self.layers.remove(index);
+    Ok(())
+  }
+
+  fn get_layer_index(&self, layer_id: u32) -> Result<u32, VotingSystemError> {
     let mut i = 0;
     let mut index = None;
     for layer in self.layers.iter() {
@@ -45,11 +50,29 @@ impl NeuralGovernance {
       }
       i += 1;
     }
-    let index = index.ok_or(VotingSystemError::NoSuchLayer)?;
+    Ok(index.ok_or(VotingSystemError::NoSuchLayer)?)
+  }
+
+  pub fn add_neuron(&mut self, layer_id: u32, neuron: NeuronType) -> Result<(), VotingSystemError> {
+    let index = self.get_layer_index(layer_id)?;
     let mut new_layer = self.layers.get(index).unwrap().clone();
     new_layer
       .neurons
       .set(neuron, DecimalNumberWrapper::from(DEFAULT_WEIGHT).as_raw());
+    self.layers.remove(index);
+    self.layers.insert(index, new_layer.clone());
+
+    Ok(())
+  }
+
+  pub fn remove_neuron(
+    &mut self,
+    layer_id: u32,
+    neuron: NeuronType,
+  ) -> Result<(), VotingSystemError> {
+    let index = self.get_layer_index(layer_id)?;
+    let mut new_layer = self.layers.get(index).unwrap().clone();
+    new_layer.neurons.remove(neuron);
     self.layers.remove(index);
     self.layers.insert(index, new_layer.clone());
 
@@ -61,17 +84,7 @@ impl NeuralGovernance {
     layer_id: u32,
     aggregator: LayerAggregator,
   ) -> Result<(), VotingSystemError> {
-    // todo try to fix modifying layer
-    let mut i = 0;
-    let mut index = None;
-    for layer in self.layers.iter() {
-      if layer.id == layer_id {
-        index = Some(i);
-        break;
-      }
-      i += 1;
-    }
-    let index = index.ok_or(VotingSystemError::NoSuchLayer)?;
+    let index = self.get_layer_index(layer_id)?;
     let mut new_layer = self.layers.get(index).unwrap().clone();
     new_layer.aggregator = aggregator;
     self.layers.remove(index);
@@ -85,17 +98,7 @@ impl NeuralGovernance {
     neuron: NeuronType,
     weight: DecimalNumber,
   ) -> Result<(), VotingSystemError> {
-    // todo try to fix modifying layer
-    let mut i = 0;
-    let mut index = None;
-    for layer in self.layers.iter() {
-      if layer.id == layer_id {
-        index = Some(i);
-        break;
-      }
-      i += 1;
-    }
-    let index = index.ok_or(VotingSystemError::NoSuchLayer)?;
+    let index = self.get_layer_index(layer_id)?;
     let mut new_layer = self.layers.get(index).unwrap().clone();
     new_layer
       .neurons
