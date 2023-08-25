@@ -1,9 +1,14 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
+mod types;
+
 // This contract's going to be responsible for fetching the data from any external resources
 
-use soroban_sdk::{contract, contractimpl, contracttype, vec, Env, Map, String, Vec};
+use soroban_sdk::{
+  contract, contracterror, contractimpl, contracttype, vec, Env, Map, String, Vec,
+};
+use types::{ExternalDataProviderError, MAX_DELEGATEES, MIN_DELEGATEES};
 
 #[contracttype]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -25,6 +30,8 @@ pub enum DataKey {
   PriorVotingHistory,
   // Map<u32, DecimalNumber> - (connected to PRIOR_VOTING_HISTORY) rounds to their bonus (for participation)
   RoundBonusMap,
+  // Map<UserUUID, Vec<UserUUID>> - users to the vector of users they delegated their votes to
+  Delegatees,
 }
 
 #[contract]
@@ -35,6 +42,7 @@ impl ExternalDataProvider {}
 #[contractimpl]
 impl ExternalDataProvider {
   pub fn mock_sample_data(env: Env) {
+    // for assigned reputation neuron
     let mut reputation_map: Map<String, ReputationCategory> = Map::new(&env);
     reputation_map.set(
       String::from_slice(&env, "user001"),
@@ -61,6 +69,7 @@ impl ExternalDataProvider {
       .instance()
       .set(&DataKey::Reputation, &reputation_map);
 
+    // for prior history neuron
     let mut voting_history_set: Map<String, Vec<u32>> = Map::new(&env);
     voting_history_set.set(String::from_slice(&env, "user001"), vec![&env, 2, 3]);
     voting_history_set.set(String::from_slice(&env, "user003"), vec![&env, 2, 3, 4]);
@@ -78,17 +87,38 @@ impl ExternalDataProvider {
       .storage()
       .instance()
       .set(&DataKey::RoundBonusMap, &round_bonus_map);
+
+    // for delegation
+    let mut delegatees: Map<String, Vec<String>> = Map::new(&env);
+    delegatees.set(
+      String::from_slice(&env, "user001"),
+      vec![
+        &env,
+        String::from_slice(&env, "user002"),
+        String::from_slice(&env, "user003"),
+        String::from_slice(&env, "user004"),
+        String::from_slice(&env, "user005"),
+        String::from_slice(&env, "user006"),
+        String::from_slice(&env, "user008"),
+      ],
+    );
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::Delegatees, &delegatees);
   }
 
   // for assigned reputation neuron
-  pub fn get_user_reputation_category(env: Env, user_id: String) -> ReputationCategory {
-    let map: Map<String, ReputationCategory> = Map::new(&env);
-    let reputation_map: Map<String, ReputationCategory> = env
+  pub fn get_reputation_categories(env: Env) -> Map<String, ReputationCategory> {
+    env
       .storage()
       .instance()
       .get(&DataKey::Reputation)
-      .unwrap_or(map);
-    reputation_map
+      .unwrap_or(Map::new(&env))
+  }
+
+  pub fn get_user_reputation_category(env: Env, user_id: String) -> ReputationCategory {
+    ExternalDataProvider::get_reputation_categories(env.clone())
       .get(user_id)
       .unwrap_or(ReputationCategory::Uncategorized)
   }
@@ -110,30 +140,38 @@ impl ExternalDataProvider {
   }
 
   // for prior history neuron
+  pub fn get_prior_voting_history(env: Env) -> Map<String, Vec<u32>> {
+    env
+      .storage()
+      .instance()
+      .get(&DataKey::PriorVotingHistory)
+      .unwrap_or(Map::new(&env))
+  }
+
   pub fn get_user_prior_voting_history(env: Env, user_id: String) -> Vec<u32> {
-    let map: Map<String, Vec<u32>> = Map::new(&env);
     let voting_history_set: Map<String, Vec<u32>> = env
       .storage()
       .instance()
       .get(&DataKey::PriorVotingHistory)
-      .unwrap_or(map);
+      .unwrap_or(Map::new(&env));
     voting_history_set.get(user_id).unwrap_or(vec![&env])
   }
 
-  pub fn set_user_prior_voting_history(env: Env, voting_history_set: Map<String, Vec<u32>>) {
+  pub fn set_user_prior_voting_history(env: Env, user_id: String, new_voting_history: Vec<u32>) {
+    let mut voting_history = ExternalDataProvider::get_prior_voting_history(env.clone());
+    voting_history.set(user_id, new_voting_history);
     env
       .storage()
       .instance()
-      .set(&DataKey::PriorVotingHistory, &voting_history_set);
+      .set(&DataKey::PriorVotingHistory, &voting_history);
   }
 
   pub fn get_round_bonus_map(env: Env) -> Map<u32, (u32, u32)> {
-    let map: Map<u32, (u32, u32)> = Map::new(&env);
     let round_bonus_map: Map<u32, (u32, u32)> = env
       .storage()
       .instance()
       .get(&DataKey::RoundBonusMap)
-      .unwrap_or(map);
+      .unwrap_or(Map::new(&env));
     round_bonus_map
   }
 
@@ -142,6 +180,36 @@ impl ExternalDataProvider {
       .storage()
       .instance()
       .set(&DataKey::RoundBonusMap, &round_bonus_map);
+  }
+
+  // for delegation
+  pub fn get_delegatees(env: Env) -> Map<String, Vec<String>> {
+    env
+      .storage()
+      .instance()
+      .get(&DataKey::Delegatees)
+      .unwrap_or(Map::new(&env))
+  }
+
+  pub fn set_delegatees_for_user(
+    env: Env,
+    user_id: String,
+    new_delegatees: Vec<String>,
+  ) -> Result<(), ExternalDataProviderError> {
+    if new_delegatees.len() > MAX_DELEGATEES {
+      return Err(ExternalDataProviderError::TooManyDelegatees);
+    }
+    if new_delegatees.len() < MIN_DELEGATEES {
+      return Err(ExternalDataProviderError::NotEnoughDelegatees);
+    }
+    let mut delegatees: Map<String, Vec<String>> =
+      ExternalDataProvider::get_delegatees(env.clone());
+    delegatees.set(user_id.clone(), new_delegatees);
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::Delegatees, &delegatees);
+    Ok(())
   }
 }
 

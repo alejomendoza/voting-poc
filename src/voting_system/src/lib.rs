@@ -60,6 +60,10 @@ impl VotingSystem {
       .set(&DataKey::NeuralGovernance, &neural_governance);
   }
 
+  fn calculate_quorum_consensus() {
+    //...
+  }
+
   pub fn vote(
     env: Env,
     voter_id: String,
@@ -75,6 +79,18 @@ impl VotingSystem {
       votes.get(project_id.clone()).unwrap_or(Map::new(&env));
     if project_votes.contains_key(voter_id.clone()) {
       return Err(VotingSystemError::UserAlreadyVoted);
+    }
+    if vote == Vote::Delegate {
+      let external_data_provider_client = external_data_provider_contract::Client::new(
+        &env,
+        &VotingSystem::get_external_data_provider(env.clone())?,
+      );
+      let delegatees = external_data_provider_client
+        .get_delegatees()
+        .get(voter_id.clone())
+        .ok_or(VotingSystemError::DelegateesNotFound)?;
+      // TODO where should the limits for delegatees be checked here or in the ext data provider?
+      // TODO call a function calculating consensus `calculate_quorum_consensus`...
     }
     project_votes.set(voter_id, vote);
     votes.set(project_id, project_votes);

@@ -10,11 +10,13 @@ pub enum Vote {
   Yes,
   No,
   Abstain,
+  Delegate,
 }
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub enum VotingSystemError {
+  // todo remove unused errors
   UnknownError = 0,
   ExternalDataProviderNotSet = 1,
   LayerAggregatorNotSet = 2,
@@ -30,4 +32,5 @@ pub enum VotingSystemError {
   NeuralGovernanceNotSet = 12,
   RoundNotFoundInRoundBonusMap = 13,
   NoSuchLayer = 14,
+  DelegateesNotFound = 15,
 }
