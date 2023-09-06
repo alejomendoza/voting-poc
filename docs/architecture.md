@@ -9,13 +9,6 @@ This workspace consists of the following packages:
 
 They are described below. Both of them are smart contracts.
 
-## Implementation notes
-
-### Storage
-
-For now, the `instance` option is used everywhere, but it is left as a `TODO` to do research about this once again and choose a proper way of using the storage; useful links:
-- https://soroban.stellar.org/docs/fundamentals-and-concepts/persisting-data
-
 ## Packages
 
 ### Voting System

@@ -23,9 +23,12 @@ mod external_data_provider_contract {
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
+  // storage type: instance
   // Map<project_id, Map<user_id, vote>>
   Votes,
+  // storage type: instance
   NeuralGovernance,
+  // storage type: temporary
   ExternalDataProvider,
 }
 
@@ -284,7 +287,7 @@ impl VotingSystem {
   }
 
   pub fn set_external_data_provider(env: Env, external_data_provider_address: Address) {
-    env.storage().instance().set(
+    env.storage().temporary().set(
       &DataKey::ExternalDataProvider,
       &external_data_provider_address,
     );
@@ -293,7 +296,7 @@ impl VotingSystem {
   pub fn get_external_data_provider(env: Env) -> Result<Address, VotingSystemError> {
     env
       .storage()
-      .instance()
+      .temporary()
       .get(&DataKey::ExternalDataProvider)
       .ok_or(VotingSystemError::ExternalDataProviderNotSet)?
   }
