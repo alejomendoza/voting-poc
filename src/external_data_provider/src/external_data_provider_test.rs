@@ -1,4 +1,4 @@
-use soroban_sdk::{Env, String, Vec};
+use soroban_sdk::{vec, Env, String, Vec};
 
 use crate::{ExternalDataProvider, ExternalDataProviderClient, ReputationCategory};
 
@@ -173,4 +173,48 @@ pub fn test_delegation() {
       == 5
   );
   assert!(external_data_provider_client.get_delegatees().len() == 2);
+}
+
+#[test]
+pub fn test_delegation_rank() {
+  let env = Env::default();
+
+  let external_data_provider_id = env.register_contract(None, ExternalDataProvider);
+  let external_data_provider_client =
+    ExternalDataProviderClient::new(&env, &external_data_provider_id);
+
+  let user_id_1 = String::from_slice(&env, "user001");
+  let user_id_2 = String::from_slice(&env, "user002");
+  let user_id_3 = String::from_slice(&env, "user003");
+  let user_id_99 = String::from_slice(&env, "user099");
+
+  assert!(external_data_provider_client
+    .get_delegation_ranks()
+    .is_empty());
+
+  external_data_provider_client.mock_sample_data();
+
+  assert!(external_data_provider_client.get_delegation_ranks().len() == 8);
+
+  let ranks = external_data_provider_client.get_delegation_ranks_for_users(&vec![
+    &env,
+    user_id_1.clone(),
+    user_id_2.clone(),
+    user_id_3.clone(),
+  ]);
+  assert!(ranks.len() == 3);
+  assert!(ranks.get(user_id_1.clone()).unwrap() == 1);
+  assert!(ranks.get(user_id_2.clone()).unwrap() == 2);
+  assert!(ranks.get(user_id_3.clone()).unwrap() == 3);
+
+  external_data_provider_client.set_delegation_rank_for_user(&user_id_1.clone(), &15);
+
+  let ranks = external_data_provider_client.get_delegation_ranks_for_users(&vec![
+    &env,
+    user_id_1.clone(),
+    user_id_99.clone(),
+  ]);
+  assert!(ranks.len() == 2);
+  assert!(ranks.get(user_id_1.clone()).unwrap() == 15);
+  assert!(ranks.get(user_id_99.clone()).unwrap() == 0);
 }

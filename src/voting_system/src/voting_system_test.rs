@@ -254,3 +254,245 @@ pub fn test_prior_voting_history_neuron() {
       == (0, 300)
   );
 }
+
+#[test]
+pub fn test_delegation_more_yes_votes() {
+  let env = Env::default();
+
+  let voting_system_id = env.register_contract(None, VotingSystem);
+  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+  voting_system_client.initialize();
+
+  let external_data_provider_id =
+    env.register_contract_wasm(None, external_data_provider_contract::WASM);
+  let external_data_provider_client =
+    external_data_provider_contract::Client::new(&env, &external_data_provider_id);
+  external_data_provider_client.mock_sample_data();
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
+
+  assert!(voting_system_client.add_layer() == 0);
+  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
+  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
+
+  let voter_id_1 = String::from_slice(&env, "user001");
+  let voter_id_2 = String::from_slice(&env, "user002");
+  let voter_id_3 = String::from_slice(&env, "user003");
+  let voter_id_4 = String::from_slice(&env, "user004");
+  let voter_id_5 = String::from_slice(&env, "user005");
+  let voter_id_6 = String::from_slice(&env, "user006");
+  let voter_id_8 = String::from_slice(&env, "user008");
+
+  let project_id = String::from_slice(&env, "project001");
+
+  voting_system_client.add_project(&project_id);
+  voting_system_client.vote(&voter_id_1, &project_id, &Vote::Delegate);
+  voting_system_client.vote(&voter_id_2, &project_id, &Vote::No); // not considered - low rank
+  voting_system_client.vote(&voter_id_3, &project_id, &Vote::No);
+  voting_system_client.vote(&voter_id_4, &project_id, &Vote::No);
+  voting_system_client.vote(&voter_id_5, &project_id, &Vote::Yes);
+  voting_system_client.vote(&voter_id_6, &project_id, &Vote::Yes);
+  voting_system_client.vote(&voter_id_8, &project_id, &Vote::Yes);
+
+  let consensus = voting_system_client.calculate_quorum_consensus(
+    &voter_id_1,
+    &voting_system_client
+      .get_votes()
+      .get(project_id.clone())
+      .unwrap(),
+  );
+  assert!(consensus == Vote::Yes);
+}
+
+#[test]
+pub fn test_delegation_more_no_votes() {
+  let env = Env::default();
+
+  let voting_system_id = env.register_contract(None, VotingSystem);
+  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+  voting_system_client.initialize();
+
+  let external_data_provider_id =
+    env.register_contract_wasm(None, external_data_provider_contract::WASM);
+  let external_data_provider_client =
+    external_data_provider_contract::Client::new(&env, &external_data_provider_id);
+  external_data_provider_client.mock_sample_data();
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
+
+  assert!(voting_system_client.add_layer() == 0);
+  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
+  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
+
+  let voter_id_1 = String::from_slice(&env, "user001");
+  let voter_id_2 = String::from_slice(&env, "user002");
+  let voter_id_3 = String::from_slice(&env, "user003");
+  let voter_id_4 = String::from_slice(&env, "user004");
+  let voter_id_5 = String::from_slice(&env, "user005");
+  let voter_id_6 = String::from_slice(&env, "user006");
+  let voter_id_8 = String::from_slice(&env, "user008");
+
+  let project_id = String::from_slice(&env, "project001");
+
+  voting_system_client.add_project(&project_id);
+  voting_system_client.vote(&voter_id_1, &project_id, &Vote::Delegate);
+  voting_system_client.vote(&voter_id_2, &project_id, &Vote::Yes); // not considered - low rank
+  voting_system_client.vote(&voter_id_3, &project_id, &Vote::Yes);
+  voting_system_client.vote(&voter_id_4, &project_id, &Vote::No);
+  voting_system_client.vote(&voter_id_5, &project_id, &Vote::Yes);
+  voting_system_client.vote(&voter_id_6, &project_id, &Vote::No);
+  voting_system_client.vote(&voter_id_8, &project_id, &Vote::No);
+
+  let consensus = voting_system_client.calculate_quorum_consensus(
+    &voter_id_1,
+    &voting_system_client
+      .get_votes()
+      .get(project_id.clone())
+      .unwrap(),
+  );
+  assert!(consensus == Vote::No);
+}
+
+#[test]
+pub fn test_delegation_too_many_abstain_votes() {
+  let env = Env::default();
+
+  let voting_system_id = env.register_contract(None, VotingSystem);
+  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+  voting_system_client.initialize();
+
+  let external_data_provider_id =
+    env.register_contract_wasm(None, external_data_provider_contract::WASM);
+  let external_data_provider_client =
+    external_data_provider_contract::Client::new(&env, &external_data_provider_id);
+  external_data_provider_client.mock_sample_data();
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
+
+  assert!(voting_system_client.add_layer() == 0);
+  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
+  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
+
+  let voter_id_1 = String::from_slice(&env, "user001");
+  let voter_id_2 = String::from_slice(&env, "user002");
+  let voter_id_3 = String::from_slice(&env, "user003");
+  let voter_id_4 = String::from_slice(&env, "user004");
+  let voter_id_5 = String::from_slice(&env, "user005");
+  let voter_id_6 = String::from_slice(&env, "user006");
+  let voter_id_8 = String::from_slice(&env, "user008");
+
+  let project_id = String::from_slice(&env, "project001");
+
+  voting_system_client.add_project(&project_id);
+  voting_system_client.vote(&voter_id_1, &project_id, &Vote::Delegate);
+  voting_system_client.vote(&voter_id_2, &project_id, &Vote::Yes); // not considered - low rank
+  voting_system_client.vote(&voter_id_3, &project_id, &Vote::Abstain);
+  voting_system_client.vote(&voter_id_4, &project_id, &Vote::Abstain);
+  voting_system_client.vote(&voter_id_5, &project_id, &Vote::Yes);
+  voting_system_client.vote(&voter_id_6, &project_id, &Vote::No);
+  voting_system_client.vote(&voter_id_8, &project_id, &Vote::No);
+
+  let consensus = voting_system_client.calculate_quorum_consensus(
+    &voter_id_1,
+    &voting_system_client
+      .get_votes()
+      .get(project_id.clone())
+      .unwrap(),
+  );
+  assert!(consensus == Vote::Abstain);
+}
+
+#[test]
+pub fn test_delegation_too_many_delegate_votes() {
+  let env = Env::default();
+
+  let voting_system_id = env.register_contract(None, VotingSystem);
+  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+  voting_system_client.initialize();
+
+  let external_data_provider_id =
+    env.register_contract_wasm(None, external_data_provider_contract::WASM);
+  let external_data_provider_client =
+    external_data_provider_contract::Client::new(&env, &external_data_provider_id);
+  external_data_provider_client.mock_sample_data();
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
+
+  assert!(voting_system_client.add_layer() == 0);
+  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
+  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
+
+  let voter_id_1 = String::from_slice(&env, "user001");
+  let voter_id_2 = String::from_slice(&env, "user002");
+  let voter_id_3 = String::from_slice(&env, "user003");
+  let voter_id_4 = String::from_slice(&env, "user004");
+  let voter_id_5 = String::from_slice(&env, "user005");
+  let voter_id_6 = String::from_slice(&env, "user006");
+  let voter_id_8 = String::from_slice(&env, "user008");
+
+  let project_id = String::from_slice(&env, "project001");
+
+  // scenario 1 - mote Yes votes
+  voting_system_client.add_project(&project_id);
+  voting_system_client.vote(&voter_id_1, &project_id, &Vote::Delegate);
+  voting_system_client.vote(&voter_id_2, &project_id, &Vote::Yes);
+  voting_system_client.vote(&voter_id_3, &project_id, &Vote::Delegate); // not considered - delegate
+  voting_system_client.vote(&voter_id_4, &project_id, &Vote::Delegate); // not considered - delegate
+  voting_system_client.vote(&voter_id_5, &project_id, &Vote::Delegate); // not considered - delegate
+  voting_system_client.vote(&voter_id_6, &project_id, &Vote::No);
+  voting_system_client.vote(&voter_id_8, &project_id, &Vote::No);
+
+  let consensus = voting_system_client.calculate_quorum_consensus(
+    &voter_id_1,
+    &voting_system_client
+      .get_votes()
+      .get(project_id.clone())
+      .unwrap(),
+  );
+  assert!(consensus == Vote::Abstain);
+}
+
+#[test]
+pub fn test_delegation_yes_no_equal() {
+  let env = Env::default();
+
+  let voting_system_id = env.register_contract(None, VotingSystem);
+  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+  voting_system_client.initialize();
+
+  let external_data_provider_id =
+    env.register_contract_wasm(None, external_data_provider_contract::WASM);
+  let external_data_provider_client =
+    external_data_provider_contract::Client::new(&env, &external_data_provider_id);
+  external_data_provider_client.mock_sample_data();
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
+
+  assert!(voting_system_client.add_layer() == 0);
+  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
+  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
+
+  let voter_id_1 = String::from_slice(&env, "user001");
+  let voter_id_2 = String::from_slice(&env, "user002");
+  let voter_id_3 = String::from_slice(&env, "user003");
+  let voter_id_4 = String::from_slice(&env, "user004");
+  let voter_id_5 = String::from_slice(&env, "user005");
+  let voter_id_6 = String::from_slice(&env, "user006");
+  let voter_id_8 = String::from_slice(&env, "user008");
+
+  let project_id = String::from_slice(&env, "project001");
+
+  // scenario 1 - mote Yes votes
+  voting_system_client.add_project(&project_id);
+  voting_system_client.vote(&voter_id_1, &project_id, &Vote::Delegate);
+  voting_system_client.vote(&voter_id_2, &project_id, &Vote::Yes);
+  voting_system_client.vote(&voter_id_3, &project_id, &Vote::Delegate); // not considered - delegate
+  voting_system_client.vote(&voter_id_4, &project_id, &Vote::Abstain);
+  voting_system_client.vote(&voter_id_5, &project_id, &Vote::Yes);
+  voting_system_client.vote(&voter_id_6, &project_id, &Vote::No);
+  voting_system_client.vote(&voter_id_8, &project_id, &Vote::No);
+
+  let consensus = voting_system_client.calculate_quorum_consensus(
+    &voter_id_1,
+    &voting_system_client
+      .get_votes()
+      .get(project_id.clone())
+      .unwrap(),
+  );
+  assert!(consensus == Vote::Abstain);
+}

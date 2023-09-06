@@ -9,7 +9,7 @@ mod types;
 
 use crate::decimal_number_wrapper::DecimalNumberWrapper;
 
-use crate::types::{Vote, VotingSystemError};
+use crate::types::{Vote, VotingSystemError, QUORUM_SIZE};
 use layer::{LayerAggregator, NeuronType};
 use neural_governance::NeuralGovernance;
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Address, Env, Map, String, Vec};
@@ -23,7 +23,9 @@ mod external_data_provider_contract {
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
+  // Map<project_id, Map<user_id, vote>>
   Votes,
+  // Vec<project_id>
   Projects,
   NeuralGovernance,
   ExternalDataProvider,
@@ -60,8 +62,80 @@ impl VotingSystem {
       .set(&DataKey::NeuralGovernance, &neural_governance);
   }
 
-  fn calculate_quorum_consensus() {
-    //...
+  pub fn calculate_quorum_consensus(
+    env: Env,
+    voter_id: String,
+    project_votes: Map<String, Vote>,
+  ) -> Result<Vote, VotingSystemError> {
+    let external_data_provider_client = external_data_provider_contract::Client::new(
+      &env,
+      &VotingSystem::get_external_data_provider(env.clone())?,
+    );
+    let delegatees = external_data_provider_client
+      .get_delegatees()
+      .get(voter_id.clone())
+      .ok_or(VotingSystemError::DelegateesNotFound)?;
+    // delegatees 5-10 have to choose best 5 based on ranks
+    let delegation_ranks: Map<String, u32> =
+      external_data_provider_client.get_delegation_ranks_for_users(&delegatees.clone());
+
+    let mut sorted_delegatees: Map<String, u32> = Map::new(&env);
+    for delegatee_id in delegatees {
+      let delegatee_vote = project_votes
+        .get(delegatee_id.clone())
+        .ok_or(VotingSystemError::VoteNotFoundForDelegatee)?;
+      // discard users who delegated
+      if delegatee_vote == Vote::Delegate {
+        continue;
+      }
+
+      let delegatee_rank = delegation_ranks.get(delegatee_id.clone()).unwrap_or(0);
+
+      if sorted_delegatees.clone().len() < QUORUM_SIZE {
+        sorted_delegatees.set(delegatee_id.clone(), delegatee_rank);
+        continue;
+      }
+      // find min and if the current is bigger than min then remove them(with min), then insert a new one
+      let mut min_rank: Option<(String, u32)> = None;
+      for item in sorted_delegatees.clone() {
+        let min_rank_clone = min_rank.clone();
+        if min_rank_clone.is_none() || item.1 < min_rank_clone.unwrap().1 {
+          min_rank = Some(item);
+        }
+      }
+      let min_rank = min_rank.unwrap();
+      if delegatee_rank > min_rank.1 {
+        sorted_delegatees.remove(min_rank.0);
+        sorted_delegatees.set(delegatee_id.clone(), delegatee_rank);
+      }
+    }
+
+    if sorted_delegatees.clone().len() < QUORUM_SIZE {
+      return Ok(Vote::Abstain);
+    }
+
+    let mut delegatees_votes: Map<Vote, u32> = Map::new(&env);
+    for delegatee in sorted_delegatees {
+      let delegatee_vote = project_votes
+        .get(delegatee.0.clone())
+        .ok_or(VotingSystemError::VoteNotFoundForDelegatee)?;
+      if delegatee_vote == Vote::Delegate {
+        return Err(VotingSystemError::UnexpectedValue);
+      }
+      let delegatee_vote_count = delegatees_votes.get(delegatee_vote.clone()).unwrap_or(0);
+      delegatees_votes.set(delegatee_vote, delegatee_vote_count + 1);
+    }
+
+    let yes_votes = delegatees_votes.get(Vote::Yes).unwrap_or(0);
+    let no_votes = delegatees_votes.get(Vote::No).unwrap_or(0);
+    let abstain_votes = delegatees_votes.get(Vote::Abstain).unwrap_or(0);
+    if abstain_votes >= 2 || yes_votes == no_votes {
+      return Ok(Vote::Abstain);
+    }
+    if yes_votes > no_votes {
+      return Ok(Vote::Yes);
+    }
+    Ok(Vote::No)
   }
 
   pub fn vote(
@@ -79,18 +153,6 @@ impl VotingSystem {
       votes.get(project_id.clone()).unwrap_or(Map::new(&env));
     if project_votes.contains_key(voter_id.clone()) {
       return Err(VotingSystemError::UserAlreadyVoted);
-    }
-    if vote == Vote::Delegate {
-      let external_data_provider_client = external_data_provider_contract::Client::new(
-        &env,
-        &VotingSystem::get_external_data_provider(env.clone())?,
-      );
-      let delegatees = external_data_provider_client
-        .get_delegatees()
-        .get(voter_id.clone())
-        .ok_or(VotingSystemError::DelegateesNotFound)?;
-      // TODO where should the limits for delegatees be checked here or in the ext data provider?
-      // TODO call a function calculating consensus `calculate_quorum_consensus`...
     }
     project_votes.set(voter_id, vote);
     votes.set(project_id, project_votes);
@@ -129,19 +191,26 @@ impl VotingSystem {
 
   // result: map<project_id, project_voting_power>
   pub fn tally(env: Env) -> Result<Map<String, (u32, u32)>, VotingSystemError> {
-    let votes = VotingSystem::get_votes(env.clone());
+    let all_votes = VotingSystem::get_votes(env.clone());
     let mut result: Map<String, (u32, u32)> = Map::new(&env);
     // String, Map<String, (Vote, (u32, u32))>
-    for (project_id, votes) in votes {
+    for (project_id, project_votes) in all_votes {
       let mut project_voting_power_plus: DecimalNumberWrapper = Default::default();
       let mut project_voting_power_minus: DecimalNumberWrapper = Default::default();
       // String, (Vote, (u32, u32))
-      for (voter_id, vote) in votes {
+      for (voter_id, mut vote) in project_votes.clone() {
+        if vote == Vote::Delegate {
+          vote = VotingSystem::calculate_quorum_consensus(
+            env.clone(),
+            voter_id.clone(),
+            project_votes.clone(),
+          )?;
+        }
         let voting_power = match vote {
           Vote::Abstain => (0, 0),
           _ => VotingSystem::get_neural_governance(env.clone())?.execute_neural_governance(
             env.clone(),
-            voter_id,
+            voter_id.clone(),
             project_id.clone(),
           )?,
         };

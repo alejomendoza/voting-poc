@@ -1,13 +1,11 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
-mod types;
+pub mod types;
 
 // This contract's going to be responsible for fetching the data from any external resources
 
-use soroban_sdk::{
-  contract, contracterror, contractimpl, contracttype, vec, Env, Map, String, Vec,
-};
+use soroban_sdk::{contract, contractimpl, contracttype, vec, Env, Map, String, Vec};
 use types::{ExternalDataProviderError, MAX_DELEGATEES, MIN_DELEGATEES};
 
 #[contracttype]
@@ -32,6 +30,8 @@ pub enum DataKey {
   RoundBonusMap,
   // Map<UserUUID, Vec<UserUUID>> - users to the vector of users they delegated their votes to
   Delegatees,
+  // Map<UserUUID, u32> - users to their delegation rank
+  DelegationRanks,
 }
 
 #[contract]
@@ -106,6 +106,20 @@ impl ExternalDataProvider {
       .storage()
       .instance()
       .set(&DataKey::Delegatees, &delegatees);
+
+    let mut delegation_ranks: Map<String, u32> = Map::new(&env);
+    delegation_ranks.set(String::from_slice(&env, "user001"), 1);
+    delegation_ranks.set(String::from_slice(&env, "user002"), 2);
+    delegation_ranks.set(String::from_slice(&env, "user003"), 3);
+    delegation_ranks.set(String::from_slice(&env, "user004"), 4);
+    delegation_ranks.set(String::from_slice(&env, "user005"), 5);
+    delegation_ranks.set(String::from_slice(&env, "user006"), 6);
+    delegation_ranks.set(String::from_slice(&env, "user007"), 7);
+    delegation_ranks.set(String::from_slice(&env, "user008"), 8);
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::DelegationRanks, &delegation_ranks);
   }
 
   // for assigned reputation neuron
@@ -149,11 +163,8 @@ impl ExternalDataProvider {
   }
 
   pub fn get_user_prior_voting_history(env: Env, user_id: String) -> Vec<u32> {
-    let voting_history_set: Map<String, Vec<u32>> = env
-      .storage()
-      .instance()
-      .get(&DataKey::PriorVotingHistory)
-      .unwrap_or(Map::new(&env));
+    let voting_history_set: Map<String, Vec<u32>> =
+      ExternalDataProvider::get_prior_voting_history(env.clone());
     voting_history_set.get(user_id).unwrap_or(vec![&env])
   }
 
@@ -210,6 +221,32 @@ impl ExternalDataProvider {
       .instance()
       .set(&DataKey::Delegatees, &delegatees);
     Ok(())
+  }
+
+  pub fn get_delegation_ranks(env: Env) -> Map<String, u32> {
+    env
+      .storage()
+      .instance()
+      .get(&DataKey::DelegationRanks)
+      .unwrap_or(Map::new(&env))
+  }
+
+  pub fn get_delegation_ranks_for_users(env: Env, users_ids: Vec<String>) -> Map<String, u32> {
+    let delegation_ranks = ExternalDataProvider::get_delegation_ranks(env.clone());
+    let mut result: Map<String, u32> = Map::new(&env);
+    for user_id in users_ids {
+      result.set(user_id.clone(), delegation_ranks.get(user_id).unwrap_or(0));
+    }
+    result
+  }
+
+  pub fn set_delegation_rank_for_user(env: Env, user_id: String, new_rank: u32) {
+    let mut delegation_ranks = ExternalDataProvider::get_delegation_ranks(env.clone());
+    delegation_ranks.set(user_id, new_rank);
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::DelegationRanks, &delegation_ranks);
   }
 }
 

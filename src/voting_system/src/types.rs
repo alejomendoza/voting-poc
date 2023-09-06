@@ -4,6 +4,8 @@ pub type DecimalNumber = (u32, u32);
 
 pub static DEFAULT_WEIGHT: DecimalNumber = (1, 0);
 
+pub const QUORUM_SIZE: u32 = 5;
+
 #[contracttype]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Vote {
@@ -33,4 +35,6 @@ pub enum VotingSystemError {
   RoundNotFoundInRoundBonusMap = 13,
   NoSuchLayer = 14,
   DelegateesNotFound = 15,
+  VoteNotFoundForDelegatee = 16,
+  UnexpectedValue = 17,
 }
