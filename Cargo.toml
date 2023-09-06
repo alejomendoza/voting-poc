@@ -1,14 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
-    "./src/shared",
-    "./src/external_data_provider",
-    "./src/template_neuron",
-    "./src/assigned_reputation_neuron",
-    "./src/prior_voting_history_neuron",
-    "./src/layer",
-    "./src/neural_governance",
     "./src/voting_system",
+    "./src/external_data_provider",
 ]
 
 [workspace.dependencies]

@@ -1,6 +1,18 @@
 use crate::decimal_number_wrapper::DecimalNumberWrapper;
 
 #[test]
+pub fn test_from_to() {
+  let num: u32 = 123456;
+  let dnw: DecimalNumberWrapper = num.into();
+  assert!(dnw.as_tuple() == (123, 456));
+  assert!(dnw.as_raw() == num);
+
+  let dnw: DecimalNumberWrapper = (12, 74).into();
+  assert!(dnw.as_tuple() == (12, 74));
+  assert!(dnw.as_raw() == 12074);
+}
+
+#[test]
 pub fn test_add() {
   assert!(
     DecimalNumberWrapper::add(

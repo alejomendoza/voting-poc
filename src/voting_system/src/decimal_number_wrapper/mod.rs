@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 static DECIMAL_POINTS: u32 = 3;
 static DECIMAL_MODIFIER: u32 = (10 as u32).pow(DECIMAL_POINTS);
 
@@ -84,6 +85,10 @@ impl DecimalNumberWrapper {
   pub fn as_tuple(&self) -> (u32, u32) {
     (self.whole, self.fractional)
   }
+
+  pub fn as_raw(&self) -> u32 {
+    self.whole * DECIMAL_MODIFIER + self.fractional
+  }
 }
 
 impl From<(u32, u32)> for DecimalNumberWrapper {
@@ -91,6 +96,18 @@ impl From<(u32, u32)> for DecimalNumberWrapper {
     DecimalNumberWrapper {
       whole: value.0,
       fractional: value.1,
+    }
+    .validate()
+  }
+}
+
+impl From<u32> for DecimalNumberWrapper {
+  fn from(raw: u32) -> Self {
+    let whole = raw / DECIMAL_MODIFIER;
+
+    DecimalNumberWrapper {
+      whole,
+      fractional: raw - (whole * DECIMAL_MODIFIER),
     }
     .validate()
   }
