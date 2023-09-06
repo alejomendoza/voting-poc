@@ -12,7 +12,7 @@ use crate::decimal_number_wrapper::DecimalNumberWrapper;
 use crate::types::{Vote, VotingSystemError, QUORUM_SIZE};
 use layer::{LayerAggregator, NeuronType};
 use neural_governance::NeuralGovernance;
-use soroban_sdk::{contract, contractimpl, contracttype, vec, Address, Env, Map, String, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Map, String, Vec};
 
 mod external_data_provider_contract {
   soroban_sdk::contractimport!(
@@ -25,8 +25,6 @@ mod external_data_provider_contract {
 pub enum DataKey {
   // Map<project_id, Map<user_id, vote>>
   Votes,
-  // Vec<project_id>
-  Projects,
   NeuralGovernance,
   ExternalDataProvider,
 }
@@ -144,13 +142,11 @@ impl VotingSystem {
     project_id: String,
     vote: Vote,
   ) -> Result<(), VotingSystemError> {
-    if !VotingSystem::get_projects(env.clone()).contains(project_id.clone()) {
-      return Err(VotingSystemError::ProjectDoesNotExist);
-    }
-
     let mut votes = VotingSystem::get_votes(env.clone());
-    let mut project_votes: Map<String, Vote> =
-      votes.get(project_id.clone()).unwrap_or(Map::new(&env));
+    let mut project_votes = votes
+      .get(project_id.clone())
+      .ok_or(VotingSystemError::ProjectDoesNotExist)?;
+
     if project_votes.contains_key(voter_id.clone()) {
       return Err(VotingSystemError::UserAlreadyVoted);
     }
@@ -170,21 +166,13 @@ impl VotingSystem {
       .unwrap_or(Map::new(&env))
   }
 
-  pub fn get_projects(env: Env) -> Vec<String> {
-    env
-      .storage()
-      .instance()
-      .get(&DataKey::Projects)
-      .unwrap_or(vec![&env])
-  }
-
   pub fn add_project(env: Env, project_id: String) -> Result<(), VotingSystemError> {
-    let mut projects = VotingSystem::get_projects(env.clone());
-    if projects.contains(project_id.clone()) {
+    let mut votes = VotingSystem::get_votes(env.clone());
+    if votes.get(project_id.clone()).is_some() {
       return Err(VotingSystemError::ProjectAlreadyAdded);
     }
-    projects.push_back(project_id);
-    env.storage().instance().set(&DataKey::Projects, &projects);
+    votes.set(project_id, Map::new(&env));
+    env.storage().instance().set(&DataKey::Votes, &votes);
 
     Ok(())
   }
