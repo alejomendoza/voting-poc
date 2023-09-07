@@ -10,24 +10,6 @@ use crate::{
   VotingSystem, VotingSystemClient,
 };
 
-mod template_neuron_contract {
-  soroban_sdk::contractimport!(
-    file = "../../target/wasm32-unknown-unknown/release/voting_template_neuron.wasm"
-  );
-}
-
-mod assigned_reputation_neuron_contract {
-  soroban_sdk::contractimport!(
-    file = "../../target/wasm32-unknown-unknown/release/voting_assigned_reputation_neuron.wasm"
-  );
-}
-
-mod prior_voting_history_neuron_contract {
-  soroban_sdk::contractimport!(
-    file = "../../target/wasm32-unknown-unknown/release/voting_prior_voting_history_neuron.wasm"
-  );
-}
-
 #[test]
 pub fn test_setting_up_neural_governance() {
   let env = Env::default();
