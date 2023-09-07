@@ -9,12 +9,6 @@ use crate::{
   layer::{Layer, LayerAggregator, NeuronType},
 };
 
-mod template_neuron_contract {
-  soroban_sdk::contractimport!(
-    file = "../../target/wasm32-unknown-unknown/release/voting_template_neuron.wasm"
-  );
-}
-
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct NeuralGovernance {

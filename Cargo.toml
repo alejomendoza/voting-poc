@@ -1,8 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
-    "./src/voting_system",
     "./src/external_data_provider",
+    "./src/voting_system",
 ]
 
 [workspace.dependencies]

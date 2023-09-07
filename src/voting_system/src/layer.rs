@@ -6,12 +6,6 @@ use crate::{
   neurons::{assigned_reputation_neuron, dummy_neuron, prior_voting_history_neuron},
 };
 
-mod template_neuron_contract {
-  soroban_sdk::contractimport!(
-    file = "../../target/wasm32-unknown-unknown/release/voting_template_neuron.wasm"
-  );
-}
-
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum LayerAggregator {
