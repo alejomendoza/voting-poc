@@ -1,3 +1,6 @@
 /target
 /.soroban
 /Cargo.lock
+
+/scripts/.config
+/scripts/.contracts
