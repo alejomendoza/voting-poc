@@ -8,7 +8,7 @@ pub fn oracle_function(
   env: Env,
   voter_id: String,
   _project_id: String,
-  maybe_previous_layer_vote: Option<(u32, u32)>,
+  previous_layer_vote: (u32, u32),
 ) -> Result<(u32, u32), VotingSystemError> {
   let external_data_provider = VotingSystem::get_external_data_provider(env.clone())?;
   let external_data_provider_client =
@@ -19,7 +19,6 @@ pub fn oracle_function(
     return Ok((0, 0));
   }
   let round_bonus_map = external_data_provider_client.get_round_bonus_map();
-  let previous_layer_vote = maybe_previous_layer_vote.unwrap_or((1, 0));
   let previous_layer_vote: DecimalNumberWrapper = DecimalNumberWrapper::from(previous_layer_vote);
   let mut bonus_result = DecimalNumberWrapper::from(previous_layer_vote.as_tuple());
   for round in voter_active_rounds {

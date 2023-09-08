@@ -108,7 +108,7 @@ impl NeuralGovernance {
     voter_id: String,
     project_id: String,
   ) -> Result<(u32, u32), VotingSystemError> {
-    let mut current_layer_result: Option<(u32, u32)> = None;
+    let mut current_layer_result: (u32, u32) = (0, 0);
 
     if self.layers.is_empty() {
       return Err(VotingSystemError::NoLayersExist);
@@ -120,8 +120,8 @@ impl NeuralGovernance {
         project_id.clone(),
         current_layer_result,
       )?;
-      current_layer_result = Some(layer.run_layer_aggregator(layer_result)?);
+      current_layer_result = layer.run_layer_aggregator(layer_result)?;
     }
-    current_layer_result.ok_or(VotingSystemError::ResultExpected)
+    Ok(current_layer_result)
   }
 }

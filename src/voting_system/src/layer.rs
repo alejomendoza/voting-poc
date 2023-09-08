@@ -37,7 +37,7 @@ impl Layer {
     env: Env,
     voter_id: String,
     project_id: String,
-    previous_layer_vote: Option<(u32, u32)>,
+    previous_layer_vote: (u32, u32),
   ) -> Result<Vec<(u32, u32)>, VotingSystemError> {
     if self.aggregator == LayerAggregator::Unknown {
       return Err(VotingSystemError::LayerAggregatorNotSet);
