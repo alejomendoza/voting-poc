@@ -4,10 +4,6 @@ set -e
 
 CURRENT_DIR=$(git rev-parse --show-toplevel)/scripts
 
-NETWORK_PASSPHRASE=$(cat $CURRENT_DIR/.config/network_passphrase)
-RPC_URL=$(cat $CURRENT_DIR/.config/rpc_url)
-SECRET_KEY=$(cat $CURRENT_DIR/.config/secret_key)
-
 VOTING_SYSTEM_ID=$(cat $CURRENT_DIR/.contracts/voting_system_id)
 EXTERNAL_DATA_PROVIDER_ID=$(cat $CURRENT_DIR/.contracts/external_data_provider_id)
 
