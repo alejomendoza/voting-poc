@@ -6,7 +6,6 @@ pub mod types;
 // This contract's going to be responsible for fetching the data from any external resources
 
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Env, Map, String, Vec};
-use types::{ExternalDataProviderError, MAX_DELEGATEES, MIN_DELEGATEES};
 
 #[contracttype]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -31,9 +30,6 @@ pub enum DataKey {
   // storage type: temporary
   // Map<u32, DecimalNumber> - (connected to PRIOR_VOTING_HISTORY) rounds to their bonus (for participation)
   RoundBonusMap,
-  // storage type: temporary
-  // Map<UserUUID, Vec<UserUUID>> - users to the vector of users they delegated their votes to
-  Delegatees,
   // storage type: temporary
   // Map<UserUUID, u32> - users to their delegation rank
   DelegationRanks,
@@ -92,25 +88,6 @@ impl ExternalDataProvider {
       .storage()
       .temporary()
       .set(&DataKey::RoundBonusMap, &round_bonus_map);
-
-    // for delegation
-    let mut delegatees: Map<String, Vec<String>> = Map::new(&env);
-    delegatees.set(
-      String::from_slice(&env, "user001"),
-      vec![
-        &env,
-        String::from_slice(&env, "user002"),
-        String::from_slice(&env, "user003"),
-        String::from_slice(&env, "user004"),
-        String::from_slice(&env, "user005"),
-        String::from_slice(&env, "user006"),
-        String::from_slice(&env, "user008"),
-      ],
-    );
-    env
-      .storage()
-      .temporary()
-      .set(&DataKey::Delegatees, &delegatees);
 
     let mut delegation_ranks: Map<String, u32> = Map::new(&env);
     delegation_ranks.set(String::from_slice(&env, "user001"), 1);
@@ -199,35 +176,6 @@ impl ExternalDataProvider {
   }
 
   // for delegation
-  pub fn get_delegatees(env: Env) -> Map<String, Vec<String>> {
-    env
-      .storage()
-      .temporary()
-      .get(&DataKey::Delegatees)
-      .unwrap_or(Map::new(&env))
-  }
-
-  pub fn set_delegatees_for_user(
-    env: Env,
-    user_id: String,
-    new_delegatees: Vec<String>,
-  ) -> Result<(), ExternalDataProviderError> {
-    if new_delegatees.len() > MAX_DELEGATEES {
-      return Err(ExternalDataProviderError::TooManyDelegatees);
-    }
-    if new_delegatees.len() < MIN_DELEGATEES {
-      return Err(ExternalDataProviderError::NotEnoughDelegatees);
-    }
-    let mut delegatees: Map<String, Vec<String>> =
-      ExternalDataProvider::get_delegatees(env.clone());
-    delegatees.set(user_id.clone(), new_delegatees);
-    env
-      .storage()
-      .temporary()
-      .set(&DataKey::Delegatees, &delegatees);
-    Ok(())
-  }
-
   pub fn get_delegation_ranks(env: Env) -> Map<String, u32> {
     env
       .storage()

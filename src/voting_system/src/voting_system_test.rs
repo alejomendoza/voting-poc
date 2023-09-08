@@ -3,7 +3,7 @@ use crate::{
   external_data_provider_contract,
   types::{Vote, DEFAULT_WEIGHT},
 };
-use soroban_sdk::{Env, String};
+use soroban_sdk::{vec, Env, String};
 
 use crate::{
   layer::{LayerAggregator, NeuronType},
@@ -267,7 +267,16 @@ pub fn test_delegation_more_yes_votes() {
   let project_id = String::from_slice(&env, "project001");
 
   voting_system_client.add_project(&project_id);
-  voting_system_client.vote(&voter_id_1, &project_id, &Vote::Delegate);
+  let delegatees = vec![
+    &env,
+    voter_id_2.clone(),
+    voter_id_3.clone(),
+    voter_id_4.clone(),
+    voter_id_5.clone(),
+    voter_id_6.clone(),
+    voter_id_8.clone(),
+  ];
+  voting_system_client.delegate(&voter_id_1, &project_id, &delegatees);
   voting_system_client.vote(&voter_id_2, &project_id, &Vote::No); // not considered - low rank
   voting_system_client.vote(&voter_id_3, &project_id, &Vote::No);
   voting_system_client.vote(&voter_id_4, &project_id, &Vote::No);
@@ -315,7 +324,16 @@ pub fn test_delegation_more_no_votes() {
   let project_id = String::from_slice(&env, "project001");
 
   voting_system_client.add_project(&project_id);
-  voting_system_client.vote(&voter_id_1, &project_id, &Vote::Delegate);
+  let delegatees = vec![
+    &env,
+    voter_id_2.clone(),
+    voter_id_3.clone(),
+    voter_id_4.clone(),
+    voter_id_5.clone(),
+    voter_id_6.clone(),
+    voter_id_8.clone(),
+  ];
+  voting_system_client.delegate(&voter_id_1, &project_id, &delegatees);
   voting_system_client.vote(&voter_id_2, &project_id, &Vote::Yes); // not considered - low rank
   voting_system_client.vote(&voter_id_3, &project_id, &Vote::Yes);
   voting_system_client.vote(&voter_id_4, &project_id, &Vote::No);
@@ -363,7 +381,16 @@ pub fn test_delegation_too_many_abstain_votes() {
   let project_id = String::from_slice(&env, "project001");
 
   voting_system_client.add_project(&project_id);
-  voting_system_client.vote(&voter_id_1, &project_id, &Vote::Delegate);
+  let delegatees = vec![
+    &env,
+    voter_id_2.clone(),
+    voter_id_3.clone(),
+    voter_id_4.clone(),
+    voter_id_5.clone(),
+    voter_id_6.clone(),
+    voter_id_8.clone(),
+  ];
+  voting_system_client.delegate(&voter_id_1, &project_id, &delegatees);
   voting_system_client.vote(&voter_id_2, &project_id, &Vote::Yes); // not considered - low rank
   voting_system_client.vote(&voter_id_3, &project_id, &Vote::Abstain);
   voting_system_client.vote(&voter_id_4, &project_id, &Vote::Abstain);
@@ -408,15 +435,58 @@ pub fn test_delegation_too_many_delegate_votes() {
   let voter_id_6 = String::from_slice(&env, "user006");
   let voter_id_8 = String::from_slice(&env, "user008");
 
+  let voter_id_999 = String::from_slice(&env, "user999");
+
   let project_id = String::from_slice(&env, "project001");
 
-  // scenario 1 - mote Yes votes
   voting_system_client.add_project(&project_id);
-  voting_system_client.vote(&voter_id_1, &project_id, &Vote::Delegate);
+  let delegatees = vec![
+    &env,
+    voter_id_2.clone(),
+    voter_id_3.clone(),
+    voter_id_4.clone(),
+    voter_id_5.clone(),
+    voter_id_6.clone(),
+    voter_id_8.clone(),
+  ];
+  voting_system_client.delegate(&voter_id_1, &project_id, &delegatees);
   voting_system_client.vote(&voter_id_2, &project_id, &Vote::Yes);
-  voting_system_client.vote(&voter_id_3, &project_id, &Vote::Delegate); // not considered - delegate (this would raise an error when used from `tally` because we would need delegatees for this user as well)
-  voting_system_client.vote(&voter_id_4, &project_id, &Vote::Delegate); // not considered - delegate (this would raise an error when used from `tally` because we would need delegatees for this user as well)
-  voting_system_client.vote(&voter_id_5, &project_id, &Vote::Delegate); // not considered - delegate (this would raise an error when used from `tally` because we would need delegatees for this user as well)
+  voting_system_client.delegate(
+    &voter_id_3,
+    &project_id,
+    &vec![
+      &env,
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+    ],
+  );
+  voting_system_client.delegate(
+    &voter_id_4,
+    &project_id,
+    &vec![
+      &env,
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+    ],
+  );
+  voting_system_client.delegate(
+    &voter_id_5,
+    &project_id,
+    &vec![
+      &env,
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+    ],
+  );
   voting_system_client.vote(&voter_id_6, &project_id, &Vote::No);
   voting_system_client.vote(&voter_id_8, &project_id, &Vote::No);
 
@@ -457,13 +527,34 @@ pub fn test_delegation_yes_no_equal() {
   let voter_id_6 = String::from_slice(&env, "user006");
   let voter_id_8 = String::from_slice(&env, "user008");
 
+  let voter_id_999 = String::from_slice(&env, "user999");
+
   let project_id = String::from_slice(&env, "project001");
 
-  // scenario 1 - mote Yes votes
   voting_system_client.add_project(&project_id);
-  voting_system_client.vote(&voter_id_1, &project_id, &Vote::Delegate);
+  let delegatees = vec![
+    &env,
+    voter_id_2.clone(),
+    voter_id_3.clone(),
+    voter_id_4.clone(),
+    voter_id_5.clone(),
+    voter_id_6.clone(),
+    voter_id_8.clone(),
+  ];
+  voting_system_client.delegate(&voter_id_1, &project_id, &delegatees);
   voting_system_client.vote(&voter_id_2, &project_id, &Vote::Yes);
-  voting_system_client.vote(&voter_id_3, &project_id, &Vote::Delegate); // not considered - delegate (this would raise an error when used from `tally` because we would need delegatees for this user as well)
+  voting_system_client.delegate(
+    &voter_id_3,
+    &project_id,
+    &vec![
+      &env,
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+      voter_id_999.clone(),
+    ],
+  );
   voting_system_client.vote(&voter_id_4, &project_id, &Vote::Abstain);
   voting_system_client.vote(&voter_id_5, &project_id, &Vote::Yes);
   voting_system_client.vote(&voter_id_6, &project_id, &Vote::No);
@@ -509,7 +600,16 @@ pub fn test_delegation_in_practice() {
   let project_id = String::from_slice(&env, "project001");
 
   voting_system_client.add_project(&project_id);
-  voting_system_client.vote(&voter_id_1, &project_id, &Vote::Delegate);
+  let delegatees = vec![
+    &env,
+    voter_id_2.clone(),
+    voter_id_3.clone(),
+    voter_id_4.clone(),
+    voter_id_5.clone(),
+    voter_id_6.clone(),
+    voter_id_8.clone(),
+  ];
+  voting_system_client.delegate(&voter_id_1, &project_id, &delegatees);
   voting_system_client.vote(&voter_id_2, &project_id, &Vote::No);
   voting_system_client.vote(&voter_id_3, &project_id, &Vote::Yes);
   voting_system_client.vote(&voter_id_4, &project_id, &Vote::Yes);

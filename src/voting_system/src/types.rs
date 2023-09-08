@@ -7,6 +7,9 @@ pub static DEFAULT_WEIGHT: DecimalNumber = (1, 0);
 pub const QUORUM_SIZE: u32 = 5;
 pub const QUORUM_PARTICIPATION_TRESHOLD: u32 = 3;
 
+pub const MIN_DELEGATEES: u32 = 5;
+pub const MAX_DELEGATEES: u32 = 10;
+
 pub const ABSTAIN_VOTING_POWER: (u32, u32) = (0, 0);
 
 #[contracttype]
@@ -40,4 +43,6 @@ pub enum VotingSystemError {
   DelegateesNotFound = 15,
   VoteNotFoundForDelegatee = 16,
   UnexpectedValue = 17,
+  TooManyDelegatees = 18,
+  NotEnoughDelegatees = 19,
 }
