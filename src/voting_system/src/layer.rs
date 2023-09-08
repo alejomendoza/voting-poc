@@ -49,27 +49,26 @@ impl Layer {
     }
     for (neuron, raw_weight) in self.neurons.iter() {
       let raw_neuron_vote: DecimalNumber = match neuron {
-        NeuronType::Dummy => dummy_neuron::oracle_function(
-          env.clone(),
-          voter_id.clone(),
-          project_id.clone(),
-          previous_layer_vote,
-        )?,
+        NeuronType::Dummy => {
+          dummy_neuron::oracle_function(env.clone(), voter_id.clone(), project_id.clone())?
+        }
         NeuronType::AssignedReputation => assigned_reputation_neuron::oracle_function(
           env.clone(),
           voter_id.clone(),
           project_id.clone(),
-          previous_layer_vote,
         )?,
         NeuronType::PriorVotingHistory => prior_voting_history_neuron::oracle_function(
           env.clone(),
           voter_id.clone(),
           project_id.clone(),
-          previous_layer_vote,
         )?,
       };
       let neuron_vote = self.run_neuron_weight_function(
-        raw_neuron_vote,
+        DecimalNumberWrapper::add(
+          DecimalNumberWrapper::from(raw_neuron_vote),
+          DecimalNumberWrapper::from(previous_layer_vote),
+        )
+        .as_tuple(),
         DecimalNumberWrapper::from(raw_weight).as_tuple(),
       );
       neuron_votes.push_back(neuron_vote);

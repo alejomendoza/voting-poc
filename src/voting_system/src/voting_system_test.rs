@@ -135,7 +135,7 @@ pub fn test_simple_voting() {
       .tally()
       .get(project_id.clone())
       .unwrap()
-      == (2, 100)
+      == (2, 200)
   );
   // change neuron weight
   voting_system_client.set_neuron_weight(&1, &NeuronType::Dummy, &(2, 0));
@@ -144,7 +144,7 @@ pub fn test_simple_voting() {
       .tally()
       .get(project_id.clone())
       .unwrap()
-      == (4, 200)
+      == (4, 400)
   );
 }
 
@@ -522,5 +522,5 @@ pub fn test_delegation_in_practice() {
     .get(project_id.clone())
     .unwrap();
 
-  assert!(result == (4, 0));
+  assert!(result == (4, 400));
 }
