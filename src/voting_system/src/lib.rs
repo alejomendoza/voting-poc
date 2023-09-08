@@ -13,6 +13,7 @@ use crate::types::{Vote, VotingSystemError, QUORUM_SIZE};
 use layer::{LayerAggregator, NeuronType};
 use neural_governance::NeuralGovernance;
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Map, String, Vec};
+use types::{ABSTAIN_VOTING_POWER, QUORUM_PARTICIPATION_TRESHOLD};
 
 mod external_data_provider_contract {
   soroban_sdk::contractimport!(
@@ -130,7 +131,7 @@ impl VotingSystem {
     let yes_votes = delegatees_votes.get(Vote::Yes).unwrap_or(0);
     let no_votes = delegatees_votes.get(Vote::No).unwrap_or(0);
     let abstain_votes = delegatees_votes.get(Vote::Abstain).unwrap_or(0);
-    if abstain_votes >= 2 || yes_votes == no_votes {
+    if abstain_votes >= QUORUM_SIZE - QUORUM_PARTICIPATION_TRESHOLD || yes_votes == no_votes {
       return Ok(Vote::Abstain);
     }
     if yes_votes > no_votes {
@@ -198,7 +199,7 @@ impl VotingSystem {
           )?;
         }
         let voting_power = match vote {
-          Vote::Abstain => (0, 0),
+          Vote::Abstain => ABSTAIN_VOTING_POWER,
           _ => VotingSystem::get_neural_governance(env.clone())?.execute_neural_governance(
             env.clone(),
             voter_id.clone(),
