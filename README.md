@@ -20,6 +20,7 @@ The architecture of the system is described [here](./docs/architecture.md)
 
 ## Useful scripts
 
+To run e2e tests on localhost using docker, run:
 ```
 ./scripts/restart_docker.sh && ./scripts/run.sh
 ```
