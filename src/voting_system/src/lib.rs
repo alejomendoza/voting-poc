@@ -234,6 +234,17 @@ impl VotingSystem {
     VotingSystem::get_votes(env.clone()).keys()
   }
 
+  pub fn get_voters(env: Env) -> Vec<String> {
+    let votes = VotingSystem::get_votes(env.clone());
+    let mut voters: Map<String, ()> = Map::new(&env);
+    for (_, project_votes) in votes {
+      for voter_id in project_votes.keys() {
+        voters.set(voter_id, ());
+      }
+    }
+    voters.keys()
+  }
+
   // result: map<project_id, project_voting_power>
   pub fn tally(env: Env) -> Result<Map<String, (u32, u32)>, VotingSystemError> {
     let all_votes = VotingSystem::get_votes(env.clone());
