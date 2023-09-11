@@ -127,7 +127,9 @@ pub fn test_simple_voting() {
   let voter_id = String::from_slice(&env, "user001");
   let project_id = String::from_slice(&env, "project001");
 
+  assert!(voting_system_client.get_projects().is_empty());
   voting_system_client.add_project(&project_id);
+  assert!(voting_system_client.get_projects().len() == 1);
   voting_system_client.vote(&voter_id, &project_id, &Vote::Yes);
 
   assert!(
