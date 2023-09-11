@@ -13,6 +13,7 @@ use crate::types::{Vote, VotingSystemError, QUORUM_SIZE};
 use layer::{LayerAggregator, NeuronType};
 use neural_governance::NeuralGovernance;
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Map, String, Vec};
+use types::{ABSTAIN_VOTING_POWER, MAX_DELEGATEES, MIN_DELEGATEES, QUORUM_PARTICIPATION_TRESHOLD};
 
 mod external_data_provider_contract {
   soroban_sdk::contractimport!(
@@ -28,6 +29,9 @@ pub enum DataKey {
   Votes,
   // storage type: instance
   NeuralGovernance,
+  // storage type: instance
+  // Map<UserUUID, Vec<UserUUID>> - users to the vector of users they delegated their votes to
+  Delegatees,
   // storage type: temporary
   ExternalDataProvider,
 }
@@ -72,8 +76,7 @@ impl VotingSystem {
       &env,
       &VotingSystem::get_external_data_provider(env.clone())?,
     );
-    let delegatees = external_data_provider_client
-      .get_delegatees()
+    let delegatees = VotingSystem::get_delegatees(env.clone())
       .get(voter_id.clone())
       .ok_or(VotingSystemError::DelegateesNotFound)?;
     // delegatees 5-10 have to choose best 5 based on ranks
@@ -130,7 +133,7 @@ impl VotingSystem {
     let yes_votes = delegatees_votes.get(Vote::Yes).unwrap_or(0);
     let no_votes = delegatees_votes.get(Vote::No).unwrap_or(0);
     let abstain_votes = delegatees_votes.get(Vote::Abstain).unwrap_or(0);
-    if abstain_votes >= 2 || yes_votes == no_votes {
+    if abstain_votes >= QUORUM_SIZE - QUORUM_PARTICIPATION_TRESHOLD || yes_votes == no_votes {
       return Ok(Vote::Abstain);
     }
     if yes_votes > no_votes {
@@ -145,6 +148,14 @@ impl VotingSystem {
     project_id: String,
     vote: Vote,
   ) -> Result<(), VotingSystemError> {
+    if vote == Vote::Delegate
+      && VotingSystem::get_delegatees(env.clone())
+        .get(voter_id.clone())
+        .is_none()
+    {
+      return Err(VotingSystemError::DelegateesNotFound);
+    }
+
     let mut votes = VotingSystem::get_votes(env.clone());
     let mut project_votes = votes
       .get(project_id.clone())
@@ -159,6 +170,45 @@ impl VotingSystem {
     env.storage().instance().set(&DataKey::Votes, &votes);
 
     Ok(())
+  }
+
+  fn get_delegatees(env: Env) -> Map<String, Vec<String>> {
+    env
+      .storage()
+      .instance()
+      .get(&DataKey::Delegatees)
+      .unwrap_or(Map::new(&env))
+  }
+
+  pub fn set_delegatees(
+    env: Env,
+    voter_id: String,
+    delegatees_for_user: Vec<String>,
+  ) -> Result<(), VotingSystemError> {
+    if delegatees_for_user.len() > MAX_DELEGATEES {
+      return Err(VotingSystemError::TooManyDelegatees);
+    }
+    if delegatees_for_user.len() < MIN_DELEGATEES {
+      return Err(VotingSystemError::NotEnoughDelegatees);
+    }
+    let mut all_delegatees = VotingSystem::get_delegatees(env.clone());
+    all_delegatees.set(voter_id, delegatees_for_user);
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::Delegatees, &all_delegatees);
+
+    Ok(())
+  }
+
+  pub fn delegate(
+    env: Env,
+    voter_id: String,
+    project_id: String,
+    delegatees_for_user: Vec<String>,
+  ) -> Result<(), VotingSystemError> {
+    VotingSystem::set_delegatees(env.clone(), voter_id.clone(), delegatees_for_user)?;
+    VotingSystem::vote(env.clone(), voter_id, project_id, Vote::Delegate)
   }
 
   pub fn get_votes(env: Env) -> Map<String, Map<String, Vote>> {
@@ -198,7 +248,7 @@ impl VotingSystem {
           )?;
         }
         let voting_power = match vote {
-          Vote::Abstain => (0, 0),
+          Vote::Abstain => ABSTAIN_VOTING_POWER,
           _ => VotingSystem::get_neural_governance(env.clone())?.execute_neural_governance(
             env.clone(),
             voter_id.clone(),
