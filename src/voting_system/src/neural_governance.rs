@@ -1,6 +1,6 @@
 #![allow(non_upper_case_globals)]
 
-use crate::types::{DecimalNumber, VotingSystemError, DEFAULT_WEIGHT};
+use crate::types::{DecimalNumber, VotingSystemError, DEFAULT_WEIGHT, INITIAL_VOTING_POWER};
 
 use soroban_sdk::{contracttype, Env, Map, String, Vec};
 
@@ -108,7 +108,7 @@ impl NeuralGovernance {
     voter_id: String,
     project_id: String,
   ) -> Result<(u32, u32), VotingSystemError> {
-    let mut current_layer_result: (u32, u32) = (0, 0);
+    let mut current_layer_result: (u32, u32) = INITIAL_VOTING_POWER;
 
     if self.layers.is_empty() {
       return Err(VotingSystemError::NoLayersExist);

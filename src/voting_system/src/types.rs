@@ -10,6 +10,7 @@ pub const QUORUM_PARTICIPATION_TRESHOLD: u32 = 3;
 pub const MIN_DELEGATEES: u32 = 5;
 pub const MAX_DELEGATEES: u32 = 10;
 
+pub const INITIAL_VOTING_POWER: (u32, u32) = (0, 0);
 pub const ABSTAIN_VOTING_POWER: (u32, u32) = (0, 0);
 
 #[contracttype]
