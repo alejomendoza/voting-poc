@@ -1,4 +1,4 @@
-use soroban_sdk::{contracterror, contracttype};
+use soroban_sdk::{contracterror, contracttype, String, Env};
 
 pub type DecimalNumber = (u32, u32);
 
@@ -21,6 +21,40 @@ pub enum Vote {
   Abstain,
   Delegate,
 }
+
+pub fn vote_from_str(env: Env, str: String) -> Vote {
+  if str == String::from_slice(&env, "Yes") {
+    return Vote::Yes;
+  }
+  if str == String::from_slice(&env, "No") {
+    return Vote::No;
+  }
+  if str == String::from_slice(&env, "Delegate") {
+    return Vote::Delegate;
+  }
+  return Vote::Abstain;
+  // match str {
+  //   String::from_slice(&env, "Yes") => Vote::Yes,
+  //   "No" => Vote::No,
+  //   "Abstain" => Vote::Abstain,
+  //   "Delegate" => Vote::Delegate,
+  //   _ => Vote::Abstain,
+  // }
+}
+
+// impl FromStr for Vote {
+//   type Err = ();
+
+//   fn from_str(input: &str) -> Result<Vote, Self::Err> {
+//       match input {
+//           "Yes"  => Ok(Vote::Yes),
+//           "No"  => Ok(Vote::No),
+//           "Abstain"  => Ok(Vote::Abstain),
+//           "Delegate" => Ok(Vote::Delegate),
+//           _      => Err(()),
+//       }
+//   }
+// }
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]

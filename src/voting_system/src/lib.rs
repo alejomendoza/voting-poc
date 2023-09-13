@@ -13,7 +13,7 @@ use crate::types::{Vote, VotingSystemError, QUORUM_SIZE};
 use layer::{LayerAggregator, NeuronType};
 use neural_governance::NeuralGovernance;
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Map, String, Vec};
-use types::{ABSTAIN_VOTING_POWER, MAX_DELEGATEES, MIN_DELEGATEES, QUORUM_PARTICIPATION_TRESHOLD};
+use types::{ABSTAIN_VOTING_POWER, MAX_DELEGATEES, MIN_DELEGATEES, QUORUM_PARTICIPATION_TRESHOLD, vote_from_str};
 
 mod external_data_provider_contract {
   soroban_sdk::contractimport!(
@@ -146,8 +146,9 @@ impl VotingSystem {
     env: Env,
     voter_id: String,
     project_id: String,
-    vote: Vote,
+    vote: String,
   ) -> Result<(), VotingSystemError> {
+    let vote: Vote = vote_from_str(env.clone(), vote);
     if vote == Vote::Delegate
       && VotingSystem::get_delegatees(env.clone())
         .get(voter_id.clone())
@@ -208,7 +209,7 @@ impl VotingSystem {
     delegatees_for_user: Vec<String>,
   ) -> Result<(), VotingSystemError> {
     VotingSystem::set_delegatees(env.clone(), voter_id.clone(), delegatees_for_user)?;
-    VotingSystem::vote(env.clone(), voter_id, project_id, Vote::Delegate)
+    VotingSystem::vote(env.clone(), voter_id, project_id, String::from_slice(&env, "Delegate"))
   }
 
   pub fn get_votes(env: Env) -> Map<String, Map<String, Vote>> {
