@@ -31,7 +31,7 @@ pub enum DataKey {
   // storage type: instance
   // Map<UserUUID, Vec<UserUUID>> - users to the vector of users they delegated their votes to
   Delegatees,
-  // storage type: temporary
+  // storage type: instance
   ExternalDataProvider,
 }
 
@@ -69,7 +69,7 @@ impl VotingSystem {
   pub fn calculate_quorum_consensus(
     env: Env,
     voter_id: String,
-    project_votes: Map<String, Vote>,
+    project_id: String,
   ) -> Result<Vote, VotingSystemError> {
     let external_data_provider_client = external_data_provider_contract::Client::new(
       &env,
@@ -81,6 +81,9 @@ impl VotingSystem {
     // delegatees 5-10 have to choose best 5 based on ranks
     let delegation_ranks: Map<String, u32> =
       external_data_provider_client.get_delegation_ranks_for_users(&delegatees.clone());
+
+    let all_votes = VotingSystem::get_votes(env.clone());
+    let project_votes = all_votes.get(project_id.clone()).unwrap_or(Map::new(&env));
 
     let mut sorted_delegatees: Map<String, u32> = Map::new(&env);
     for delegatee_id in delegatees {
@@ -259,7 +262,7 @@ impl VotingSystem {
           vote = VotingSystem::calculate_quorum_consensus(
             env.clone(),
             voter_id.clone(),
-            project_votes.clone(),
+            project_id.clone(),
           )?;
         }
         let voting_power = match vote {
@@ -355,7 +358,7 @@ impl VotingSystem {
   }
 
   pub fn set_external_data_provider(env: Env, external_data_provider_address: Address) {
-    env.storage().temporary().set(
+    env.storage().instance().set(
       &DataKey::ExternalDataProvider,
       &external_data_provider_address,
     );
@@ -364,7 +367,7 @@ impl VotingSystem {
   pub fn get_external_data_provider(env: Env) -> Result<Address, VotingSystemError> {
     env
       .storage()
-      .temporary()
+      .instance()
       .get(&DataKey::ExternalDataProvider)
       .ok_or(VotingSystemError::ExternalDataProviderNotSet)?
   }

@@ -290,10 +290,7 @@ pub fn test_delegation_more_yes_votes() {
 
   let consensus = voting_system_client.calculate_quorum_consensus(
     &voter_id_1,
-    &voting_system_client
-      .get_votes()
-      .get(project_id.clone())
-      .unwrap(),
+    &project_id.clone(),
   );
   assert!(consensus == Vote::Yes);
 }
@@ -347,10 +344,7 @@ pub fn test_delegation_more_no_votes() {
 
   let consensus = voting_system_client.calculate_quorum_consensus(
     &voter_id_1,
-    &voting_system_client
-      .get_votes()
-      .get(project_id.clone())
-      .unwrap(),
+    &project_id.clone(),
   );
   assert!(consensus == Vote::No);
 }
@@ -404,10 +398,7 @@ pub fn test_delegation_too_many_abstain_votes() {
 
   let consensus = voting_system_client.calculate_quorum_consensus(
     &voter_id_1,
-    &voting_system_client
-      .get_votes()
-      .get(project_id.clone())
-      .unwrap(),
+    &project_id.clone(),
   );
   assert!(consensus == Vote::Abstain);
 }
@@ -496,10 +487,7 @@ pub fn test_delegation_too_many_delegate_votes() {
 
   let consensus = voting_system_client.calculate_quorum_consensus(
     &voter_id_1,
-    &voting_system_client
-      .get_votes()
-      .get(project_id.clone())
-      .unwrap(),
+    &project_id.clone(),
   );
   assert!(consensus == Vote::Abstain);
 }
@@ -566,10 +554,7 @@ pub fn test_delegation_yes_no_equal() {
 
   let consensus = voting_system_client.calculate_quorum_consensus(
     &voter_id_1,
-    &voting_system_client
-      .get_votes()
-      .get(project_id.clone())
-      .unwrap(),
+    &project_id.clone(),
   );
   assert!(consensus == Vote::Abstain);
 }
