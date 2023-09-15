@@ -1,4 +1,4 @@
-use crate::types::{DecimalNumber, VotingSystemError, LayerAggregator, NeuronType};
+use crate::types::{DecimalNumber, LayerAggregator, NeuronType, VotingSystemError};
 use soroban_sdk::{contracttype, Env, Map, String, Vec};
 
 use crate::{

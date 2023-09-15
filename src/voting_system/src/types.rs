@@ -1,4 +1,4 @@
-use soroban_sdk::{contracterror, contracttype, String, Env};
+use soroban_sdk::{contracterror, contracttype, Env, String};
 
 pub type DecimalNumber = (u32, u32);
 

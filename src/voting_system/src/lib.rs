@@ -12,7 +12,10 @@ use crate::decimal_number_wrapper::DecimalNumberWrapper;
 use crate::types::{Vote, VotingSystemError, QUORUM_SIZE};
 use neural_governance::NeuralGovernance;
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Map, String, Vec};
-use types::{ABSTAIN_VOTING_POWER, MAX_DELEGATEES, MIN_DELEGATEES, QUORUM_PARTICIPATION_TRESHOLD, vote_from_str, LayerAggregator, layer_aggregator_from_str, neuron_type_from_str};
+use types::{
+  layer_aggregator_from_str, neuron_type_from_str, vote_from_str, LayerAggregator,
+  ABSTAIN_VOTING_POWER, MAX_DELEGATEES, MIN_DELEGATEES, QUORUM_PARTICIPATION_TRESHOLD,
+};
 
 mod external_data_provider_contract {
   soroban_sdk::contractimport!(
@@ -211,7 +214,12 @@ impl VotingSystem {
     delegatees_for_user: Vec<String>,
   ) -> Result<(), VotingSystemError> {
     VotingSystem::set_delegatees(env.clone(), voter_id.clone(), delegatees_for_user)?;
-    VotingSystem::vote(env.clone(), voter_id, project_id, String::from_slice(&env, "Delegate"))
+    VotingSystem::vote(
+      env.clone(),
+      voter_id,
+      project_id,
+      String::from_slice(&env, "Delegate"),
+    )
   }
 
   pub fn get_votes(env: Env) -> Map<String, Map<String, Vote>> {
@@ -331,11 +339,7 @@ impl VotingSystem {
     Ok(())
   }
 
-  pub fn remove_neuron(
-    env: Env,
-    layer_id: u32,
-    neuron: String,
-  ) -> Result<(), VotingSystemError> {
+  pub fn remove_neuron(env: Env, layer_id: u32, neuron: String) -> Result<(), VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone()).unwrap();
     let neuron = neuron_type_from_str(env.clone(), neuron)?;
     neural_governance.remove_neuron(layer_id, neuron)?;
