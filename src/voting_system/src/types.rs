@@ -33,28 +33,46 @@ pub fn vote_from_str(env: Env, str: String) -> Vote {
     return Vote::Delegate;
   }
   return Vote::Abstain;
-  // match str {
-  //   String::from_slice(&env, "Yes") => Vote::Yes,
-  //   "No" => Vote::No,
-  //   "Abstain" => Vote::Abstain,
-  //   "Delegate" => Vote::Delegate,
-  //   _ => Vote::Abstain,
-  // }
 }
 
-// impl FromStr for Vote {
-//   type Err = ();
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum LayerAggregator {
+  Unknown,
+  Sum,
+  Product,
+}
 
-//   fn from_str(input: &str) -> Result<Vote, Self::Err> {
-//       match input {
-//           "Yes"  => Ok(Vote::Yes),
-//           "No"  => Ok(Vote::No),
-//           "Abstain"  => Ok(Vote::Abstain),
-//           "Delegate" => Ok(Vote::Delegate),
-//           _      => Err(()),
-//       }
-//   }
-// }
+pub fn layer_aggregator_from_str(env: Env, str: String) -> LayerAggregator {
+  if str == String::from_slice(&env, "Sum") {
+    return LayerAggregator::Sum;
+  }
+  if str == String::from_slice(&env, "Product") {
+    return LayerAggregator::Product;
+  }
+  LayerAggregator::Unknown
+}
+
+#[contracttype]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum NeuronType {
+  Dummy,
+  AssignedReputation,
+  PriorVotingHistory,
+}
+
+pub fn neuron_type_from_str(env: Env, str: String) -> Result<NeuronType, VotingSystemError> {
+  if str == String::from_slice(&env, "Dummy") {
+    return Ok(NeuronType::Dummy);
+  }
+  if str == String::from_slice(&env, "AssignedReputation") {
+    return Ok(NeuronType::AssignedReputation);
+  }
+  if str == String::from_slice(&env, "PriorVotingHistory") {
+    return Ok(NeuronType::PriorVotingHistory);
+  }
+  Err(VotingSystemError::UnknownNeuronType)
+}
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -80,4 +98,5 @@ pub enum VotingSystemError {
   UnexpectedValue = 17,
   TooManyDelegatees = 18,
   NotEnoughDelegatees = 19,
+  UnknownNeuronType = 20,
 }

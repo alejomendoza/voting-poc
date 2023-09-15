@@ -1,12 +1,11 @@
 use crate::{
   decimal_number_wrapper::DecimalNumberWrapper,
   external_data_provider_contract,
-  types::{Vote, DEFAULT_WEIGHT},
+  types::{Vote, DEFAULT_WEIGHT, LayerAggregator, NeuronType},
 };
 use soroban_sdk::{vec, Env, String};
 
 use crate::{
-  layer::{LayerAggregator, NeuronType},
   VotingSystem, VotingSystemClient,
 };
 
@@ -35,7 +34,7 @@ pub fn test_setting_up_neural_governance() {
       .aggregator
       == LayerAggregator::Unknown
   );
-  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
+  voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
   assert!(
     voting_system_client
       .get_neural_governance()
@@ -46,9 +45,9 @@ pub fn test_setting_up_neural_governance() {
       == LayerAggregator::Sum
   );
 
-  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
-  voting_system_client.add_neuron(&0, &NeuronType::AssignedReputation);
-  voting_system_client.add_neuron(&0, &NeuronType::PriorVotingHistory);
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "Dummy"));
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "AssignedReputation"));
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "PriorVotingHistory"));
   assert!(
     voting_system_client
       .get_neural_governance()
@@ -70,7 +69,7 @@ pub fn test_setting_up_neural_governance() {
       == 0
   );
 
-  voting_system_client.remove_neuron(&0, &NeuronType::PriorVotingHistory);
+  voting_system_client.remove_neuron(&0, &String::from_slice(&env, "PriorVotingHistory"));
   assert!(
     voting_system_client
       .get_neural_governance()
@@ -82,7 +81,7 @@ pub fn test_setting_up_neural_governance() {
       == 2
   );
 
-  voting_system_client.set_neuron_weight(&0, &NeuronType::AssignedReputation, &(4, 700));
+  voting_system_client.set_neuron_weight(&0, &String::from_slice(&env, "AssignedReputation"), &4700);
   assert!(
     voting_system_client
       .get_neural_governance()
@@ -118,11 +117,11 @@ pub fn test_simple_voting() {
   assert!(voting_system_client.add_layer() == 0);
   assert!(voting_system_client.add_layer() == 1);
 
-  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
-  voting_system_client.set_layer_aggregator(&1, &LayerAggregator::Product);
+  voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
+  voting_system_client.set_layer_aggregator(&1, &String::from_slice(&env, "Product"));
 
-  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
-  voting_system_client.add_neuron(&1, &NeuronType::Dummy);
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "Dummy"));
+  voting_system_client.add_neuron(&1, &String::from_slice(&env, "Dummy"));
 
   let voter_id = String::from_slice(&env, "user001");
   let project_id = String::from_slice(&env, "project001");
@@ -143,7 +142,7 @@ pub fn test_simple_voting() {
       == (2, 200)
   );
   // change neuron weight
-  voting_system_client.set_neuron_weight(&1, &NeuronType::Dummy, &(2, 0));
+  voting_system_client.set_neuron_weight(&1, &String::from_slice(&env, "Dummy"), &2000);
   assert!(
     voting_system_client
       .tally()
@@ -163,10 +162,10 @@ pub fn test_assigned_reputation_neuron() {
   voting_system_client.initialize();
   assert!(voting_system_client.add_layer() == 0);
 
-  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
+  voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
 
-  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
-  voting_system_client.add_neuron(&0, &NeuronType::AssignedReputation);
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "Dummy"));
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "AssignedReputation"));
 
   let external_data_provider_id =
     env.register_contract_wasm(None, external_data_provider_contract::WASM);
@@ -192,8 +191,8 @@ pub fn test_assigned_reputation_neuron() {
   );
 
   // change neurons' weights
-  voting_system_client.set_neuron_weight(&0, &NeuronType::Dummy, &(2, 0));
-  voting_system_client.set_neuron_weight(&0, &NeuronType::AssignedReputation, &(2, 0));
+  voting_system_client.set_neuron_weight(&0, &String::from_slice(&env, "Dummy"), &2000);
+  voting_system_client.set_neuron_weight(&0, &String::from_slice(&env, "AssignedReputation"), &2000);
 
   assert!(
     voting_system_client
@@ -214,9 +213,9 @@ pub fn test_prior_voting_history_neuron() {
   voting_system_client.initialize();
   assert!(voting_system_client.add_layer() == 0);
 
-  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
+  voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
 
-  voting_system_client.add_neuron(&0, &NeuronType::PriorVotingHistory);
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "PriorVotingHistory"));
 
   let external_data_provider_id =
     env.register_contract_wasm(None, external_data_provider_contract::WASM);
@@ -258,8 +257,8 @@ pub fn test_delegation_more_yes_votes() {
   voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   assert!(voting_system_client.add_layer() == 0);
-  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
-  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
+  voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "Dummy"));
 
   let voter_id_1 = String::from_slice(&env, "user001");
   let voter_id_2 = String::from_slice(&env, "user002");
@@ -315,8 +314,8 @@ pub fn test_delegation_more_no_votes() {
   voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   assert!(voting_system_client.add_layer() == 0);
-  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
-  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
+  voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "Dummy"));
 
   let voter_id_1 = String::from_slice(&env, "user001");
   let voter_id_2 = String::from_slice(&env, "user002");
@@ -372,8 +371,8 @@ pub fn test_delegation_too_many_abstain_votes() {
   voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   assert!(voting_system_client.add_layer() == 0);
-  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
-  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
+  voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "Dummy"));
 
   let voter_id_1 = String::from_slice(&env, "user001");
   let voter_id_2 = String::from_slice(&env, "user002");
@@ -429,8 +428,8 @@ pub fn test_delegation_too_many_delegate_votes() {
   voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   assert!(voting_system_client.add_layer() == 0);
-  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
-  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
+  voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "Dummy"));
 
   let voter_id_1 = String::from_slice(&env, "user001");
   let voter_id_2 = String::from_slice(&env, "user002");
@@ -521,8 +520,8 @@ pub fn test_delegation_yes_no_equal() {
   voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   assert!(voting_system_client.add_layer() == 0);
-  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
-  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
+  voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "Dummy"));
 
   let voter_id_1 = String::from_slice(&env, "user001");
   let voter_id_2 = String::from_slice(&env, "user002");
@@ -591,8 +590,8 @@ pub fn test_delegation_in_practice() {
   voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   assert!(voting_system_client.add_layer() == 0);
-  voting_system_client.set_layer_aggregator(&0, &LayerAggregator::Sum);
-  voting_system_client.add_neuron(&0, &NeuronType::Dummy);
+  voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "Dummy"));
 
   let voter_id_1 = String::from_slice(&env, "user001");
   let voter_id_2 = String::from_slice(&env, "user002");
