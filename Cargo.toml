@@ -6,7 +6,7 @@ members = [
 ]
 
 [workspace.dependencies]
-soroban-sdk = { git = "https://github.com/karol-bisztyga/rs-soroban-sdk.git", branch = "kb/fork" }
+soroban-sdk = "20.0.0-rc1"
 
 [profile.release]
 opt-level = "z"

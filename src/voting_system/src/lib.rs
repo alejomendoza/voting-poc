@@ -74,10 +74,10 @@ impl VotingSystem {
     voter_id: String,
     project_id: String,
   ) -> Result<Vote, VotingSystemError> {
-    let external_data_provider_client = external_data_provider_contract::Client::new(
-      &env,
-      &VotingSystem::get_external_data_provider(env.clone())?,
-    );
+    let external_data_provider_address = VotingSystem::get_external_data_provider(env.clone())?;
+    let external_data_provider_client =
+      external_data_provider_contract::Client::new(&env, &external_data_provider_address);
+      
     let delegatees = VotingSystem::get_delegatees(env.clone())
       .get(voter_id.clone())
       .ok_or(VotingSystemError::DelegateesNotFound)?;
@@ -178,7 +178,7 @@ impl VotingSystem {
     Ok(())
   }
 
-  fn get_delegatees(env: Env) -> Map<String, Vec<String>> {
+  pub fn get_delegatees(env: Env) -> Map<String, Vec<String>> {
     env
       .storage()
       .instance()
