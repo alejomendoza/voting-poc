@@ -1,4 +1,4 @@
-use soroban_sdk::{contracterror, contracttype};
+use soroban_sdk::{contracterror, contracttype, Env, String};
 
 pub type DecimalNumber = (u32, u32);
 
@@ -20,6 +20,58 @@ pub enum Vote {
   No,
   Abstain,
   Delegate,
+}
+
+pub fn vote_from_str(env: Env, str: String) -> Vote {
+  if str == String::from_slice(&env, "Yes") {
+    return Vote::Yes;
+  }
+  if str == String::from_slice(&env, "No") {
+    return Vote::No;
+  }
+  if str == String::from_slice(&env, "Delegate") {
+    return Vote::Delegate;
+  }
+  return Vote::Abstain;
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum LayerAggregator {
+  Unknown,
+  Sum,
+  Product,
+}
+
+pub fn layer_aggregator_from_str(env: Env, str: String) -> LayerAggregator {
+  if str == String::from_slice(&env, "Sum") {
+    return LayerAggregator::Sum;
+  }
+  if str == String::from_slice(&env, "Product") {
+    return LayerAggregator::Product;
+  }
+  LayerAggregator::Unknown
+}
+
+#[contracttype]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum NeuronType {
+  Dummy,
+  AssignedReputation,
+  PriorVotingHistory,
+}
+
+pub fn neuron_type_from_str(env: Env, str: String) -> Result<NeuronType, VotingSystemError> {
+  if str == String::from_slice(&env, "Dummy") {
+    return Ok(NeuronType::Dummy);
+  }
+  if str == String::from_slice(&env, "AssignedReputation") {
+    return Ok(NeuronType::AssignedReputation);
+  }
+  if str == String::from_slice(&env, "PriorVotingHistory") {
+    return Ok(NeuronType::PriorVotingHistory);
+  }
+  Err(VotingSystemError::UnknownNeuronType)
 }
 
 #[contracterror]
@@ -46,4 +98,5 @@ pub enum VotingSystemError {
   UnexpectedValue = 17,
   TooManyDelegatees = 18,
   NotEnoughDelegatees = 19,
+  UnknownNeuronType = 20,
 }

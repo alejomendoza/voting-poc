@@ -1,13 +1,13 @@
 #![allow(non_upper_case_globals)]
 
-use crate::types::{DecimalNumber, VotingSystemError, DEFAULT_WEIGHT, INITIAL_VOTING_POWER};
+use crate::types::{
+  DecimalNumber, LayerAggregator, NeuronType, VotingSystemError, DEFAULT_WEIGHT,
+  INITIAL_VOTING_POWER,
+};
 
 use soroban_sdk::{contracttype, Env, Map, String, Vec};
 
-use crate::{
-  decimal_number_wrapper::DecimalNumberWrapper,
-  layer::{Layer, LayerAggregator, NeuronType},
-};
+use crate::{decimal_number_wrapper::DecimalNumberWrapper, layer::Layer};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]

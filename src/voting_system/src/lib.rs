@@ -10,10 +10,12 @@ mod types;
 use crate::decimal_number_wrapper::DecimalNumberWrapper;
 
 use crate::types::{Vote, VotingSystemError, QUORUM_SIZE};
-use layer::{LayerAggregator, NeuronType};
 use neural_governance::NeuralGovernance;
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Map, String, Vec};
-use types::{ABSTAIN_VOTING_POWER, MAX_DELEGATEES, MIN_DELEGATEES, QUORUM_PARTICIPATION_TRESHOLD};
+use types::{
+  layer_aggregator_from_str, neuron_type_from_str, vote_from_str, LayerAggregator,
+  ABSTAIN_VOTING_POWER, MAX_DELEGATEES, MIN_DELEGATEES, QUORUM_PARTICIPATION_TRESHOLD,
+};
 
 mod external_data_provider_contract {
   soroban_sdk::contractimport!(
@@ -70,18 +72,21 @@ impl VotingSystem {
   pub fn calculate_quorum_consensus(
     env: Env,
     voter_id: String,
-    project_votes: Map<String, Vote>,
+    project_id: String,
   ) -> Result<Vote, VotingSystemError> {
-    let external_data_provider_client = external_data_provider_contract::Client::new(
-      &env,
-      &VotingSystem::get_external_data_provider(env.clone())?,
-    );
+    let external_data_provider_address = VotingSystem::get_external_data_provider(env.clone())?;
+    let external_data_provider_client =
+      external_data_provider_contract::Client::new(&env, &external_data_provider_address);
+
     let delegatees = VotingSystem::get_delegatees(env.clone())
       .get(voter_id.clone())
       .ok_or(VotingSystemError::DelegateesNotFound)?;
     // delegatees 5-10 have to choose best 5 based on ranks
     let delegation_ranks: Map<String, u32> =
       external_data_provider_client.get_delegation_ranks_for_users(&delegatees.clone());
+
+    let all_votes = VotingSystem::get_votes(env.clone());
+    let project_votes = all_votes.get(project_id.clone()).unwrap_or(Map::new(&env));
 
     let mut sorted_delegatees: Map<String, u32> = Map::new(&env);
     for delegatee_id in delegatees {
@@ -146,8 +151,9 @@ impl VotingSystem {
     env: Env,
     voter_id: String,
     project_id: String,
-    vote: Vote,
+    vote: String,
   ) -> Result<(), VotingSystemError> {
+    let vote: Vote = vote_from_str(env.clone(), vote);
     if vote == Vote::Delegate
       && VotingSystem::get_delegatees(env.clone())
         .get(voter_id.clone())
@@ -172,7 +178,7 @@ impl VotingSystem {
     Ok(())
   }
 
-  fn get_delegatees(env: Env) -> Map<String, Vec<String>> {
+  pub fn get_delegatees(env: Env) -> Map<String, Vec<String>> {
     env
       .storage()
       .instance()
@@ -208,7 +214,12 @@ impl VotingSystem {
     delegatees_for_user: Vec<String>,
   ) -> Result<(), VotingSystemError> {
     VotingSystem::set_delegatees(env.clone(), voter_id.clone(), delegatees_for_user)?;
-    VotingSystem::vote(env.clone(), voter_id, project_id, Vote::Delegate)
+    VotingSystem::vote(
+      env.clone(),
+      voter_id,
+      project_id,
+      String::from_slice(&env, "Delegate"),
+    )
   }
 
   pub fn get_votes(env: Env) -> Map<String, Map<String, Vote>> {
@@ -259,7 +270,7 @@ impl VotingSystem {
           vote = VotingSystem::calculate_quorum_consensus(
             env.clone(),
             voter_id.clone(),
-            project_votes.clone(),
+            project_id.clone(),
           )?;
         }
         let voting_power = match vote {
@@ -294,8 +305,6 @@ impl VotingSystem {
     Ok(result)
   }
 
-  // implement all operations like: add_layer, add_neuron, set_layer_aggregator, set_neuron_weight, etc.
-  // this will do operations on the neural governance contract
   pub fn add_layer(env: Env) -> Result<u32, VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone())?;
     let new_layer_id = neural_governance.add_layer(env.clone());
@@ -313,27 +322,26 @@ impl VotingSystem {
   pub fn set_layer_aggregator(
     env: Env,
     layer_id: u32,
-    aggregator: LayerAggregator,
+    aggregator: String,
   ) -> Result<(), VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone())?;
-    neural_governance.set_layer_aggregator(layer_id, aggregator)?;
+    let layer_aggregator: LayerAggregator = layer_aggregator_from_str(env.clone(), aggregator);
+    neural_governance.set_layer_aggregator(layer_id, layer_aggregator)?;
     VotingSystem::set_neural_governance(env, neural_governance);
     Ok(())
   }
 
-  pub fn add_neuron(env: Env, layer_id: u32, neuron: NeuronType) -> Result<(), VotingSystemError> {
+  pub fn add_neuron(env: Env, layer_id: u32, neuron: String) -> Result<(), VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone())?;
+    let neuron = neuron_type_from_str(env.clone(), neuron)?;
     neural_governance.add_neuron(layer_id, neuron)?;
     VotingSystem::set_neural_governance(env, neural_governance);
     Ok(())
   }
 
-  pub fn remove_neuron(
-    env: Env,
-    layer_id: u32,
-    neuron: NeuronType,
-  ) -> Result<(), VotingSystemError> {
+  pub fn remove_neuron(env: Env, layer_id: u32, neuron: String) -> Result<(), VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone()).unwrap();
+    let neuron = neuron_type_from_str(env.clone(), neuron)?;
     neural_governance.remove_neuron(layer_id, neuron)?;
     VotingSystem::set_neural_governance(env, neural_governance);
     Ok(())
@@ -342,10 +350,12 @@ impl VotingSystem {
   pub fn set_neuron_weight(
     env: Env,
     layer_id: u32,
-    neuron: NeuronType,
-    weight: (u32, u32),
+    neuron: String,
+    weight: u32,
   ) -> Result<(), VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone())?;
+    let neuron = neuron_type_from_str(env.clone(), neuron)?;
+    let weight = DecimalNumberWrapper::from(weight).as_tuple();
     neural_governance.set_neuron_weight(layer_id, neuron, weight)?;
     VotingSystem::set_neural_governance(env, neural_governance);
     Ok(())

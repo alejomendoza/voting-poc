@@ -1,26 +1,10 @@
-use crate::types::{DecimalNumber, VotingSystemError};
+use crate::types::{DecimalNumber, LayerAggregator, NeuronType, VotingSystemError};
 use soroban_sdk::{contracttype, Env, Map, String, Vec};
 
 use crate::{
   decimal_number_wrapper::DecimalNumberWrapper,
   neurons::{assigned_reputation_neuron, dummy_neuron, prior_voting_history_neuron},
 };
-
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum LayerAggregator {
-  Unknown,
-  Sum,
-  Product,
-}
-
-#[contracttype]
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum NeuronType {
-  Dummy,
-  AssignedReputation,
-  PriorVotingHistory,
-}
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]

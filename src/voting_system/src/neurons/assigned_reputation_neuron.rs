@@ -6,9 +6,9 @@ pub fn oracle_function(
   voter_id: String,
   _project_id: String,
 ) -> Result<(u32, u32), VotingSystemError> {
-  let external_data_provider = VotingSystem::get_external_data_provider(env.clone())?;
+  let external_data_provider_address = VotingSystem::get_external_data_provider(env.clone())?;
   let external_data_provider_client =
-    external_data_provider_contract::Client::new(&env, &external_data_provider);
+    external_data_provider_contract::Client::new(&env, &external_data_provider_address);
 
   let reputation_category = external_data_provider_client.get_user_reputation_category(&voter_id);
   let bonus = external_data_provider_client.get_reputation_score(&reputation_category);
