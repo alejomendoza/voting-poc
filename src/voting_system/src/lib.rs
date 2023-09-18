@@ -34,7 +34,7 @@ pub enum DataKey {
   // storage type: instance
   // Map<UserUUID, Vec<UserUUID>> - users to the vector of users they delegated their votes to
   Delegatees,
-  // storage type: instance
+  // storage type: temporary
   ExternalDataProvider,
 }
 
@@ -77,7 +77,7 @@ impl VotingSystem {
     let external_data_provider_address = VotingSystem::get_external_data_provider(env.clone())?;
     let external_data_provider_client =
       external_data_provider_contract::Client::new(&env, &external_data_provider_address);
-      
+
     let delegatees = VotingSystem::get_delegatees(env.clone())
       .get(voter_id.clone())
       .ok_or(VotingSystemError::DelegateesNotFound)?;
@@ -362,7 +362,7 @@ impl VotingSystem {
   }
 
   pub fn set_external_data_provider(env: Env, external_data_provider_address: Address) {
-    env.storage().instance().set(
+    env.storage().temporary().set(
       &DataKey::ExternalDataProvider,
       &external_data_provider_address,
     );
@@ -371,7 +371,7 @@ impl VotingSystem {
   pub fn get_external_data_provider(env: Env) -> Result<Address, VotingSystemError> {
     env
       .storage()
-      .instance()
+      .temporary()
       .get(&DataKey::ExternalDataProvider)
       .ok_or(VotingSystemError::ExternalDataProviderNotSet)?
   }
