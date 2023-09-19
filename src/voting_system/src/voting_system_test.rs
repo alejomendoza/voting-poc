@@ -136,6 +136,7 @@ pub fn test_simple_voting() {
 
   assert!(voting_system_client.get_voters().is_empty());
   voting_system_client.vote(&voter_id, &project_id, &String::from_slice(&env, "No"));
+  assert!(voting_system_client.get_projects().len() == 2);
   // test overriding the vote
   voting_system_client.vote(&voter_id, &project_id, &String::from_slice(&env, "Yes"));
   assert!(voting_system_client.get_voters().len() == 1);
@@ -143,7 +144,6 @@ pub fn test_simple_voting() {
   assert!(voting_system_client.get_voters().len() == 2);
   voting_system_client.remove_vote(&voter_id_2, &project_id_2);
   assert!(voting_system_client.get_voters().len() == 1);
-  assert!(voting_system_client.get_projects().len() == 2);
 
   voting_system_client.vote(&voter_id, &project_id_2, &String::from_slice(&env, "Yes"));
   assert!(voting_system_client.get_votes_for_user(&voter_id).len() == 2);

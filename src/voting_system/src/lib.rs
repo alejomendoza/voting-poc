@@ -226,7 +226,7 @@ impl VotingSystem {
       .unwrap_or(Map::new(&env))
   }
 
-  pub fn get_votes_for_user(env: Env, user_id: String) -> Map<String, Vote> {
+  pub fn get_votes_for_user(env: Env, voter_id: String) -> Map<String, Vote> {
     let all_votes: Map<String, Map<String, Vote>> = env
       .storage()
       .instance()
@@ -235,11 +235,9 @@ impl VotingSystem {
     // project id => vote
     let mut result: Map<String, Vote> = Map::new(&env);
     for (project_id, project_votes) in all_votes {
-      let maybe_vote = project_votes.get(user_id.clone());
-      if maybe_vote.is_none() {
-        continue;
+      if let Some(vote) = project_votes.get(voter_id.clone()) {
+        result.set(project_id, vote);
       }
-      result.set(project_id, maybe_vote.unwrap());
     }
     result
   }
