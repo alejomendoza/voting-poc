@@ -163,13 +163,9 @@ impl VotingSystem {
     }
 
     let mut votes = VotingSystem::get_votes(env.clone());
-    let mut project_votes = votes
-      .get(project_id.clone())
-      .ok_or(VotingSystemError::ProjectDoesNotExist)?;
+    let mut project_votes: Map<String, Vote> =
+      votes.get(project_id.clone()).unwrap_or(Map::new(&env));
 
-    if project_votes.contains_key(voter_id.clone()) {
-      return Err(VotingSystemError::UserAlreadyVoted);
-    }
     project_votes.set(voter_id, vote);
     votes.set(project_id, project_votes);
 
@@ -247,6 +243,15 @@ impl VotingSystem {
       result.set(project_id, maybe_vote.unwrap());
     }
     result
+  }
+
+  pub fn remove_vote(env: Env, voter_id: String, project_id: String) {
+    let all_votes: Map<String, Map<String, Vote>> = env
+      .storage()
+      .instance()
+      .get(&DataKey::Votes)
+      .unwrap_or(Map::new(&env));
+    // ...
   }
 
   pub fn add_project(env: Env, project_id: String) -> Result<(), VotingSystemError> {

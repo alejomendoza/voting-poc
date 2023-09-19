@@ -127,14 +127,18 @@ pub fn test_simple_voting() {
 
   let voter_id = String::from_slice(&env, "user001");
   let project_id = String::from_slice(&env, "project001");
+  let project_id_2 = String::from_slice(&env, "project002");
 
   assert!(voting_system_client.get_projects().is_empty());
-  voting_system_client.add_project(&project_id);
+  voting_system_client.add_project(&project_id_2);
   assert!(voting_system_client.get_projects().len() == 1);
 
   assert!(voting_system_client.get_voters().is_empty());
+  voting_system_client.vote(&voter_id, &project_id, &String::from_slice(&env, "No"));
+  // test overriding the vote
   voting_system_client.vote(&voter_id, &project_id, &String::from_slice(&env, "Yes"));
   assert!(voting_system_client.get_voters().len() == 1);
+  assert!(voting_system_client.get_projects().len() == 2);
 
   assert!(
     voting_system_client
