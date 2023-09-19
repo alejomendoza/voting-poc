@@ -49,6 +49,20 @@ impl DecimalNumberWrapper {
     .validate()
   }
 
+  pub fn div(a: DecimalNumberWrapper, b: DecimalNumberWrapper) -> DecimalNumberWrapper {
+    if b.as_raw() == 0 {
+      panic!("division by zero")
+    }
+    let a_prepared = DecimalNumberWrapper::prepare_number(a.validate()) * DECIMAL_MODIFIER;
+    let result = a_prepared / DecimalNumberWrapper::prepare_number(b.validate());
+    let whole = result / DECIMAL_MODIFIER;
+    DecimalNumberWrapper {
+      whole,
+      fractional: result - (whole * DECIMAL_MODIFIER),
+    }
+    .validate()
+  }
+
   // a - b
   // we operate on unsigned values, so in case a < b, it just returns 0
   pub fn sub(a: DecimalNumberWrapper, b: DecimalNumberWrapper) -> DecimalNumberWrapper {
