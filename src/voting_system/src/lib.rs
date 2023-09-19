@@ -230,6 +230,25 @@ impl VotingSystem {
       .unwrap_or(Map::new(&env))
   }
 
+  // TODO: not tested
+  pub fn get_votes_for_user(env: Env, user_id: String) -> Map<String, Vote> {
+    let all_votes: Map<String, Map<String, Vote>> = env
+      .storage()
+      .instance()
+      .get(&DataKey::Votes)
+      .unwrap_or(Map::new(&env));
+    // project id => vote
+    let mut result: Map<String, Vote> = Map::new(&env);
+    for (project_id, project_votes) in all_votes {
+      let maybe_vote = project_votes.get(user_id.clone());
+      if maybe_vote.is_none() {
+        continue;
+      }
+      result.set(project_id, maybe_vote.unwrap());
+    }
+    result
+  }
+
   pub fn add_project(env: Env, project_id: String) -> Result<(), VotingSystemError> {
     let mut votes = VotingSystem::get_votes(env.clone());
     if votes.get(project_id.clone()).is_some() {
