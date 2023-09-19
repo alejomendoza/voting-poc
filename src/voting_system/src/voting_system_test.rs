@@ -145,6 +145,9 @@ pub fn test_simple_voting() {
   assert!(voting_system_client.get_voters().len() == 1);
   assert!(voting_system_client.get_projects().len() == 2);
 
+  voting_system_client.vote(&voter_id, &project_id_2, &String::from_slice(&env, "Yes"));
+  assert!(voting_system_client.get_votes_for_user(&voter_id).len() == 2);
+
   assert!(
     voting_system_client
       .tally()

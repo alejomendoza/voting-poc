@@ -226,7 +226,6 @@ impl VotingSystem {
       .unwrap_or(Map::new(&env))
   }
 
-  // TODO: not tested
   pub fn get_votes_for_user(env: Env, user_id: String) -> Map<String, Vote> {
     let all_votes: Map<String, Map<String, Vote>> = env
       .storage()
