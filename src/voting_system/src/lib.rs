@@ -246,12 +246,13 @@ impl VotingSystem {
   }
 
   pub fn remove_vote(env: Env, voter_id: String, project_id: String) {
-    let all_votes: Map<String, Map<String, Vote>> = env
-      .storage()
-      .instance()
-      .get(&DataKey::Votes)
-      .unwrap_or(Map::new(&env));
-    // ...
+    let mut votes = VotingSystem::get_votes(env.clone());
+    let mut project_votes: Map<String, Vote> =
+      votes.get(project_id.clone()).unwrap_or(Map::new(&env));
+    project_votes.remove(voter_id);
+    votes.set(project_id, project_votes);
+
+    env.storage().instance().set(&DataKey::Votes, &votes);
   }
 
   pub fn add_project(env: Env, project_id: String) -> Result<(), VotingSystemError> {

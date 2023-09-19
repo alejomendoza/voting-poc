@@ -126,6 +126,7 @@ pub fn test_simple_voting() {
   voting_system_client.add_neuron(&1, &String::from_slice(&env, "Dummy"));
 
   let voter_id = String::from_slice(&env, "user001");
+  let voter_id_2 = String::from_slice(&env, "user002");
   let project_id = String::from_slice(&env, "project001");
   let project_id_2 = String::from_slice(&env, "project002");
 
@@ -137,6 +138,10 @@ pub fn test_simple_voting() {
   voting_system_client.vote(&voter_id, &project_id, &String::from_slice(&env, "No"));
   // test overriding the vote
   voting_system_client.vote(&voter_id, &project_id, &String::from_slice(&env, "Yes"));
+  assert!(voting_system_client.get_voters().len() == 1);
+  voting_system_client.vote(&voter_id_2, &project_id_2, &String::from_slice(&env, "Yes"));
+  assert!(voting_system_client.get_voters().len() == 2);
+  voting_system_client.remove_vote(&voter_id_2, &project_id_2);
   assert!(voting_system_client.get_voters().len() == 1);
   assert!(voting_system_client.get_projects().len() == 2);
 
