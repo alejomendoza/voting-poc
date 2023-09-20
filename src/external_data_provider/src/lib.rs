@@ -33,6 +33,9 @@ pub enum DataKey {
   // storage type: temporary
   // Map<UserUUID, u32> - users to their delegation rank
   DelegationRanks,
+  // storage type: temporary
+  // Map<UserUUID, Vec<UserUUID>> - users to their delegation rank
+  TrustMap,
 }
 
 #[contract]
@@ -43,28 +46,22 @@ impl ExternalDataProvider {}
 #[contractimpl]
 impl ExternalDataProvider {
   pub fn mock_sample_data(env: Env) {
+    let user001 = String::from_slice(&env, "user001");
+    let user002 = String::from_slice(&env, "user002");
+    let user003 = String::from_slice(&env, "user003");
+    let user004 = String::from_slice(&env, "user004");
+    let user005 = String::from_slice(&env, "user005");
+    let user006 = String::from_slice(&env, "user006");
+    let user007 = String::from_slice(&env, "user007");
+    let user008 = String::from_slice(&env, "user008");
+    let user009 = String::from_slice(&env, "user009");
     // for assigned reputation neuron
     let mut reputation_map: Map<String, ReputationCategory> = Map::new(&env);
-    reputation_map.set(
-      String::from_slice(&env, "user001"),
-      ReputationCategory::Excellent,
-    );
-    reputation_map.set(
-      String::from_slice(&env, "user002"),
-      ReputationCategory::VeryGood,
-    );
-    reputation_map.set(
-      String::from_slice(&env, "user003"),
-      ReputationCategory::Good,
-    );
-    reputation_map.set(
-      String::from_slice(&env, "user004"),
-      ReputationCategory::Average,
-    );
-    reputation_map.set(
-      String::from_slice(&env, "user005"),
-      ReputationCategory::Poor,
-    );
+    reputation_map.set(user001.clone(), ReputationCategory::Excellent);
+    reputation_map.set(user002.clone(), ReputationCategory::VeryGood);
+    reputation_map.set(user003.clone(), ReputationCategory::Good);
+    reputation_map.set(user004.clone(), ReputationCategory::Average);
+    reputation_map.set(user005.clone(), ReputationCategory::Poor);
     env
       .storage()
       .temporary()
@@ -72,8 +69,8 @@ impl ExternalDataProvider {
 
     // for prior history neuron
     let mut voting_history_set: Map<String, Vec<u32>> = Map::new(&env);
-    voting_history_set.set(String::from_slice(&env, "user001"), vec![&env, 2, 3]);
-    voting_history_set.set(String::from_slice(&env, "user003"), vec![&env, 2, 3, 4]);
+    voting_history_set.set(user001.clone(), vec![&env, 2, 3]);
+    voting_history_set.set(user003.clone(), vec![&env, 2, 3, 4]);
     env
       .storage()
       .temporary()
@@ -90,18 +87,41 @@ impl ExternalDataProvider {
       .set(&DataKey::RoundBonusMap, &round_bonus_map);
 
     let mut delegation_ranks: Map<String, u32> = Map::new(&env);
-    delegation_ranks.set(String::from_slice(&env, "user001"), 1);
-    delegation_ranks.set(String::from_slice(&env, "user002"), 2);
-    delegation_ranks.set(String::from_slice(&env, "user003"), 3);
-    delegation_ranks.set(String::from_slice(&env, "user004"), 4);
-    delegation_ranks.set(String::from_slice(&env, "user005"), 5);
-    delegation_ranks.set(String::from_slice(&env, "user006"), 6);
-    delegation_ranks.set(String::from_slice(&env, "user007"), 7);
-    delegation_ranks.set(String::from_slice(&env, "user008"), 8);
+    delegation_ranks.set(user001.clone(), 1);
+    delegation_ranks.set(user002.clone(), 2);
+    delegation_ranks.set(user003.clone(), 3);
+    delegation_ranks.set(user004.clone(), 4);
+    delegation_ranks.set(user005.clone(), 5);
+    delegation_ranks.set(user006.clone(), 6);
+    delegation_ranks.set(user007.clone(), 7);
+    delegation_ranks.set(user008.clone(), 8);
     env
       .storage()
       .temporary()
       .set(&DataKey::DelegationRanks, &delegation_ranks);
+
+    // for trust graph neuron
+    let mut trust_map: Map<String, Vec<String>> = Map::new(&env);
+    trust_map.set(
+      user001.clone(),
+      vec![&env, user002.clone(), user004.clone()],
+    );
+    trust_map.set(
+      user002.clone(),
+      vec![&env, user001.clone(),]
+    );
+    trust_map.set(
+      user003.clone(),
+      vec![&env, user001.clone(), user002.clone(),]
+    );
+    trust_map.set(
+      user004.clone(),
+      vec![&env, user003.clone(),]
+    );
+    env
+      .storage()
+      .temporary()
+      .set(&DataKey::TrustMap, &trust_map);
   }
 
   // for assigned reputation neuron
@@ -200,6 +220,21 @@ impl ExternalDataProvider {
       .storage()
       .temporary()
       .set(&DataKey::DelegationRanks, &delegation_ranks);
+  }
+
+  // for trust graph neuron
+  pub fn get_trust_map(env: Env) -> Map<String, Vec<String>> {
+    env
+      .storage()
+      .temporary()
+      .get(&DataKey::TrustMap)
+      .unwrap_or(Map::new(&env))
+  }
+  pub fn set_trust_map(env: Env, trust_map: Map<String, Vec<String>>) {
+    env
+      .storage()
+      .temporary()
+      .set(&DataKey::TrustMap, &trust_map);
   }
 }
 

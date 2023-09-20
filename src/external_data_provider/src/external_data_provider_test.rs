@@ -127,3 +127,30 @@ pub fn test_delegation_rank() {
   assert!(ranks.get(user_id_1.clone()).unwrap() == 15);
   assert!(ranks.get(user_id_99.clone()).unwrap() == 0);
 }
+
+#[test]
+pub fn test_trust_map() {
+  let env = Env::default();
+
+  let external_data_provider_id = env.register_contract(None, ExternalDataProvider);
+  let external_data_provider_client =
+    ExternalDataProviderClient::new(&env, &external_data_provider_id);
+
+  let user_id_1 = String::from_slice(&env, "user001");
+  let user_id_2 = String::from_slice(&env, "user002");
+
+  assert!(external_data_provider_client.get_trust_map().get(user_id_1.clone()).is_none());
+
+  external_data_provider_client.mock_sample_data();
+
+  let trust_map = external_data_provider_client.get_trust_map();
+  let user_1_map = trust_map.get(user_id_1.clone());
+  let user_2_map = trust_map.get(user_id_2.clone());
+  assert!(user_1_map == Some(Vec::from_slice(&env, &[
+    user_id_2.clone(),
+    String::from_slice(&env, "user004")
+  ])));
+  assert!(user_2_map == Some(Vec::from_slice(&env, &[
+    user_id_1.clone(),
+  ])));
+}
