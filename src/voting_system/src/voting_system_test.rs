@@ -135,14 +135,26 @@ pub fn test_simple_voting() {
   assert!(voting_system_client.get_projects().len() == 1);
 
   assert!(voting_system_client.get_voters().is_empty());
-  voting_system_client.vote(&voter_id, &project_id, &String::from_slice(&env, "No"));
+  let current_user_votes =
+    voting_system_client.vote(&voter_id, &project_id, &String::from_slice(&env, "No"));
+  assert!(current_user_votes.len() == 1);
   assert!(voting_system_client.get_projects().len() == 2);
   // test overriding the vote
-  voting_system_client.vote(&voter_id, &project_id, &String::from_slice(&env, "Yes"));
+  let current_user_votes =
+    voting_system_client.vote(&voter_id, &project_id, &String::from_slice(&env, "Yes"));
+  assert!(current_user_votes.len() == 1);
+
+  let current_user_votes =
+    voting_system_client.vote(&voter_id, &project_id_2, &String::from_slice(&env, "Yes"));
+  assert!(current_user_votes.len() == 2);
+
   assert!(voting_system_client.get_voters().len() == 1);
-  voting_system_client.vote(&voter_id_2, &project_id_2, &String::from_slice(&env, "Yes"));
+  let current_user_votes =
+    voting_system_client.vote(&voter_id_2, &project_id_2, &String::from_slice(&env, "Yes"));
+  assert!(current_user_votes.len() == 1);
   assert!(voting_system_client.get_voters().len() == 2);
-  voting_system_client.remove_vote(&voter_id_2, &project_id_2);
+  let current_user_votes = voting_system_client.remove_vote(&voter_id_2, &project_id_2);
+  assert!(current_user_votes.len() == 0);
   assert!(voting_system_client.get_voters().len() == 1);
 
   voting_system_client.vote(&voter_id, &project_id_2, &String::from_slice(&env, "Yes"));
