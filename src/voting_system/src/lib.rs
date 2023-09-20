@@ -1,6 +1,7 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
+mod page_rank;
 mod decimal_number_wrapper;
 mod layer;
 mod neural_governance;
