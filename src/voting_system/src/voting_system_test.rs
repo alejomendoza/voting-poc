@@ -1,9 +1,10 @@
 use crate::{
   decimal_number_wrapper::DecimalNumberWrapper,
   external_data_provider_contract,
+  page_rank::Rank,
   types::{LayerAggregator, NeuronType, Vote, DEFAULT_WEIGHT},
 };
-use soroban_sdk::{vec, Env, String};
+use soroban_sdk::{vec, Env, Map, String};
 
 use crate::{VotingSystem, VotingSystemClient};
 
@@ -268,6 +269,61 @@ pub fn test_prior_voting_history_neuron() {
       .get(project_id.clone())
       .unwrap()
       == (0, 300)
+  );
+}
+
+#[test]
+pub fn test_graph_bonus() {
+  let env = Env::default();
+
+  let voting_system_id = env.register_contract(None, VotingSystem);
+  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+
+  voting_system_client.initialize();
+  assert!(voting_system_client.add_layer() == 0);
+
+  voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
+
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "TrustGraph"));
+
+  let external_data_provider_id =
+    env.register_contract_wasm(None, external_data_provider_contract::WASM);
+  let external_data_provider_client =
+    external_data_provider_contract::Client::new(&env, &external_data_provider_id);
+  external_data_provider_client.mock_sample_data();
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
+
+  let voter_id_1 = String::from_slice(&env, "user001");
+  let voter_id_2 = String::from_slice(&env, "user002");
+  let project_id = String::from_slice(&env, "project001");
+
+  voting_system_client.add_project(&project_id);
+  voting_system_client.vote(&voter_id_1, &project_id, &String::from_slice(&env, "Yes"));
+  voting_system_client.vote(&voter_id_2, &project_id, &String::from_slice(&env, "No"));
+
+  let tm = external_data_provider_client.get_trust_map();
+  let rank = Rank::from_pages(&env, tm);
+  let calculated = rank.calculate(&env);
+
+  assert!(
+    calculated
+      == Map::from_array(
+        &env,
+        [
+          (String::from_slice(&env, "user001"), (0, 344)),
+          (String::from_slice(&env, "user002"), (0, 185)),
+          (String::from_slice(&env, "user003"), (0, 339)),
+          (String::from_slice(&env, "user004"), (0, 181)),
+        ]
+      )
+  );
+
+  assert!(
+    voting_system_client
+      .tally()
+      .get(project_id.clone())
+      .unwrap()
+      == (0, 159)
   );
 }
 

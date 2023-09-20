@@ -5,6 +5,8 @@ pub mod types;
 
 // This contract's going to be responsible for fetching the data from any external resources
 
+use core::f32::consts::E;
+
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Env, Map, String, Vec};
 
 #[contracttype]
@@ -34,7 +36,7 @@ pub enum DataKey {
   // Map<UserUUID, u32> - users to their delegation rank
   DelegationRanks,
   // storage type: temporary
-  // Map<UserUUID, Vec<UserUUID>> - users to their delegation rank
+  // Map<String, Map<String, ()>> - users to their delegation rank
   TrustMap,
 }
 
@@ -101,22 +103,23 @@ impl ExternalDataProvider {
       .set(&DataKey::DelegationRanks, &delegation_ranks);
 
     // for trust graph neuron
-    let mut trust_map: Map<String, Vec<String>> = Map::new(&env);
+    let mut trust_map: Map<String, Map<String, ()>> = Map::new(&env);
     trust_map.set(
       user001.clone(),
-      vec![&env, user002.clone(), user004.clone()],
+      // map[&env, user002.clone(), user004.clone()],
+      Map::from_array(&env, [(user002.clone(), ()), (user004.clone(), ())]),
     );
     trust_map.set(
       user002.clone(),
-      vec![&env, user001.clone(),]
+      Map::from_array(&env, [(user001.clone(), ())]),
     );
     trust_map.set(
       user003.clone(),
-      vec![&env, user001.clone(), user002.clone(),]
+      Map::from_array(&env, [(user001.clone(), ()), (user002.clone(), ())]),
     );
     trust_map.set(
       user004.clone(),
-      vec![&env, user003.clone(),]
+      Map::from_array(&env, [(user003.clone(), ())]),
     );
     env
       .storage()
@@ -223,14 +226,14 @@ impl ExternalDataProvider {
   }
 
   // for trust graph neuron
-  pub fn get_trust_map(env: Env) -> Map<String, Vec<String>> {
+  pub fn get_trust_map(env: Env) -> Map<String, Map<String, ()>> {
     env
       .storage()
       .temporary()
       .get(&DataKey::TrustMap)
       .unwrap_or(Map::new(&env))
   }
-  pub fn set_trust_map(env: Env, trust_map: Map<String, Vec<String>>) {
+  pub fn set_trust_map(env: Env, trust_map: Map<String, Map<String, ()>>) {
     env
       .storage()
       .temporary()

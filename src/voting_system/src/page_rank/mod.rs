@@ -13,6 +13,14 @@ impl Rank {
     }
   }
 
+  pub fn from_pages(env: &Env, pages: Map<String, Map<String, ()>>) -> Rank {
+    let mut result = Rank::new(env);
+    for (page, links) in pages {
+      result.add_page(page, links);
+    }
+    result
+  }
+
   pub fn add_page(&mut self, page: String, links: Map<String, ()>) {
     self.graph.set(page, links);
   }

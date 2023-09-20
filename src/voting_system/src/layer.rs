@@ -3,7 +3,9 @@ use soroban_sdk::{contracttype, Env, Map, String, Vec};
 
 use crate::{
   decimal_number_wrapper::DecimalNumberWrapper,
-  neurons::{assigned_reputation_neuron, dummy_neuron, prior_voting_history_neuron},
+  neurons::{
+    assigned_reputation_neuron, dummy_neuron, prior_voting_history_neuron, trust_graph_neuron,
+  },
 };
 
 #[contracttype]
@@ -46,6 +48,9 @@ impl Layer {
           voter_id.clone(),
           project_id.clone(),
         )?,
+        NeuronType::TrustGraph => {
+          trust_graph_neuron::oracle_function(env.clone(), voter_id.clone(), project_id.clone())?
+        }
       };
       let neuron_vote = self.run_neuron_weight_function(
         DecimalNumberWrapper::add(
