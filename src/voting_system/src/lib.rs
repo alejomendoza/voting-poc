@@ -152,7 +152,7 @@ impl VotingSystem {
     voter_id: String,
     project_id: String,
     vote: String,
-  ) -> Result<(), VotingSystemError> {
+  ) -> Result<Map<String, Vote>, VotingSystemError> {
     let vote: Vote = vote_from_str(env.clone(), vote);
     if vote == Vote::Delegate
       && VotingSystem::get_delegatees(env.clone())
@@ -166,12 +166,12 @@ impl VotingSystem {
     let mut project_votes: Map<String, Vote> =
       votes.get(project_id.clone()).unwrap_or(Map::new(&env));
 
-    project_votes.set(voter_id, vote);
+    project_votes.set(voter_id.clone(), vote);
     votes.set(project_id, project_votes);
 
     env.storage().instance().set(&DataKey::Votes, &votes);
 
-    Ok(())
+    Ok(VotingSystem::get_votes_for_user(env, voter_id))
   }
 
   pub fn get_delegatees(env: Env) -> Map<String, Vec<String>> {
@@ -208,7 +208,7 @@ impl VotingSystem {
     voter_id: String,
     project_id: String,
     delegatees_for_user: Vec<String>,
-  ) -> Result<(), VotingSystemError> {
+  ) -> Result<Map<String, Vote>, VotingSystemError> {
     VotingSystem::set_delegatees(env.clone(), voter_id.clone(), delegatees_for_user)?;
     VotingSystem::vote(
       env.clone(),
@@ -242,14 +242,16 @@ impl VotingSystem {
     result
   }
 
-  pub fn remove_vote(env: Env, voter_id: String, project_id: String) {
+  pub fn remove_vote(env: Env, voter_id: String, project_id: String) -> Map<String, Vote> {
     let mut votes = VotingSystem::get_votes(env.clone());
     let mut project_votes: Map<String, Vote> =
       votes.get(project_id.clone()).unwrap_or(Map::new(&env));
-    project_votes.remove(voter_id);
+    project_votes.remove(voter_id.clone());
     votes.set(project_id, project_votes);
 
     env.storage().instance().set(&DataKey::Votes, &votes);
+
+    VotingSystem::get_votes_for_user(env, voter_id)
   }
 
   pub fn add_project(env: Env, project_id: String) -> Result<(), VotingSystemError> {
