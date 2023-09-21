@@ -147,6 +147,31 @@ impl VotingSystem {
     Ok(Vote::No)
   }
 
+  // votes: Map<project_id, vote>
+  pub fn multiple_vote_operations(
+    env: Env,
+    voter_id: String,
+    votes: Map<String, String>,
+  ) -> Result<Map<String, Vote>, VotingSystemError> {
+    let mut all_votes = VotingSystem::get_votes(env.clone());
+    for (project_id, vote) in votes {
+      let vote: Vote = vote_from_str(env.clone(), vote);
+      if vote == Vote::Delegate
+        && VotingSystem::get_delegatees(env.clone())
+          .get(voter_id.clone())
+          .is_none()
+      {
+        return Err(VotingSystemError::DelegateesNotFound);
+      }
+      let mut project_votes = all_votes.get(project_id.clone()).unwrap_or(Map::new(&env));
+      project_votes.set(voter_id.clone(), vote);
+      all_votes.set(project_id, project_votes);
+    }
+
+    env.storage().instance().set(&DataKey::Votes, &all_votes);
+    Ok(VotingSystem::get_votes_for_user(env, voter_id))
+  }
+
   pub fn vote(
     env: Env,
     voter_id: String,
