@@ -164,8 +164,17 @@ impl VotingSystem {
         return Err(VotingSystemError::DelegateesNotFound);
       }
       let mut project_votes = all_votes.get(project_id.clone()).unwrap_or(Map::new(&env));
-      project_votes.set(voter_id.clone(), vote);
-      all_votes.set(project_id, project_votes);
+      if vote == Vote::Remove {
+        project_votes.remove(voter_id.clone());
+      } else {
+        project_votes.set(voter_id.clone(), vote);
+      }
+
+      if project_votes.is_empty() {
+        all_votes.remove(project_id.clone());
+      } else {
+        all_votes.set(project_id, project_votes);
+      }
     }
 
     env.storage().instance().set(&DataKey::Votes, &all_votes);
@@ -191,8 +200,17 @@ impl VotingSystem {
     let mut project_votes: Map<String, Vote> =
       votes.get(project_id.clone()).unwrap_or(Map::new(&env));
 
-    project_votes.set(voter_id.clone(), vote);
-    votes.set(project_id, project_votes);
+    if vote == Vote::Remove {
+      project_votes.remove(voter_id.clone());
+    } else {
+      project_votes.set(voter_id.clone(), vote);
+    }
+
+    if project_votes.is_empty() {
+      votes.remove(project_id.clone());
+    } else {
+      votes.set(project_id, project_votes);
+    }
 
     env.storage().instance().set(&DataKey::Votes, &votes);
 
@@ -267,16 +285,17 @@ impl VotingSystem {
     result
   }
 
-  pub fn remove_vote(env: Env, voter_id: String, project_id: String) -> Map<String, Vote> {
-    let mut votes = VotingSystem::get_votes(env.clone());
-    let mut project_votes: Map<String, Vote> =
-      votes.get(project_id.clone()).unwrap_or(Map::new(&env));
-    project_votes.remove(voter_id.clone());
-    votes.set(project_id, project_votes);
-
-    env.storage().instance().set(&DataKey::Votes, &votes);
-
-    VotingSystem::get_votes_for_user(env, voter_id)
+  pub fn remove_vote(
+    env: Env,
+    voter_id: String,
+    project_id: String,
+  ) -> Result<Map<String, Vote>, VotingSystemError> {
+    VotingSystem::vote(
+      env.clone(),
+      voter_id,
+      project_id,
+      String::from_slice(&env, "Remove"),
+    )
   }
 
   pub fn add_project(env: Env, project_id: String) -> Result<(), VotingSystemError> {

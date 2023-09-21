@@ -3,7 +3,7 @@ use crate::{
   external_data_provider_contract,
   types::{LayerAggregator, NeuronType, Vote, DEFAULT_WEIGHT},
 };
-use soroban_sdk::{vec, Env, Map, String};
+use soroban_sdk::{vec, Env, Map, String };
 
 use crate::{VotingSystem, VotingSystemClient};
 
@@ -684,7 +684,7 @@ pub fn test_multiple_voting_operations() {
   assert!(votes.len() == 3);
   assert!(
     votes
-      .get(project_id)
+      .get(project_id.clone())
       .unwrap()
       .get(voter_id.clone())
       .unwrap()
@@ -692,7 +692,7 @@ pub fn test_multiple_voting_operations() {
   );
   assert!(
     votes
-      .get(project_id_2)
+      .get(project_id_2.clone())
       .unwrap()
       .get(voter_id.clone())
       .unwrap()
@@ -700,10 +700,48 @@ pub fn test_multiple_voting_operations() {
   );
   assert!(
     votes
-      .get(project_id_3)
+      .get(project_id_3.clone())
       .unwrap()
       .get(voter_id.clone())
       .unwrap()
       == Vote::Yes
   );
+
+  //
+  let current_user_votes = voting_system_client.multiple_vote_operations(
+    &voter_id,
+    &Map::from_array(
+      &env,
+      [
+        (project_id.clone(), String::from_slice(&env, "Remove")),
+        (project_id_2.clone(), String::from_slice(&env, "Remove")),
+        (project_id_3.clone(), String::from_slice(&env, "No")),
+      ],
+    ),
+  );
+  assert!(current_user_votes.len() == 1);
+  assert!(voting_system_client.get_voters().len() == 1);
+  let votes = voting_system_client.get_votes();
+  
+  assert!(votes.len() == 1);
+  assert!(
+    votes
+      .get(project_id_3.clone())
+      .unwrap()
+      .get(voter_id.clone())
+      .unwrap()
+      == Vote::No
+  );
+
+  let current_user_votes = voting_system_client.multiple_vote_operations(
+    &voter_id,
+    &Map::from_array(
+      &env,
+      [
+        (project_id_3.clone(), String::from_slice(&env, "Remove")),
+      ],
+    ),
+  );
+  assert!(current_user_votes.is_empty());
+  assert!(voting_system_client.get_voters().is_empty());
 }
