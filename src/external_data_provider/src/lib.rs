@@ -5,8 +5,6 @@ pub mod types;
 
 // This contract's going to be responsible for fetching the data from any external resources
 
-use core::f32::consts::E;
-
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Env, Map, String, Vec};
 
 #[contracttype]
@@ -56,7 +54,6 @@ impl ExternalDataProvider {
     let user006 = String::from_slice(&env, "user006");
     let user007 = String::from_slice(&env, "user007");
     let user008 = String::from_slice(&env, "user008");
-    let user009 = String::from_slice(&env, "user009");
     // for assigned reputation neuron
     let mut reputation_map: Map<String, ReputationCategory> = Map::new(&env);
     reputation_map.set(user001.clone(), ReputationCategory::Excellent);
