@@ -13,7 +13,7 @@ pub fn oracle_function(
     external_data_provider_contract::Client::new(&env, &external_data_provider_address);
 
   let rank = Rank::from_pages(&env, external_data_provider_client.get_trust_map());
-  // consider caching the result in external data provider so the algorithm's not run every time this neuron is executed
+  // TODO: consider caching the result in external data provider so the algorithm's not run every time this neuron is executed
   let rank = rank.calculate(&env).get(voter_id.clone()).unwrap();
 
   Ok(rank)

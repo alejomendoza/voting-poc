@@ -26,7 +26,7 @@ impl Rank {
   }
 
   pub fn calculate(&self, env: &Env) -> Map<String, DecimalNumber> {
-    // Initialize the PageRank values
+    // TODO this algorithm probably needs some work
     let initial_rank: DecimalNumber = DecimalNumberWrapper::div(
       DecimalNumberWrapper::from((1, 0)),
       DecimalNumberWrapper::from((self.graph.len(), 0)),
