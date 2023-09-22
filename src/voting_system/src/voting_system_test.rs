@@ -3,7 +3,7 @@ use crate::{
   external_data_provider_contract,
   types::{LayerAggregator, NeuronType, Vote, DEFAULT_WEIGHT},
 };
-use soroban_sdk::{vec, Env, Map, String };
+use soroban_sdk::{vec, Env, Map, String};
 
 use crate::{VotingSystem, VotingSystemClient};
 
@@ -722,7 +722,7 @@ pub fn test_multiple_voting_operations() {
   assert!(current_user_votes.len() == 1);
   assert!(voting_system_client.get_voters().len() == 1);
   let votes = voting_system_client.get_votes();
-  
+
   assert!(votes.len() == 1);
   assert!(
     votes
@@ -737,9 +737,7 @@ pub fn test_multiple_voting_operations() {
     &voter_id,
     &Map::from_array(
       &env,
-      [
-        (project_id_3.clone(), String::from_slice(&env, "Remove")),
-      ],
+      [(project_id_3.clone(), String::from_slice(&env, "Remove"))],
     ),
   );
   assert!(current_user_votes.is_empty());
