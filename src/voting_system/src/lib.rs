@@ -5,6 +5,7 @@ mod decimal_number_wrapper;
 mod layer;
 mod neural_governance;
 mod neurons;
+mod page_rank;
 mod types;
 
 use crate::decimal_number_wrapper::DecimalNumberWrapper;

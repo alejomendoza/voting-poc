@@ -171,3 +171,33 @@ pub fn test_sub() {
       == (0, 0)
   );
 }
+
+#[test]
+pub fn test_divide() {
+  assert!(
+    DecimalNumberWrapper::div(
+      DecimalNumberWrapper::new(6, 0),
+      DecimalNumberWrapper::new(3, 0)
+    )
+    .as_tuple()
+      == (2, 0)
+  );
+
+  assert!(
+    DecimalNumberWrapper::div(
+      DecimalNumberWrapper::new(5, 0),
+      DecimalNumberWrapper::new(2, 0)
+    )
+    .as_tuple()
+      == (2, 500)
+  );
+
+  assert!(
+    DecimalNumberWrapper::div(
+      DecimalNumberWrapper::new(1, 345),
+      DecimalNumberWrapper::new(2, 123)
+    )
+    .as_tuple()
+      == (0, 633)
+  );
+}
