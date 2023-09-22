@@ -20,6 +20,7 @@ pub enum Vote {
   No,
   Abstain,
   Delegate,
+  Remove,
 }
 
 pub fn vote_from_str(env: Env, str: String) -> Vote {
@@ -31,6 +32,9 @@ pub fn vote_from_str(env: Env, str: String) -> Vote {
   }
   if str == String::from_slice(&env, "Delegate") {
     return Vote::Delegate;
+  }
+  if str == String::from_slice(&env, "Remove") {
+    return Vote::Remove;
   }
   return Vote::Abstain;
 }
