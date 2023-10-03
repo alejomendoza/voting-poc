@@ -1,9 +1,9 @@
 use crate::{
-  decimal_number_wrapper::DecimalNumberWrapper,
   external_data_provider_contract,
   page_rank::Rank,
   types::{LayerAggregator, NeuronType, Vote, DEFAULT_WEIGHT},
 };
+use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{vec, Env, Map, String};
 
 use crate::{VotingSystem, VotingSystemClient};
@@ -105,7 +105,7 @@ pub fn test_setting_up_neural_governance() {
       .neurons
       .get(NeuronType::AssignedReputation)
       .unwrap()
-      == DecimalNumberWrapper::from((4, 700)).as_raw()
+      == DecimalNumberWrapper::from("4.7").as_raw()
   );
 }
 

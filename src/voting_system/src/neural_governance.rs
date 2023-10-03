@@ -5,9 +5,10 @@ use crate::types::{
   INITIAL_VOTING_POWER,
 };
 
+use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{contracttype, Env, Map, String, Vec};
 
-use crate::{decimal_number_wrapper::DecimalNumberWrapper, layer::Layer};
+use crate::layer::Layer;
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]

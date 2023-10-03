@@ -1,7 +1,5 @@
-use crate::{
-  decimal_number_wrapper::DecimalNumberWrapper, external_data_provider_contract,
-  types::VotingSystemError, VotingSystem,
-};
+use crate::{types::VotingSystemError, VotingSystem, external_data_provider_contract};
+use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{Env, String};
 
 pub fn oracle_function(
@@ -18,7 +16,7 @@ pub fn oracle_function(
     return Ok((0, 0));
   }
   let round_bonus_map = external_data_provider_client.get_round_bonus_map();
-  let mut bonus_result = DecimalNumberWrapper::new(0, 0);
+  let mut bonus_result = DecimalNumberWrapper::new("0.0");
   for round in voter_active_rounds {
     let bonus: (u32, u32) = round_bonus_map
       .get(round)
