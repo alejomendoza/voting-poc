@@ -105,7 +105,7 @@ pub fn test_setting_up_neural_governance() {
       .neurons
       .get(NeuronType::AssignedReputation)
       .unwrap()
-      == DecimalNumberWrapper::from((4, 700)).as_raw()
+      == DecimalNumberWrapper::from("4.7").as_raw()
   );
 }
 

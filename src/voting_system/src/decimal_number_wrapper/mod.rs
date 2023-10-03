@@ -9,8 +9,8 @@ pub struct DecimalNumberWrapper {
 }
 
 impl DecimalNumberWrapper {
-  pub fn new(whole: u32, fractional: u32) -> Self {
-    let res = DecimalNumberWrapper { whole, fractional };
+  pub fn new(value: &str) -> Self {
+    let res = DecimalNumberWrapper::from(value);
     res.validate()
   }
 
@@ -112,6 +112,38 @@ impl From<(u32, u32)> for DecimalNumberWrapper {
       fractional: value.1,
     }
     .validate()
+  }
+}
+
+impl From<&str> for DecimalNumberWrapper {
+  fn from(value: &str) -> Self {
+    let mut split = value.split(".");
+    if split.clone().count() as u32 != 2 {
+      panic!(
+        "invalid decimal point number, it should be delimited by a single ., for example 12.34"
+      );
+    }
+    let whole = split.nth(0).unwrap().trim().parse().unwrap();
+    let fractional_str = split.nth(0).unwrap();
+    let mut fractional: u32 = fractional_str.trim().parse().unwrap();
+
+    if fractional != 0 {
+      let mut prefixing_zeros = 0;
+      let mut chars = fractional_str.clone().chars();
+      loop {
+        let c = chars.nth(0).unwrap_or('?');
+        if c != '0' {
+          break;
+        }
+        prefixing_zeros += 1;
+      }
+
+      let treshold = (10 as u32).pow(2 - prefixing_zeros);
+      while fractional < treshold {
+        fractional = fractional * 10;
+      }
+    }
+    DecimalNumberWrapper { whole, fractional }.validate()
   }
 }
 

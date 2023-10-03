@@ -10,14 +10,27 @@ pub fn test_from_to() {
   let dnw: DecimalNumberWrapper = (12, 74).into();
   assert!(dnw.as_tuple() == (12, 74));
   assert!(dnw.as_raw() == 12074);
+
+  let dnw: DecimalNumberWrapper = (12, 100).into();
+  assert!(dnw.as_tuple() == (12, 100));
+  assert!(dnw.as_raw() == 12100);
+
+  let dnw: DecimalNumberWrapper = "123.56".into();
+
+  assert!(dnw.as_tuple() == (123, 560));
+  assert!(dnw.as_raw() == 123560);
+
+  let dnw: DecimalNumberWrapper = "44.1".into();
+  assert!(dnw.as_tuple() == (44, 100));
+  assert!(dnw.as_raw() == 44100);
 }
 
 #[test]
 pub fn test_add() {
   assert!(
     DecimalNumberWrapper::add(
-      DecimalNumberWrapper::new(4, 800),
-      DecimalNumberWrapper::new(5, 500)
+      DecimalNumberWrapper::new("4.8"),
+      DecimalNumberWrapper::new("5.5")
     )
     .as_tuple()
       == (10, 300)
@@ -25,8 +38,8 @@ pub fn test_add() {
 
   assert!(
     DecimalNumberWrapper::add(
-      DecimalNumberWrapper::new(0, 1),
-      DecimalNumberWrapper::new(0, 100)
+      DecimalNumberWrapper::new("0.001"),
+      DecimalNumberWrapper::new("0.1")
     )
     .as_tuple()
       == (0, 101)
@@ -34,8 +47,8 @@ pub fn test_add() {
 
   assert!(
     DecimalNumberWrapper::add(
-      DecimalNumberWrapper::new(0, 1),
-      DecimalNumberWrapper::new(0, 20)
+      DecimalNumberWrapper::new("0.001"),
+      DecimalNumberWrapper::new("0.020"),
     )
     .as_tuple()
       == (0, 21)
@@ -46,8 +59,8 @@ pub fn test_add() {
 pub fn test_multiply() {
   assert!(
     DecimalNumberWrapper::mul(
-      DecimalNumberWrapper::new(5, 0),
-      DecimalNumberWrapper::new(7, 0)
+      DecimalNumberWrapper::new("5.0"),
+      DecimalNumberWrapper::new("7.0"),
     )
     .as_tuple()
       == (35, 0)
@@ -55,8 +68,8 @@ pub fn test_multiply() {
 
   assert!(
     DecimalNumberWrapper::mul(
-      DecimalNumberWrapper::new(1, 500),
-      DecimalNumberWrapper::new(2, 800)
+      DecimalNumberWrapper::new("1.5"),
+      DecimalNumberWrapper::new("2.8"),
     )
     .as_tuple()
       == (4, 200)
@@ -64,17 +77,17 @@ pub fn test_multiply() {
 
   assert!(
     DecimalNumberWrapper::mul(
-      DecimalNumberWrapper::new(1, 5),
-      DecimalNumberWrapper::new(2, 8)
+      DecimalNumberWrapper::new("1.5"),
+      DecimalNumberWrapper::new("2.8"),
     )
     .as_tuple()
-      == (2, 18)
+      == (4, 200)
   );
 
   assert!(
     DecimalNumberWrapper::mul(
-      DecimalNumberWrapper::new(1, 320),
-      DecimalNumberWrapper::new(0, 30)
+      DecimalNumberWrapper::new("1.32"),
+      DecimalNumberWrapper::new("0.03"),
     )
     .as_tuple()
       == (0, 39)
@@ -82,8 +95,8 @@ pub fn test_multiply() {
 
   assert!(
     DecimalNumberWrapper::mul(
-      DecimalNumberWrapper::new(4, 400),
-      DecimalNumberWrapper::new(0, 200)
+      DecimalNumberWrapper::new("4.4"),
+      DecimalNumberWrapper::new("0.2"),
     )
     .as_tuple()
       == (0, 880)
@@ -94,36 +107,36 @@ pub fn test_multiply() {
 pub fn test_cmp() {
   assert!(
     DecimalNumberWrapper::cmp(
-      DecimalNumberWrapper::new(14, 450),
-      DecimalNumberWrapper::new(14, 450)
+      DecimalNumberWrapper::new("14.45"),
+      DecimalNumberWrapper::new("14.45"),
     ) == 0
   );
 
   assert!(
     DecimalNumberWrapper::cmp(
-      DecimalNumberWrapper::new(15, 450),
-      DecimalNumberWrapper::new(14, 450)
+      DecimalNumberWrapper::new("15.45"),
+      DecimalNumberWrapper::new("14.45"),
     ) == 1
   );
 
   assert!(
     DecimalNumberWrapper::cmp(
-      DecimalNumberWrapper::new(14, 450),
-      DecimalNumberWrapper::new(114, 450)
+      DecimalNumberWrapper::new("14.45"),
+      DecimalNumberWrapper::new("114.45"),
     ) == 2
   );
 
   assert!(
     DecimalNumberWrapper::cmp(
-      DecimalNumberWrapper::new(14, 460),
-      DecimalNumberWrapper::new(14, 450)
+      DecimalNumberWrapper::new("14.46"),
+      DecimalNumberWrapper::new("14.45"),
     ) == 1
   );
 
   assert!(
     DecimalNumberWrapper::cmp(
-      DecimalNumberWrapper::new(14, 450),
-      DecimalNumberWrapper::new(14, 460)
+      DecimalNumberWrapper::new("14.45"),
+      DecimalNumberWrapper::new("14.46"),
     ) == 2
   );
 }
@@ -132,40 +145,40 @@ pub fn test_cmp() {
 pub fn test_sub() {
   assert!(
     DecimalNumberWrapper::sub(
-      DecimalNumberWrapper::new(12, 360),
-      DecimalNumberWrapper::new(12, 340)
+      DecimalNumberWrapper::new("12.36"),
+      DecimalNumberWrapper::new("12.34"),
     )
     .as_tuple()
       == (0, 20)
   );
   assert!(
     DecimalNumberWrapper::sub(
-      DecimalNumberWrapper::new(12, 360),
-      DecimalNumberWrapper::new(12, 361)
+      DecimalNumberWrapper::new("12.36"),
+      DecimalNumberWrapper::new("12.361"),
     )
     .as_tuple()
       == (0, 0)
   );
   assert!(
     DecimalNumberWrapper::sub(
-      DecimalNumberWrapper::new(13, 360),
-      DecimalNumberWrapper::new(12, 360)
+      DecimalNumberWrapper::new("13.36"),
+      DecimalNumberWrapper::new("12.36"),
     )
     .as_tuple()
       == (1, 0)
   );
   assert!(
     DecimalNumberWrapper::sub(
-      DecimalNumberWrapper::new(13, 360),
-      DecimalNumberWrapper::new(14, 360)
+      DecimalNumberWrapper::new("13.36"),
+      DecimalNumberWrapper::new("14.36"),
     )
     .as_tuple()
       == (0, 0)
   );
   assert!(
     DecimalNumberWrapper::sub(
-      DecimalNumberWrapper::new(14, 360),
-      DecimalNumberWrapper::new(14, 360)
+      DecimalNumberWrapper::new("14.36"),
+      DecimalNumberWrapper::new("14.36"),
     )
     .as_tuple()
       == (0, 0)
@@ -176,8 +189,8 @@ pub fn test_sub() {
 pub fn test_divide() {
   assert!(
     DecimalNumberWrapper::div(
-      DecimalNumberWrapper::new(6, 0),
-      DecimalNumberWrapper::new(3, 0)
+      DecimalNumberWrapper::new("6.0"),
+      DecimalNumberWrapper::new("3.0"),
     )
     .as_tuple()
       == (2, 0)
@@ -185,8 +198,8 @@ pub fn test_divide() {
 
   assert!(
     DecimalNumberWrapper::div(
-      DecimalNumberWrapper::new(5, 0),
-      DecimalNumberWrapper::new(2, 0)
+      DecimalNumberWrapper::new("5.0"),
+      DecimalNumberWrapper::new("2.0"),
     )
     .as_tuple()
       == (2, 500)
@@ -194,10 +207,10 @@ pub fn test_divide() {
 
   assert!(
     DecimalNumberWrapper::div(
-      DecimalNumberWrapper::new(1, 345),
-      DecimalNumberWrapper::new(2, 123)
+      DecimalNumberWrapper::new("1.345"),
+      DecimalNumberWrapper::new("2.132"),
     )
     .as_tuple()
-      == (0, 633)
+      == (0, 630)
   );
 }
