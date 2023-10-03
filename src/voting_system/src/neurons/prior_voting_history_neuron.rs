@@ -1,7 +1,5 @@
-use crate::{
-  decimal_number_wrapper::DecimalNumberWrapper, external_data_provider_contract,
-  types::VotingSystemError, VotingSystem,
-};
+use crate::{types::VotingSystemError, VotingSystem, external_data_provider_contract};
+use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{Env, String};
 
 pub fn oracle_function(

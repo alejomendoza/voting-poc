@@ -1,17 +1,15 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
-mod decimal_number_wrapper;
 mod layer;
 mod neural_governance;
 mod neurons;
 mod page_rank;
 mod types;
 
-use crate::decimal_number_wrapper::DecimalNumberWrapper;
-
 use crate::types::{Vote, VotingSystemError, QUORUM_SIZE};
 use neural_governance::NeuralGovernance;
+use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Map, String, Vec};
 use types::{
   layer_aggregator_from_str, neuron_type_from_str, vote_from_str, LayerAggregator,

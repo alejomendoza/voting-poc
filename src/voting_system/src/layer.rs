@@ -1,11 +1,9 @@
 use crate::types::{DecimalNumber, LayerAggregator, NeuronType, VotingSystemError};
+use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{contracttype, Env, Map, String, Vec};
 
-use crate::{
-  decimal_number_wrapper::DecimalNumberWrapper,
-  neurons::{
-    assigned_reputation_neuron, dummy_neuron, prior_voting_history_neuron, trust_graph_neuron,
-  },
+use crate::neurons::{
+  assigned_reputation_neuron, dummy_neuron, prior_voting_history_neuron, trust_graph_neuron,
 };
 
 #[contracttype]
