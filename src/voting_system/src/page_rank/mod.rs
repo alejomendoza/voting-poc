@@ -1,6 +1,7 @@
+use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{Env, Map, String};
 
-use crate::{decimal_number_wrapper::DecimalNumberWrapper, types::DecimalNumber};
+use crate::types::DecimalNumber;
 
 pub struct Rank {
   graph: Map<String, Map<String, ()>>,
