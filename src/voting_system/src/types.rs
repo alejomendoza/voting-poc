@@ -84,6 +84,7 @@ pub enum NeuronType {
   AssignedReputation,
   PriorVotingHistory,
   TrustGraph,
+  NewNeuron,
 }
 
 pub fn neuron_type_from_str(env: &Env, str: String) -> Result<NeuronType, VotingSystemError> {
@@ -98,6 +99,9 @@ pub fn neuron_type_from_str(env: &Env, str: String) -> Result<NeuronType, Voting
   }
   if str == String::from_slice(&env, "TrustGraph") {
     return Ok(NeuronType::TrustGraph);
+  }
+  if str == String::from_slice(&env, "NewNeuron") {
+    return Ok(NeuronType::NewNeuron);
   }
   Err(VotingSystemError::UnknownNeuronType)
 }

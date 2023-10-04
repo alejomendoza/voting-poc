@@ -44,7 +44,7 @@ pub fn test_setting_up_neural_governance() {
       == LayerAggregator::Sum
   );
 
-  voting_system_client.add_neuron(&0, &String::from_slice(&env, "Dummy"));
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "NewNeuron"));
   voting_system_client.add_neuron(&0, &String::from_slice(&env, "AssignedReputation"));
   voting_system_client.add_neuron(&0, &String::from_slice(&env, "PriorVotingHistory"));
   assert!(
@@ -92,7 +92,7 @@ pub fn test_setting_up_neural_governance() {
       .get(0)
       .unwrap()
       .neurons
-      .get(NeuronType::Dummy)
+      .get(NeuronType::NewNeuron)
       .unwrap()
       == DecimalNumberWrapper::from(DEFAULT_WEIGHT).as_raw()
   );

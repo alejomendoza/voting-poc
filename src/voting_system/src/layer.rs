@@ -1,4 +1,7 @@
-use crate::types::{DecimalNumber, LayerAggregator, NeuronType, VotingSystemError};
+use crate::{
+  neurons::new_neuron,
+  types::{DecimalNumber, LayerAggregator, NeuronType, VotingSystemError},
+};
 use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{contracttype, Env, Map, String, Vec};
 
@@ -42,6 +45,9 @@ impl Layer {
         }
         NeuronType::TrustGraph => {
           trust_graph_neuron::oracle_function(env.clone(), voter_id.clone())?
+        }
+        NeuronType::NewNeuron => {
+          new_neuron::oracle_function(env.clone(), voter_id.clone(), project_id.clone())?
         }
       };
       let neuron_vote = self.run_neuron_weight_function(
