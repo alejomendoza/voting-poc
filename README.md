@@ -13,7 +13,7 @@ They are described below. Both of them are smart contracts.
 
 ### Voting System
 
-This exposes the API, if users or admins need to do anything with this system, calls should go through this one. It also contains logic of the system.
+This exposes the API, if users or admins need to do anything with this system, calls should go through this one. It also contains the logic of the system.
 
 The main component of the system is called Neural Governance. It contains all the elements necessary for evaluating the votes.
 
@@ -37,20 +37,20 @@ If you just want to receive the votes, you just have to deploy the Voting System
 
 In order to set up the Voting System for tallying the votes, you need to do the following things:
 - deploy the Voting System contract
-- call `initialize` function which creates a new Neural Governance object and puts it in the storage
-- add a layer and set layer aggregator for it
-- add a nauron to that layer
+- call the `initialize` function which creates a new Neural Governance object and puts it in the storage
+- add a layer and set a layer aggregator for it
+- add a neuron to that layer
 
-With such a setup, you should be able to tally the votes. You can ofcourse add any number of layers and neurons.
+With such a setup, you should be able to tally the votes. You can of course add any number of layers and neurons.
 
-You can also define your own neurons, deploy the Voting System contract and add them where you want.
+You can also define your own neurons, deploy the Voting System contract, and add them where you want.
 
 #### Custom Neurons
 
 The system is open for any number of Neurons. They can be easily added and used. In order to add a new Neuron, you need to:
 - add a new file to [the neurons folder](./src/voting_system/src/neurons/) - the new Neuron has to have `oracle_function`, the easiest way to go is to just copy the contents of the [dummy neuron](./src/voting_system/src/neurons/dummy_neuron.rs)
-- fill the `oracle_function` of the new nauron with your custom logic
-- add you Neuron module to the [mod file](./src/voting_system/src/neurons/mod.rs)
+- fill the `oracle_function` of the new neuron with your custom logic
+- add your Neuron module to the [mod file](./src/voting_system/src/neurons/mod.rs)
 - in [types](./src/voting_system/src/types.rs)
   - add a field of your Neuron to the `NeuronType` enum
   - add a case of your Neuron to the `neuron_type_from_str` function
@@ -62,15 +62,15 @@ You can check how it is done on [this branch](https://github.com/alejomendoza/vo
 
 ### External Data Provider
 
-This is a contract that may be used by voting system to fetch the data from wherever outside of this system. The data is kept in the storage and can be set by an admin/anyone with a proper access.
+This is a contract that may be used by the voting system to fetch the data from wherever outside of this system. The data is kept in the storage and can be set by an admin/anyone with proper access.
 
-### Example how it works
+### Example of how it works
 
 A good example of how to properly prepare the whole infrastructure to work can be found in the [voting system test](./src/voting_system/src/voting_system_test.rs).
 
 ## Neuron template
 
-There is a neuron template in `src/template_neuron`. In order to add new neuron, please do the following things:
+There is a neuron template in `src/template_neuron`. In order to add a new neuron, please do the following things:
 - copy-paste the template neuron folder
 - rename the folder and all the names inside it (from template neuron to [your_neuron_name])
 - add its entry (workspace member) to the `Cargo.toml` in the root folder of the project
