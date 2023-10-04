@@ -58,6 +58,8 @@ The system is open for any number of Neurons. They can be easily added and used.
 
 And That's it, you can now add the new Neuron to any Layer and start using it.
 
+You can check how it is done on [this branch](https://github.com/alejomendoza/voting-poc/tree/new-neuron).
+
 ### External Data Provider
 
 This is a contract that may be used by voting system to fetch the data from wherever outside of this system. The data is kept in the storage and can be set by an admin/anyone with a proper access.
