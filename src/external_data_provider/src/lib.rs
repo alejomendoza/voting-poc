@@ -146,6 +146,19 @@ impl ExternalDataProvider {
       .set(&DataKey::Reputation, &reputation_map);
   }
 
+  pub fn set_user_reputation_category(
+    env: Env,
+    user_id: String,
+    reputation_category: ReputationCategory,
+  ) {
+    let mut reputation_categories = ExternalDataProvider::get_reputation_categories(env.clone());
+    reputation_categories.set(user_id, reputation_category);
+    env
+      .storage()
+      .temporary()
+      .set(&DataKey::Reputation, &reputation_categories);
+  }
+
   pub fn get_reputation_score(reputation_category: ReputationCategory) -> (u32, u32) {
     match reputation_category {
       ReputationCategory::Uncategorized => (0, 0),

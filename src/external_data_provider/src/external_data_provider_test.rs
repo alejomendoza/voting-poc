@@ -29,6 +29,10 @@ pub fn test_reputation() {
 
   let reputation = external_data_provider_client.get_user_reputation_category(&user_id_1);
   assert!(reputation == ReputationCategory::Poor);
+
+  external_data_provider_client.set_user_reputation_category(&user_id_1, &ReputationCategory::Good);
+  let reputation = external_data_provider_client.get_user_reputation_category(&user_id_1);
+  assert!(reputation == ReputationCategory::Good);
 }
 
 #[test]
