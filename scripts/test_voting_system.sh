@@ -35,11 +35,11 @@ invoke_function $VOTING_SYSTEM_ID add_neuron --layer_id 1 --neuron Dummy
 echo "[*] invoking get_neural_governance"
 invoke_function $VOTING_SYSTEM_ID get_neural_governance
 
-echo "[*] invoking add_project"
-invoke_function $VOTING_SYSTEM_ID add_project --project_id project001
+echo "[*] invoking add_submission"
+invoke_function $VOTING_SYSTEM_ID add_submission --submission_id submission001
 
-echo "[*] invoking vote user001 project001 Yes"
-invoke_function $VOTING_SYSTEM_ID vote --voter_id user001 --project_id project001 --vote Yes
+echo "[*] invoking vote user001 submission001 Yes"
+invoke_function $VOTING_SYSTEM_ID vote --voter_id user001 --submission_id submission001 --vote Yes
 
 # external data provider has to be added and immediately used because we use temporary storage there
 echo "[*] invoking mock_sample_data"
