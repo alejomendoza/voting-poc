@@ -6,17 +6,7 @@ pub mod types;
 // This contract's going to be responsible for fetching the data from any external resources
 
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Env, Map, String, Vec};
-
-#[contracttype]
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum ReputationCategory {
-  Excellent = 5,
-  VeryGood = 4,
-  Good = 3,
-  Average = 2,
-  Poor = 1,
-  Uncategorized = 0,
-}
+use types::{reputation_category_from_str, ReputationCategory};
 
 #[derive(Clone)]
 #[contracttype]
@@ -144,6 +134,18 @@ impl ExternalDataProvider {
       .storage()
       .temporary()
       .set(&DataKey::Reputation, &reputation_map);
+  }
+
+  pub fn set_user_reputation_category(env: Env, user_id: String, reputation_category: String) {
+    let mut reputation_categories = ExternalDataProvider::get_reputation_categories(env.clone());
+    reputation_categories.set(
+      user_id,
+      reputation_category_from_str(&env, reputation_category),
+    );
+    env
+      .storage()
+      .temporary()
+      .set(&DataKey::Reputation, &reputation_categories);
   }
 
   pub fn get_reputation_score(reputation_category: ReputationCategory) -> (u32, u32) {

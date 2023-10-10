@@ -23,7 +23,7 @@ pub enum Vote {
   Remove,
 }
 
-pub fn vote_from_str(env: Env, str: String) -> Vote {
+pub fn vote_from_str(env: &Env, str: String) -> Vote {
   if str == String::from_slice(&env, "Yes") {
     return Vote::Yes;
   }
@@ -47,7 +47,7 @@ pub enum LayerAggregator {
   Product,
 }
 
-pub fn layer_aggregator_from_str(env: Env, str: String) -> LayerAggregator {
+pub fn layer_aggregator_from_str(env: &Env, str: String) -> LayerAggregator {
   if str == String::from_slice(&env, "Sum") {
     return LayerAggregator::Sum;
   }
@@ -66,7 +66,7 @@ pub enum NeuronType {
   TrustGraph,
 }
 
-pub fn neuron_type_from_str(env: Env, str: String) -> Result<NeuronType, VotingSystemError> {
+pub fn neuron_type_from_str(env: &Env, str: String) -> Result<NeuronType, VotingSystemError> {
   if str == String::from_slice(&env, "Dummy") {
     return Ok(NeuronType::Dummy);
   }
