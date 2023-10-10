@@ -107,7 +107,7 @@ impl NeuralGovernance {
     &self,
     env: Env,
     voter_id: String,
-    project_id: String,
+    submission_id: String,
   ) -> Result<(u32, u32), VotingSystemError> {
     let mut current_layer_result: (u32, u32) = INITIAL_VOTING_POWER;
 
@@ -118,7 +118,7 @@ impl NeuralGovernance {
       let layer_result: Vec<(u32, u32)> = layer.execute_layer(
         env.clone(),
         voter_id.clone(),
-        project_id.clone(),
+        submission_id.clone(),
         current_layer_result,
       )?;
       current_layer_result = layer.run_layer_aggregator(layer_result)?;

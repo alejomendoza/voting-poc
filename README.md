@@ -25,7 +25,7 @@ Every Neuron has a specific logic of how to calculate the Weight of the vote. Th
 
 All the Layers are executed sequentially, the order matters in this case as the result of one Layer affects how the Neurons in the next one are evaluated. The result of the last calculated Layer is treated as a result of the Neural Governance.
 
-Neural Governance is executed for every vote calculating its weight. After that, the votes' weights are summed up resulting in a voting power for every project. This happens at the end of every voting round.
+Neural Governance is executed for every vote calculating its weight. After that, the votes' weights are summed up resulting in a voting power for every submission. This happens at the end of every voting round.
 
 #### Setting up
 

@@ -91,7 +91,7 @@ pub enum VotingSystemError {
   NoNeuronsExist = 3,
   CannotRunUnknownLayerAggregator = 4,
   NoLayersExist = 5,
-  ProjectAlreadyAdded = 6,
+  SubmissionAlreadyAdded = 6,
   ReducingvotesForSumAggregatorFailed = 7,
   ReducingvotesForProductAggregatorFailed = 8,
   NeuralGovernanceNotSet = 9,

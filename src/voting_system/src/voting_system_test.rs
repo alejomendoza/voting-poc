@@ -128,43 +128,53 @@ pub fn test_simple_voting() {
 
   let voter_id = String::from_slice(&env, "user001");
   let voter_id_2 = String::from_slice(&env, "user002");
-  let project_id = String::from_slice(&env, "project001");
-  let project_id_2 = String::from_slice(&env, "project002");
+  let submission_id = String::from_slice(&env, "submission001");
+  let submission_id_2 = String::from_slice(&env, "submission002");
 
-  assert!(voting_system_client.get_projects().is_empty());
-  voting_system_client.add_project(&project_id_2);
-  assert!(voting_system_client.get_projects().len() == 1);
+  assert!(voting_system_client.get_submissions().is_empty());
+  voting_system_client.add_submission(&submission_id_2);
+  assert!(voting_system_client.get_submissions().len() == 1);
 
   assert!(voting_system_client.get_voters().is_empty());
   let current_user_votes =
-    voting_system_client.vote(&voter_id, &project_id, &String::from_slice(&env, "No"));
+    voting_system_client.vote(&voter_id, &submission_id, &String::from_slice(&env, "No"));
   assert!(current_user_votes.len() == 1);
-  assert!(voting_system_client.get_projects().len() == 2);
+  assert!(voting_system_client.get_submissions().len() == 2);
   // test overriding the vote
   let current_user_votes =
-    voting_system_client.vote(&voter_id, &project_id, &String::from_slice(&env, "Yes"));
+    voting_system_client.vote(&voter_id, &submission_id, &String::from_slice(&env, "Yes"));
   assert!(current_user_votes.len() == 1);
 
-  let current_user_votes =
-    voting_system_client.vote(&voter_id, &project_id_2, &String::from_slice(&env, "Yes"));
+  let current_user_votes = voting_system_client.vote(
+    &voter_id,
+    &submission_id_2,
+    &String::from_slice(&env, "Yes"),
+  );
   assert!(current_user_votes.len() == 2);
 
   assert!(voting_system_client.get_voters().len() == 1);
-  let current_user_votes =
-    voting_system_client.vote(&voter_id_2, &project_id_2, &String::from_slice(&env, "Yes"));
+  let current_user_votes = voting_system_client.vote(
+    &voter_id_2,
+    &submission_id_2,
+    &String::from_slice(&env, "Yes"),
+  );
   assert!(current_user_votes.len() == 1);
   assert!(voting_system_client.get_voters().len() == 2);
-  let current_user_votes = voting_system_client.remove_vote(&voter_id_2, &project_id_2);
+  let current_user_votes = voting_system_client.remove_vote(&voter_id_2, &submission_id_2);
   assert!(current_user_votes.len() == 0);
   assert!(voting_system_client.get_voters().len() == 1);
 
-  voting_system_client.vote(&voter_id, &project_id_2, &String::from_slice(&env, "Yes"));
+  voting_system_client.vote(
+    &voter_id,
+    &submission_id_2,
+    &String::from_slice(&env, "Yes"),
+  );
   assert!(voting_system_client.get_votes_for_user(&voter_id).len() == 2);
 
   assert!(
     voting_system_client
       .tally()
-      .get(project_id.clone())
+      .get(submission_id.clone())
       .unwrap()
       == (2, 200)
   );
@@ -173,7 +183,7 @@ pub fn test_simple_voting() {
   assert!(
     voting_system_client
       .tally()
-      .get(project_id.clone())
+      .get(submission_id.clone())
       .unwrap()
       == (4, 400)
   );
@@ -203,16 +213,20 @@ pub fn test_assigned_reputation_neuron() {
 
   let voter_id_1 = String::from_slice(&env, "user001"); // bonus 0,300
   let voter_id_2 = String::from_slice(&env, "user002"); // bonus 0,200
-  let project_id = String::from_slice(&env, "project001");
+  let submission_id = String::from_slice(&env, "submission001");
 
-  voting_system_client.add_project(&project_id);
-  voting_system_client.vote(&voter_id_1, &project_id, &String::from_slice(&env, "Yes"));
-  voting_system_client.vote(&voter_id_2, &project_id, &String::from_slice(&env, "No"));
+  voting_system_client.add_submission(&submission_id);
+  voting_system_client.vote(
+    &voter_id_1,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
+  voting_system_client.vote(&voter_id_2, &submission_id, &String::from_slice(&env, "No"));
 
   assert!(
     voting_system_client
       .tally()
-      .get(project_id.clone())
+      .get(submission_id.clone())
       .unwrap()
       == (0, 100)
   );
@@ -228,7 +242,7 @@ pub fn test_assigned_reputation_neuron() {
   assert!(
     voting_system_client
       .tally()
-      .get(project_id.clone())
+      .get(submission_id.clone())
       .unwrap()
       == (0, 200)
   );
@@ -257,16 +271,20 @@ pub fn test_prior_voting_history_neuron() {
 
   let voter_id_1 = String::from_slice(&env, "user001"); // active rounds: [2, 3], bonusses: [0, 100], [0, 200]
   let voter_id_2 = String::from_slice(&env, "user003"); // active rounds: [2, 3, 4], bonusses: [0, 100], [0, 200], [0, 300]
-  let project_id = String::from_slice(&env, "project001");
+  let submission_id = String::from_slice(&env, "submission001");
 
-  voting_system_client.add_project(&project_id);
-  voting_system_client.vote(&voter_id_1, &project_id, &String::from_slice(&env, "No"));
-  voting_system_client.vote(&voter_id_2, &project_id, &String::from_slice(&env, "Yes"));
+  voting_system_client.add_submission(&submission_id);
+  voting_system_client.vote(&voter_id_1, &submission_id, &String::from_slice(&env, "No"));
+  voting_system_client.vote(
+    &voter_id_2,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
 
   assert!(
     voting_system_client
       .tally()
-      .get(project_id.clone())
+      .get(submission_id.clone())
       .unwrap()
       == (0, 300)
   );
@@ -295,11 +313,15 @@ pub fn test_graph_bonus() {
 
   let voter_id_1 = String::from_slice(&env, "user001");
   let voter_id_2 = String::from_slice(&env, "user002");
-  let project_id = String::from_slice(&env, "project001");
+  let submission_id = String::from_slice(&env, "submission001");
 
-  voting_system_client.add_project(&project_id);
-  voting_system_client.vote(&voter_id_1, &project_id, &String::from_slice(&env, "Yes"));
-  voting_system_client.vote(&voter_id_2, &project_id, &String::from_slice(&env, "No"));
+  voting_system_client.add_submission(&submission_id);
+  voting_system_client.vote(
+    &voter_id_1,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
+  voting_system_client.vote(&voter_id_2, &submission_id, &String::from_slice(&env, "No"));
 
   let tm = external_data_provider_client.get_trust_map();
   let rank = Rank::from_pages(&env, tm);
@@ -321,7 +343,7 @@ pub fn test_graph_bonus() {
   assert!(
     voting_system_client
       .tally()
-      .get(project_id.clone())
+      .get(submission_id.clone())
       .unwrap()
       == (0, 159)
   );
@@ -354,9 +376,9 @@ pub fn test_delegation_more_yes_votes() {
   let voter_id_6 = String::from_slice(&env, "user006");
   let voter_id_8 = String::from_slice(&env, "user008");
 
-  let project_id = String::from_slice(&env, "project001");
+  let submission_id = String::from_slice(&env, "submission001");
 
-  voting_system_client.add_project(&project_id);
+  voting_system_client.add_submission(&submission_id);
   let delegatees = vec![
     &env,
     voter_id_2.clone(),
@@ -366,15 +388,28 @@ pub fn test_delegation_more_yes_votes() {
     voter_id_6.clone(),
     voter_id_8.clone(),
   ];
-  voting_system_client.delegate(&voter_id_1, &project_id, &delegatees);
-  voting_system_client.vote(&voter_id_2, &project_id, &String::from_slice(&env, "No")); // not considered - low rank
-  voting_system_client.vote(&voter_id_3, &project_id, &String::from_slice(&env, "No"));
-  voting_system_client.vote(&voter_id_4, &project_id, &String::from_slice(&env, "No"));
-  voting_system_client.vote(&voter_id_5, &project_id, &String::from_slice(&env, "Yes"));
-  voting_system_client.vote(&voter_id_6, &project_id, &String::from_slice(&env, "Yes"));
-  voting_system_client.vote(&voter_id_8, &project_id, &String::from_slice(&env, "Yes"));
+  voting_system_client.delegate(&voter_id_1, &submission_id, &delegatees);
+  voting_system_client.vote(&voter_id_2, &submission_id, &String::from_slice(&env, "No")); // not considered - low rank
+  voting_system_client.vote(&voter_id_3, &submission_id, &String::from_slice(&env, "No"));
+  voting_system_client.vote(&voter_id_4, &submission_id, &String::from_slice(&env, "No"));
+  voting_system_client.vote(
+    &voter_id_5,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
+  voting_system_client.vote(
+    &voter_id_6,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
+  voting_system_client.vote(
+    &voter_id_8,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
 
-  let consensus = voting_system_client.calculate_quorum_consensus(&voter_id_1, &project_id.clone());
+  let consensus =
+    voting_system_client.calculate_quorum_consensus(&voter_id_1, &submission_id.clone());
   assert!(consensus == Vote::Yes);
 }
 
@@ -405,9 +440,9 @@ pub fn test_delegation_more_no_votes() {
   let voter_id_6 = String::from_slice(&env, "user006");
   let voter_id_8 = String::from_slice(&env, "user008");
 
-  let project_id = String::from_slice(&env, "project001");
+  let submission_id = String::from_slice(&env, "submission001");
 
-  voting_system_client.add_project(&project_id);
+  voting_system_client.add_submission(&submission_id);
   let delegatees = vec![
     &env,
     voter_id_2.clone(),
@@ -417,15 +452,28 @@ pub fn test_delegation_more_no_votes() {
     voter_id_6.clone(),
     voter_id_8.clone(),
   ];
-  voting_system_client.delegate(&voter_id_1, &project_id, &delegatees);
-  voting_system_client.vote(&voter_id_2, &project_id, &String::from_slice(&env, "Yes")); // not considered - low rank
-  voting_system_client.vote(&voter_id_3, &project_id, &String::from_slice(&env, "Yes"));
-  voting_system_client.vote(&voter_id_4, &project_id, &String::from_slice(&env, "No"));
-  voting_system_client.vote(&voter_id_5, &project_id, &String::from_slice(&env, "Yes"));
-  voting_system_client.vote(&voter_id_6, &project_id, &String::from_slice(&env, "No"));
-  voting_system_client.vote(&voter_id_8, &project_id, &String::from_slice(&env, "No"));
+  voting_system_client.delegate(&voter_id_1, &submission_id, &delegatees);
+  voting_system_client.vote(
+    &voter_id_2,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  ); // not considered - low rank
+  voting_system_client.vote(
+    &voter_id_3,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
+  voting_system_client.vote(&voter_id_4, &submission_id, &String::from_slice(&env, "No"));
+  voting_system_client.vote(
+    &voter_id_5,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
+  voting_system_client.vote(&voter_id_6, &submission_id, &String::from_slice(&env, "No"));
+  voting_system_client.vote(&voter_id_8, &submission_id, &String::from_slice(&env, "No"));
 
-  let consensus = voting_system_client.calculate_quorum_consensus(&voter_id_1, &project_id.clone());
+  let consensus =
+    voting_system_client.calculate_quorum_consensus(&voter_id_1, &submission_id.clone());
   assert!(consensus == Vote::No);
 }
 
@@ -456,9 +504,9 @@ pub fn test_delegation_too_many_abstain_votes() {
   let voter_id_6 = String::from_slice(&env, "user006");
   let voter_id_8 = String::from_slice(&env, "user008");
 
-  let project_id = String::from_slice(&env, "project001");
+  let submission_id = String::from_slice(&env, "submission001");
 
-  voting_system_client.add_project(&project_id);
+  voting_system_client.add_submission(&submission_id);
   let delegatees = vec![
     &env,
     voter_id_2.clone(),
@@ -468,23 +516,32 @@ pub fn test_delegation_too_many_abstain_votes() {
     voter_id_6.clone(),
     voter_id_8.clone(),
   ];
-  voting_system_client.delegate(&voter_id_1, &project_id, &delegatees);
-  voting_system_client.vote(&voter_id_2, &project_id, &String::from_slice(&env, "Yes")); // not considered - low rank
+  voting_system_client.delegate(&voter_id_1, &submission_id, &delegatees);
+  voting_system_client.vote(
+    &voter_id_2,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  ); // not considered - low rank
   voting_system_client.vote(
     &voter_id_3,
-    &project_id,
+    &submission_id,
     &String::from_slice(&env, "Abstain"),
   );
   voting_system_client.vote(
     &voter_id_4,
-    &project_id,
+    &submission_id,
     &String::from_slice(&env, "Abstain"),
   );
-  voting_system_client.vote(&voter_id_5, &project_id, &String::from_slice(&env, "Yes"));
-  voting_system_client.vote(&voter_id_6, &project_id, &String::from_slice(&env, "No"));
-  voting_system_client.vote(&voter_id_8, &project_id, &String::from_slice(&env, "No"));
+  voting_system_client.vote(
+    &voter_id_5,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
+  voting_system_client.vote(&voter_id_6, &submission_id, &String::from_slice(&env, "No"));
+  voting_system_client.vote(&voter_id_8, &submission_id, &String::from_slice(&env, "No"));
 
-  let consensus = voting_system_client.calculate_quorum_consensus(&voter_id_1, &project_id.clone());
+  let consensus =
+    voting_system_client.calculate_quorum_consensus(&voter_id_1, &submission_id.clone());
   assert!(consensus == Vote::Abstain);
 }
 
@@ -517,9 +574,9 @@ pub fn test_delegation_too_many_delegate_votes() {
 
   let voter_id_999 = String::from_slice(&env, "user999");
 
-  let project_id = String::from_slice(&env, "project001");
+  let submission_id = String::from_slice(&env, "submission001");
 
-  voting_system_client.add_project(&project_id);
+  voting_system_client.add_submission(&submission_id);
   let delegatees = vec![
     &env,
     voter_id_2.clone(),
@@ -529,11 +586,15 @@ pub fn test_delegation_too_many_delegate_votes() {
     voter_id_6.clone(),
     voter_id_8.clone(),
   ];
-  voting_system_client.delegate(&voter_id_1, &project_id, &delegatees);
-  voting_system_client.vote(&voter_id_2, &project_id, &String::from_slice(&env, "Yes"));
+  voting_system_client.delegate(&voter_id_1, &submission_id, &delegatees);
+  voting_system_client.vote(
+    &voter_id_2,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
   voting_system_client.delegate(
     &voter_id_3,
-    &project_id,
+    &submission_id,
     &vec![
       &env,
       voter_id_999.clone(),
@@ -545,7 +606,7 @@ pub fn test_delegation_too_many_delegate_votes() {
   );
   voting_system_client.delegate(
     &voter_id_4,
-    &project_id,
+    &submission_id,
     &vec![
       &env,
       voter_id_999.clone(),
@@ -557,7 +618,7 @@ pub fn test_delegation_too_many_delegate_votes() {
   );
   voting_system_client.delegate(
     &voter_id_5,
-    &project_id,
+    &submission_id,
     &vec![
       &env,
       voter_id_999.clone(),
@@ -567,10 +628,11 @@ pub fn test_delegation_too_many_delegate_votes() {
       voter_id_999.clone(),
     ],
   );
-  voting_system_client.vote(&voter_id_6, &project_id, &String::from_slice(&env, "No"));
-  voting_system_client.vote(&voter_id_8, &project_id, &String::from_slice(&env, "No"));
+  voting_system_client.vote(&voter_id_6, &submission_id, &String::from_slice(&env, "No"));
+  voting_system_client.vote(&voter_id_8, &submission_id, &String::from_slice(&env, "No"));
 
-  let consensus = voting_system_client.calculate_quorum_consensus(&voter_id_1, &project_id.clone());
+  let consensus =
+    voting_system_client.calculate_quorum_consensus(&voter_id_1, &submission_id.clone());
   assert!(consensus == Vote::Abstain);
 }
 
@@ -603,9 +665,9 @@ pub fn test_delegation_yes_no_equal() {
 
   let voter_id_999 = String::from_slice(&env, "user999");
 
-  let project_id = String::from_slice(&env, "project001");
+  let submission_id = String::from_slice(&env, "submission001");
 
-  voting_system_client.add_project(&project_id);
+  voting_system_client.add_submission(&submission_id);
   let delegatees = vec![
     &env,
     voter_id_2.clone(),
@@ -615,11 +677,15 @@ pub fn test_delegation_yes_no_equal() {
     voter_id_6.clone(),
     voter_id_8.clone(),
   ];
-  voting_system_client.delegate(&voter_id_1, &project_id, &delegatees);
-  voting_system_client.vote(&voter_id_2, &project_id, &String::from_slice(&env, "Yes"));
+  voting_system_client.delegate(&voter_id_1, &submission_id, &delegatees);
+  voting_system_client.vote(
+    &voter_id_2,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
   voting_system_client.delegate(
     &voter_id_3,
-    &project_id,
+    &submission_id,
     &vec![
       &env,
       voter_id_999.clone(),
@@ -631,14 +697,19 @@ pub fn test_delegation_yes_no_equal() {
   );
   voting_system_client.vote(
     &voter_id_4,
-    &project_id,
+    &submission_id,
     &String::from_slice(&env, "Abstain"),
   );
-  voting_system_client.vote(&voter_id_5, &project_id, &String::from_slice(&env, "Yes"));
-  voting_system_client.vote(&voter_id_6, &project_id, &String::from_slice(&env, "No"));
-  voting_system_client.vote(&voter_id_8, &project_id, &String::from_slice(&env, "No"));
+  voting_system_client.vote(
+    &voter_id_5,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
+  voting_system_client.vote(&voter_id_6, &submission_id, &String::from_slice(&env, "No"));
+  voting_system_client.vote(&voter_id_8, &submission_id, &String::from_slice(&env, "No"));
 
-  let consensus = voting_system_client.calculate_quorum_consensus(&voter_id_1, &project_id.clone());
+  let consensus =
+    voting_system_client.calculate_quorum_consensus(&voter_id_1, &submission_id.clone());
   assert!(consensus == Vote::Abstain);
 }
 
@@ -669,9 +740,9 @@ pub fn test_delegation_in_practice() {
   let voter_id_6 = String::from_slice(&env, "user006");
   let voter_id_8 = String::from_slice(&env, "user008");
 
-  let project_id = String::from_slice(&env, "project001");
+  let submission_id = String::from_slice(&env, "submission001");
 
-  voting_system_client.add_project(&project_id);
+  voting_system_client.add_submission(&submission_id);
   let delegatees = vec![
     &env,
     voter_id_2.clone(),
@@ -681,21 +752,37 @@ pub fn test_delegation_in_practice() {
     voter_id_6.clone(),
     voter_id_8.clone(),
   ];
-  voting_system_client.delegate(&voter_id_1, &project_id, &delegatees);
-  voting_system_client.vote(&voter_id_2, &project_id, &String::from_slice(&env, "No"));
-  voting_system_client.vote(&voter_id_3, &project_id, &String::from_slice(&env, "Yes"));
-  voting_system_client.vote(&voter_id_4, &project_id, &String::from_slice(&env, "Yes"));
-  voting_system_client.vote(&voter_id_5, &project_id, &String::from_slice(&env, "Yes"));
-  voting_system_client.vote(&voter_id_6, &project_id, &String::from_slice(&env, "Yes"));
+  voting_system_client.delegate(&voter_id_1, &submission_id, &delegatees);
+  voting_system_client.vote(&voter_id_2, &submission_id, &String::from_slice(&env, "No"));
+  voting_system_client.vote(
+    &voter_id_3,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
+  voting_system_client.vote(
+    &voter_id_4,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
+  voting_system_client.vote(
+    &voter_id_5,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
+  voting_system_client.vote(
+    &voter_id_6,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
   voting_system_client.vote(
     &voter_id_8,
-    &project_id,
+    &submission_id,
     &String::from_slice(&env, "Abstain"),
   );
 
   let result = voting_system_client
     .tally()
-    .get(project_id.clone())
+    .get(submission_id.clone())
     .unwrap();
 
   assert!(result == (4, 400));
@@ -719,17 +806,17 @@ pub fn test_multiple_voting_operations() {
   voting_system_client.add_neuron(&1, &String::from_slice(&env, "Dummy"));
 
   let voter_id = String::from_slice(&env, "user001");
-  let project_id = String::from_slice(&env, "project001");
-  let project_id_2 = String::from_slice(&env, "project002");
-  let project_id_3 = String::from_slice(&env, "project003");
+  let submission_id = String::from_slice(&env, "submission001");
+  let submission_id_2 = String::from_slice(&env, "submission002");
+  let submission_id_3 = String::from_slice(&env, "submission003");
   let current_user_votes = voting_system_client.multiple_vote_operations(
     &voter_id,
     &Map::from_array(
       &env,
       [
-        (project_id.clone(), String::from_slice(&env, "No")),
-        (project_id_2.clone(), String::from_slice(&env, "Yes")),
-        (project_id_3.clone(), String::from_slice(&env, "Yes")),
+        (submission_id.clone(), String::from_slice(&env, "No")),
+        (submission_id_2.clone(), String::from_slice(&env, "Yes")),
+        (submission_id_3.clone(), String::from_slice(&env, "Yes")),
       ],
     ),
   );
@@ -740,7 +827,7 @@ pub fn test_multiple_voting_operations() {
   assert!(votes.len() == 3);
   assert!(
     votes
-      .get(project_id.clone())
+      .get(submission_id.clone())
       .unwrap()
       .get(voter_id.clone())
       .unwrap()
@@ -748,7 +835,7 @@ pub fn test_multiple_voting_operations() {
   );
   assert!(
     votes
-      .get(project_id_2.clone())
+      .get(submission_id_2.clone())
       .unwrap()
       .get(voter_id.clone())
       .unwrap()
@@ -756,7 +843,7 @@ pub fn test_multiple_voting_operations() {
   );
   assert!(
     votes
-      .get(project_id_3.clone())
+      .get(submission_id_3.clone())
       .unwrap()
       .get(voter_id.clone())
       .unwrap()
@@ -769,9 +856,9 @@ pub fn test_multiple_voting_operations() {
     &Map::from_array(
       &env,
       [
-        (project_id.clone(), String::from_slice(&env, "Remove")),
-        (project_id_2.clone(), String::from_slice(&env, "Remove")),
-        (project_id_3.clone(), String::from_slice(&env, "No")),
+        (submission_id.clone(), String::from_slice(&env, "Remove")),
+        (submission_id_2.clone(), String::from_slice(&env, "Remove")),
+        (submission_id_3.clone(), String::from_slice(&env, "No")),
       ],
     ),
   );
@@ -782,7 +869,7 @@ pub fn test_multiple_voting_operations() {
   assert!(votes.len() == 1);
   assert!(
     votes
-      .get(project_id_3.clone())
+      .get(submission_id_3.clone())
       .unwrap()
       .get(voter_id.clone())
       .unwrap()
@@ -793,7 +880,7 @@ pub fn test_multiple_voting_operations() {
     &voter_id,
     &Map::from_array(
       &env,
-      [(project_id_3.clone(), String::from_slice(&env, "Remove"))],
+      [(submission_id_3.clone(), String::from_slice(&env, "Remove"))],
     ),
   );
   assert!(current_user_votes.is_empty());
