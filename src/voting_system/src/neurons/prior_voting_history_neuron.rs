@@ -1,4 +1,4 @@
-use crate::{types::VotingSystemError, VotingSystem, external_data_provider_contract};
+use crate::{external_data_provider_contract, types::VotingSystemError, VotingSystem};
 use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{Env, String};
 

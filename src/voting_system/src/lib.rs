@@ -154,7 +154,7 @@ impl VotingSystem {
   ) -> Result<Map<String, Vote>, VotingSystemError> {
     let mut all_votes = VotingSystem::get_votes(env.clone());
     for (project_id, vote) in votes {
-      let vote: Vote = vote_from_str(env.clone(), vote);
+      let vote: Vote = vote_from_str(&env, vote);
       if vote == Vote::Delegate
         && VotingSystem::get_delegatees(env.clone())
           .get(voter_id.clone())
@@ -186,7 +186,7 @@ impl VotingSystem {
     project_id: String,
     vote: String,
   ) -> Result<Map<String, Vote>, VotingSystemError> {
-    let vote: Vote = vote_from_str(env.clone(), vote);
+    let vote: Vote = vote_from_str(&env, vote);
     if vote == Vote::Delegate
       && VotingSystem::get_delegatees(env.clone())
         .get(voter_id.clone())
@@ -392,7 +392,7 @@ impl VotingSystem {
     aggregator: String,
   ) -> Result<(), VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone())?;
-    let layer_aggregator: LayerAggregator = layer_aggregator_from_str(env.clone(), aggregator);
+    let layer_aggregator: LayerAggregator = layer_aggregator_from_str(&env, aggregator);
     neural_governance.set_layer_aggregator(layer_id, layer_aggregator)?;
     VotingSystem::set_neural_governance(env, neural_governance);
     Ok(())
@@ -400,7 +400,7 @@ impl VotingSystem {
 
   pub fn add_neuron(env: Env, layer_id: u32, neuron: String) -> Result<(), VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone())?;
-    let neuron = neuron_type_from_str(env.clone(), neuron)?;
+    let neuron = neuron_type_from_str(&env, neuron)?;
     neural_governance.add_neuron(layer_id, neuron)?;
     VotingSystem::set_neural_governance(env, neural_governance);
     Ok(())
@@ -408,7 +408,7 @@ impl VotingSystem {
 
   pub fn remove_neuron(env: Env, layer_id: u32, neuron: String) -> Result<(), VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone()).unwrap();
-    let neuron = neuron_type_from_str(env.clone(), neuron)?;
+    let neuron = neuron_type_from_str(&env, neuron)?;
     neural_governance.remove_neuron(layer_id, neuron)?;
     VotingSystem::set_neural_governance(env, neural_governance);
     Ok(())
@@ -421,7 +421,7 @@ impl VotingSystem {
     weight: u32,
   ) -> Result<(), VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone())?;
-    let neuron = neuron_type_from_str(env.clone(), neuron)?;
+    let neuron = neuron_type_from_str(&env, neuron)?;
     let weight = DecimalNumberWrapper::from(weight).as_tuple();
     neural_governance.set_neuron_weight(layer_id, neuron, weight)?;
     VotingSystem::set_neural_governance(env, neural_governance);
