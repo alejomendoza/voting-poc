@@ -434,7 +434,14 @@ impl VotingSystem {
     Ok(())
   }
 
-  pub fn set_external_data_provider(env: Env, external_data_provider_address: Address) {
+  pub fn set_external_data_provider(env: Env, external_data_provider_address: String) {
+    env.storage().temporary().set(
+      &DataKey::ExternalDataProvider,
+      &external_data_provider_address,
+    );
+  }
+
+  pub fn set_external_data_provider_addr(env: Env, external_data_provider_address: Address) {
     env.storage().temporary().set(
       &DataKey::ExternalDataProvider,
       &external_data_provider_address,
