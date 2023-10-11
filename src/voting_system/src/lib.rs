@@ -156,7 +156,7 @@ impl VotingSystem {
   ) -> Result<Map<String, Vote>, VotingSystemError> {
     let mut all_votes = VotingSystem::get_votes(env.clone());
     for (submission_id, vote) in votes {
-      let vote: Vote = vote_from_str(env.clone(), vote);
+      let vote: Vote = vote_from_str(&env, vote);
 
       if vote == Vote::Delegate
         && VotingSystem::get_delegatees(env.clone())
