@@ -74,7 +74,7 @@ impl VotingSystem {
     submission_id: String,
   ) -> Result<Vote, VotingSystemError> {
     let external_data_provider_address =
-      VotingSystem::get_external_data_provider_addr(env.clone())?;
+      VotingSystem::get_external_data_provider(env.clone())?;
     let external_data_provider_client =
       external_data_provider_contract::Client::new(&env, &external_data_provider_address);
 
@@ -435,29 +435,14 @@ impl VotingSystem {
     Ok(())
   }
 
-  pub fn set_external_data_provider(env: Env, external_data_provider_address: String) {
+  pub fn set_external_data_provider(env: Env, external_data_provider_address: Address) {
     env.storage().temporary().set(
       &DataKey::ExternalDataProvider,
       &external_data_provider_address,
     );
   }
 
-  pub fn set_external_data_provider_addr(env: Env, external_data_provider_address: Address) {
-    env.storage().temporary().set(
-      &DataKey::ExternalDataProvider,
-      &external_data_provider_address,
-    );
-  }
-
-  pub fn get_external_data_provider(env: Env) -> Result<String, VotingSystemError> {
-    env
-      .storage()
-      .temporary()
-      .get(&DataKey::ExternalDataProvider)
-      .ok_or(VotingSystemError::ExternalDataProviderNotSet)?
-  }
-
-  pub fn get_external_data_provider_addr(env: Env) -> Result<Address, VotingSystemError> {
+  pub fn get_external_data_provider(env: Env) -> Result<Address, VotingSystemError> {
     env
       .storage()
       .temporary()

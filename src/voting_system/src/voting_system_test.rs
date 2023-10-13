@@ -209,7 +209,7 @@ pub fn test_assigned_reputation_neuron() {
   let external_data_provider_client =
     external_data_provider_contract::Client::new(&env, &external_data_provider_id);
   external_data_provider_client.mock_sample_data();
-  voting_system_client.set_external_data_provider_addr(&external_data_provider_id);
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   let voter_id_1 = String::from_slice(&env, "user001"); // bonus 0,300
   let voter_id_2 = String::from_slice(&env, "user002"); // bonus 0,200
@@ -267,7 +267,7 @@ pub fn test_prior_voting_history_neuron() {
   let external_data_provider_client =
     external_data_provider_contract::Client::new(&env, &external_data_provider_id);
   external_data_provider_client.mock_sample_data();
-  voting_system_client.set_external_data_provider_addr(&external_data_provider_id);
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   let voter_id_1 = String::from_slice(&env, "user001"); // active rounds: [2, 3], bonusses: [0, 100], [0, 200]
   let voter_id_2 = String::from_slice(&env, "user003"); // active rounds: [2, 3, 4], bonusses: [0, 100], [0, 200], [0, 300]
@@ -309,7 +309,7 @@ pub fn test_graph_bonus() {
   let external_data_provider_client =
     external_data_provider_contract::Client::new(&env, &external_data_provider_id);
   external_data_provider_client.mock_sample_data();
-  voting_system_client.set_external_data_provider_addr(&external_data_provider_id);
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   let voter_id_1 = String::from_slice(&env, "user001");
   let voter_id_2 = String::from_slice(&env, "user002");
@@ -362,7 +362,7 @@ pub fn test_delegation_more_yes_votes() {
   let external_data_provider_client =
     external_data_provider_contract::Client::new(&env, &external_data_provider_id);
   external_data_provider_client.mock_sample_data();
-  voting_system_client.set_external_data_provider_addr(&external_data_provider_id);
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   assert!(voting_system_client.add_layer() == 0);
   voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
@@ -426,7 +426,7 @@ pub fn test_delegation_more_no_votes() {
   let external_data_provider_client =
     external_data_provider_contract::Client::new(&env, &external_data_provider_id);
   external_data_provider_client.mock_sample_data();
-  voting_system_client.set_external_data_provider_addr(&external_data_provider_id);
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   assert!(voting_system_client.add_layer() == 0);
   voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
@@ -490,7 +490,7 @@ pub fn test_delegation_too_many_abstain_votes() {
   let external_data_provider_client =
     external_data_provider_contract::Client::new(&env, &external_data_provider_id);
   external_data_provider_client.mock_sample_data();
-  voting_system_client.set_external_data_provider_addr(&external_data_provider_id);
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   assert!(voting_system_client.add_layer() == 0);
   voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
@@ -558,7 +558,7 @@ pub fn test_delegation_too_many_delegate_votes() {
   let external_data_provider_client =
     external_data_provider_contract::Client::new(&env, &external_data_provider_id);
   external_data_provider_client.mock_sample_data();
-  voting_system_client.set_external_data_provider_addr(&external_data_provider_id);
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   assert!(voting_system_client.add_layer() == 0);
   voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
@@ -649,7 +649,7 @@ pub fn test_delegation_yes_no_equal() {
   let external_data_provider_client =
     external_data_provider_contract::Client::new(&env, &external_data_provider_id);
   external_data_provider_client.mock_sample_data();
-  voting_system_client.set_external_data_provider_addr(&external_data_provider_id);
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   assert!(voting_system_client.add_layer() == 0);
   voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
@@ -726,7 +726,7 @@ pub fn test_delegation_in_practice() {
   let external_data_provider_client =
     external_data_provider_contract::Client::new(&env, &external_data_provider_id);
   external_data_provider_client.mock_sample_data();
-  voting_system_client.set_external_data_provider_addr(&external_data_provider_id);
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
 
   assert!(voting_system_client.add_layer() == 0);
   voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));

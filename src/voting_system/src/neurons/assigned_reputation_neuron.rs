@@ -6,7 +6,7 @@ pub fn oracle_function(
   voter_id: String,
   _submission_id: String,
 ) -> Result<(u32, u32), VotingSystemError> {
-  let external_data_provider_address = VotingSystem::get_external_data_provider_addr(env.clone())?;
+  let external_data_provider_address = VotingSystem::get_external_data_provider(env.clone())?;
   let external_data_provider_client =
     external_data_provider_contract::Client::new(&env, &external_data_provider_address);
 
