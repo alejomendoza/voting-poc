@@ -33,7 +33,7 @@ pub enum DataKey {
   // storage type: instance
   // Map<UserUUID, Vec<UserUUID>> - users to the vector of users they delegated their votes to
   Delegatees,
-  // storage type: temporary
+  // storage type: instance
   ExternalDataProvider,
 }
 
@@ -436,7 +436,7 @@ impl VotingSystem {
   }
 
   pub fn set_external_data_provider(env: Env, external_data_provider_address: Address) {
-    env.storage().temporary().set(
+    env.storage().instance().set(
       &DataKey::ExternalDataProvider,
       &external_data_provider_address,
     );
@@ -445,7 +445,7 @@ impl VotingSystem {
   pub fn get_external_data_provider(env: Env) -> Result<Address, VotingSystemError> {
     env
       .storage()
-      .temporary()
+      .instance()
       .get(&DataKey::ExternalDataProvider)
       .ok_or(VotingSystemError::ExternalDataProviderNotSet)?
   }
