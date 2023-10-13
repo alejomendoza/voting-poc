@@ -14,7 +14,7 @@ pub fn oracle_function(
 
   let rank = Rank::from_pages(&env, external_data_provider_client.get_trust_map());
   // TODO: consider caching the result in external data provider so the algorithm's not run every time this neuron is executed
-  let rank = rank.calculate(&env).get(voter_id.clone()).unwrap();
+  let rank = rank.calculate(&env).get(voter_id.clone()).unwrap_or((0, 0));
 
   Ok(rank)
 }
