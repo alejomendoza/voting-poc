@@ -232,11 +232,25 @@ impl ExternalDataProvider {
       .get(&DataKey::TrustMap)
       .unwrap_or(Map::new(&env))
   }
-  pub fn set_trust_map(env: Env, trust_map: Map<String, Map<String, ()>>) {
+  pub fn set_trust_map(
+    env: Env,
+    user_id: String,
+    user_trust_map: Map<String, ()>
+  ) -> Map<String, Map<String, ()>> {
+    let mut trust_map = ExternalDataProvider::get_trust_map(env.clone());
+    let mut voter_entry = trust_map.get(user_id.clone()).unwrap_or(Map::new(&env));
+    
+    for (trusted_voter, _) in user_trust_map {
+      voter_entry.set(trusted_voter.clone(), ());
+    }
+    
+    trust_map.set(user_id.clone(), voter_entry.clone());
+    
     env
       .storage()
       .temporary()
       .set(&DataKey::TrustMap, &trust_map);
+    ExternalDataProvider::get_trust_map(env.clone())
   }
 }
 
