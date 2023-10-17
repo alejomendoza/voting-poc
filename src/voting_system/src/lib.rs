@@ -233,7 +233,7 @@ impl VotingSystem {
     env: Env,
     voter_id: String,
     delegatees_for_user: Vec<String>,
-  ) -> Result<(), VotingSystemError> {
+  ) -> Result<Vec<String>, VotingSystemError> {
     if delegatees_for_user.len() > MAX_DELEGATEES {
       return Err(VotingSystemError::TooManyDelegatees);
     }
@@ -241,13 +241,17 @@ impl VotingSystem {
       return Err(VotingSystemError::NotEnoughDelegatees);
     }
     let mut all_delegatees = VotingSystem::get_delegatees(env.clone());
-    all_delegatees.set(voter_id, delegatees_for_user);
+    all_delegatees.set(voter_id.clone(), delegatees_for_user);
     env
       .storage()
       .instance()
       .set(&DataKey::Delegatees, &all_delegatees);
 
-    Ok(())
+    Ok(
+      VotingSystem::get_delegatees(env.clone())
+        .get(voter_id.clone())
+        .unwrap_or(Vec::new(&env)),
+    )
   }
 
   pub fn delegate(
