@@ -73,8 +73,7 @@ impl VotingSystem {
     voter_id: String,
     submission_id: String,
   ) -> Result<Vote, VotingSystemError> {
-    let external_data_provider_address =
-      VotingSystem::get_external_data_provider(env.clone())?;
+    let external_data_provider_address = VotingSystem::get_external_data_provider(env.clone())?;
     let external_data_provider_client =
       external_data_provider_contract::Client::new(&env, &external_data_provider_address);
 
