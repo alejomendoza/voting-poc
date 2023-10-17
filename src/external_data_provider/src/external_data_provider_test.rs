@@ -166,3 +166,48 @@ pub fn test_trust_map() {
   );
   assert!(user_2_map == Some(Map::from_array(&env, [(user_id_1.clone(), ()),])));
 }
+
+#[test]
+pub fn test_set_trust_map() {
+  let env = Env::default();
+
+  let external_data_provider_id = env.register_contract(None, ExternalDataProvider);
+  let external_data_provider_client =
+      ExternalDataProviderClient::new(&env, &external_data_provider_id);
+
+  let user_id_1 = String::from_slice(&env, "user001");
+  let user_id_2 = String::from_slice(&env, "user002");
+
+  let mut new_trust_map: Map<String, Map<String, ()>> = Map::new(&env);
+  new_trust_map.set(user_id_1.clone(), Map::from_array(&env, [(user_id_2.clone(), ()),]));
+  external_data_provider_client.set_trust_map(&new_trust_map);
+
+  let trust_map = external_data_provider_client.get_trust_map();
+  let user_1_map = trust_map.get(user_id_1.clone());
+  let user_2_map = trust_map.get(user_id_2.clone());
+
+  assert!(user_1_map == Some(Map::from_array(&env, [(user_id_2.clone(), ()),])));
+  assert!(user_2_map.is_none())
+}
+
+#[test]
+pub fn test_set_trust_map_for_user() {
+  let env = Env::default();
+
+  let external_data_provider_id = env.register_contract(None, ExternalDataProvider);
+  let external_data_provider_client =
+      ExternalDataProviderClient::new(&env, &external_data_provider_id);
+
+  let user_id_1 = String::from_slice(&env, "user001");
+  let user_id_2 = String::from_slice(&env, "user002");
+
+  external_data_provider_client.set_trust_map_for_user(&user_id_1, &Map::from_array(&env, [(user_id_2.clone(), ()),]));
+  
+  let trust_map = external_data_provider_client.get_trust_map();
+  let user_1_map = trust_map.get(user_id_1.clone());
+  let user_2_map = trust_map.get(user_id_2.clone());
+  
+  assert!(user_1_map == Some(Map::from_array(&env, [(user_id_2.clone(), ()),])));
+  assert!(user_2_map.is_none())
+}
+
