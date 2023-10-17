@@ -244,14 +244,9 @@ impl ExternalDataProvider {
     user_trust_map: Map<String, ()>
   ) -> Map<String, Map<String, ()>> {
     let mut trust_map = ExternalDataProvider::get_trust_map(env.clone());
-    let mut voter_entry = trust_map.get(user_id.clone()).unwrap_or(Map::new(&env));
 
-    for (trusted_voter, _) in user_trust_map {
-      voter_entry.set(trusted_voter.clone(), ());
-    }
-
-    trust_map.set(user_id.clone(), voter_entry.clone());
-
+    trust_map.set(user_id.clone(), user_trust_map);
+    
     env
         .storage()
         .temporary()
