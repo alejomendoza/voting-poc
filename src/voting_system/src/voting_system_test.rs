@@ -4,7 +4,7 @@ use crate::{
   types::{LayerAggregator, NeuronType, Vote, DEFAULT_WEIGHT},
 };
 use soroban_decimal_numbers::DecimalNumberWrapper;
-use soroban_sdk::{vec, Env, Map, String};
+use soroban_sdk::{log, testutils::Logs, vec, Env, Map, String};
 
 use crate::{VotingSystem, VotingSystemClient};
 
@@ -885,4 +885,103 @@ pub fn test_multiple_voting_operations() {
   );
   assert!(current_user_votes.is_empty());
   assert!(voting_system_client.get_voters().is_empty());
+}
+
+#[test]
+pub fn test_decomposed_tally() {
+  let env = Env::default();
+  env.budget().reset_unlimited();
+
+  let voting_system_id = env.register_contract(None, VotingSystem);
+  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+
+  let voter_id_1 = String::from_slice(&env, "user001");
+  let voter_id_2 = String::from_slice(&env, "user002");
+
+  let submission_1_id = String::from_slice(&env, "submission001");
+  let submission_2_id = String::from_slice(&env, "submission002");
+
+  voting_system_client.vote(
+    &voter_id_1,
+    &submission_1_id,
+    &String::from_slice(&env, "Yes"),
+  );
+
+  voting_system_client.vote(
+    &voter_id_2,
+    &submission_1_id,
+    &String::from_slice(&env, "No"),
+  );
+
+  voting_system_client.vote(
+    &voter_id_2,
+    &submission_2_id,
+    &String::from_slice(&env, "Yes"),
+  );
+
+  voting_system_client.initialize();
+
+  let n_layers = 5;
+
+  for i in 0..n_layers {
+    assert!(voting_system_client.add_layer() == i);
+    if i % 2 == 0 {
+      voting_system_client.set_layer_aggregator(&i, &String::from_slice(&env, "Sum"));
+    } else {
+      voting_system_client.set_layer_aggregator(&i, &String::from_slice(&env, "Product"));
+    }
+
+    voting_system_client.add_neuron(&i, &String::from_slice(&env, "TrustGraph"));
+    voting_system_client.add_neuron(&i, &String::from_slice(&env, "AssignedReputation"));
+    voting_system_client.add_neuron(&i, &String::from_slice(&env, "PriorVotingHistory"));
+  }
+
+  let external_data_provider_id =
+    env.register_contract_wasm(None, external_data_provider_contract::WASM);
+  let external_data_provider_client =
+    external_data_provider_contract::Client::new(&env, &external_data_provider_id);
+  external_data_provider_client.mock_sample_data();
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
+
+  let use_tally = true;
+
+  if use_tally {
+    let tallied = voting_system_client.tally();
+    log!(
+      &env,
+      "---------------tally 1",
+      tallied.get(submission_1_id.clone()).unwrap()
+    );
+    log!(
+      &env,
+      "---------------tally 2",
+      tallied.get(submission_2_id.clone()).unwrap()
+    );
+  } else {
+    let normalized_votes: Map<String, Map<String, String>> = voting_system_client.normalize_votes();
+    let mut voters_voting_powers: Map<String, (u32, u32)> = Map::new(&env);
+    for (submission_id, submission_votes) in normalized_votes.clone() {
+      for (voter_id, _normalized_vote) in submission_votes {
+        if voters_voting_powers.get(voter_id.clone()).is_none() {
+          let voting_power = voting_system_client.voting_power_for_voter(&voter_id, &submission_id);
+          voters_voting_powers.set(voter_id, voting_power);
+        }
+      }
+    }
+
+    let final_voting_powers = voting_system_client
+      .final_submissions_voting_powers(&voters_voting_powers, &normalized_votes);
+    log!(
+      &env,
+      "---------------final voting powers",
+      final_voting_powers.get(submission_1_id).unwrap()
+    );
+    log!(
+      &env,
+      "---------------final voting powers",
+      final_voting_powers.get(submission_2_id).unwrap()
+    );
+  }
+
+  env.logs().print();
 }

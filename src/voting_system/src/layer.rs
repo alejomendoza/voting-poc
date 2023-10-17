@@ -20,7 +20,7 @@ impl Layer {
     &self,
     env: Env,
     voter_id: String,
-    submission_id: String,
+    _submission_id: String,
     previous_layer_vote: (u32, u32),
   ) -> Result<Vec<(u32, u32)>, VotingSystemError> {
     if self.aggregator == LayerAggregator::Unknown {
@@ -33,21 +33,15 @@ impl Layer {
     }
     for (neuron, raw_weight) in self.neurons.iter() {
       let raw_neuron_vote: DecimalNumber = match neuron {
-        NeuronType::Dummy => {
-          dummy_neuron::oracle_function(env.clone(), voter_id.clone(), submission_id.clone())?
+        NeuronType::Dummy => dummy_neuron::oracle_function(env.clone(), voter_id.clone())?,
+        NeuronType::AssignedReputation => {
+          assigned_reputation_neuron::oracle_function(env.clone(), voter_id.clone())?
         }
-        NeuronType::AssignedReputation => assigned_reputation_neuron::oracle_function(
-          env.clone(),
-          voter_id.clone(),
-          submission_id.clone(),
-        )?,
-        NeuronType::PriorVotingHistory => prior_voting_history_neuron::oracle_function(
-          env.clone(),
-          voter_id.clone(),
-          submission_id.clone(),
-        )?,
+        NeuronType::PriorVotingHistory => {
+          prior_voting_history_neuron::oracle_function(env.clone(), voter_id.clone())?
+        }
         NeuronType::TrustGraph => {
-          trust_graph_neuron::oracle_function(env.clone(), voter_id.clone(), submission_id.clone())?
+          trust_graph_neuron::oracle_function(env.clone(), voter_id.clone())?
         }
       };
       let neuron_vote = self.run_neuron_weight_function(
