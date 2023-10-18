@@ -4,7 +4,7 @@ use crate::{
   types::{LayerAggregator, NeuronType, Vote, DEFAULT_WEIGHT},
 };
 use soroban_decimal_numbers::DecimalNumberWrapper;
-use soroban_sdk::{log, testutils::Logs, vec, Env, Map, String};
+use soroban_sdk::{vec, Env, Map, String};
 
 use crate::{VotingSystem, VotingSystemClient};
 
@@ -943,45 +943,20 @@ pub fn test_decomposed_tally() {
   external_data_provider_client.mock_sample_data();
   voting_system_client.set_external_data_provider(&external_data_provider_id);
 
-  let use_tally = true;
-
-  if use_tally {
-    let tallied = voting_system_client.tally();
-    log!(
-      &env,
-      "---------------tally 1",
-      tallied.get(submission_1_id.clone()).unwrap()
-    );
-    log!(
-      &env,
-      "---------------tally 2",
-      tallied.get(submission_2_id.clone()).unwrap()
-    );
-  } else {
-    let normalized_votes: Map<String, Map<String, String>> = voting_system_client.normalize_votes();
-    let mut voters_voting_powers: Map<String, (u32, u32)> = Map::new(&env);
-    for (submission_id, submission_votes) in normalized_votes.clone() {
-      for (voter_id, _normalized_vote) in submission_votes {
-        if voters_voting_powers.get(voter_id.clone()).is_none() {
-          let voting_power = voting_system_client.voting_power_for_voter(&voter_id, &submission_id);
-          voters_voting_powers.set(voter_id, voting_power);
-        }
+  let normalized_votes: Map<String, Map<String, String>> = voting_system_client.normalize_votes();
+  let mut voters_voting_powers: Map<String, u32> = Map::new(&env);
+  for (submission_id, submission_votes) in normalized_votes.clone() {
+    for (voter_id, _normalized_vote) in submission_votes {
+      if voters_voting_powers.get(voter_id.clone()).is_none() {
+        let voting_power = voting_system_client.voting_power_for_voter(&voter_id, &submission_id);
+        voters_voting_powers.set(voter_id, DecimalNumberWrapper::from(voting_power).as_raw());
       }
     }
-
-    let final_voting_powers = voting_system_client
-      .final_submissions_voting_powers(&voters_voting_powers, &normalized_votes);
-    log!(
-      &env,
-      "---------------final voting powers",
-      final_voting_powers.get(submission_1_id).unwrap()
-    );
-    log!(
-      &env,
-      "---------------final voting powers",
-      final_voting_powers.get(submission_2_id).unwrap()
-    );
   }
 
-  env.logs().print();
+  let final_voting_powers =
+    voting_system_client.final_submissions_voting_powers(&voters_voting_powers, &normalized_votes);
+
+  assert!(final_voting_powers.get(submission_1_id).unwrap() == (1134, 400));
+  assert!(final_voting_powers.get(submission_2_id).unwrap() == (2, 515));
 }

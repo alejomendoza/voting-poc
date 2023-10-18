@@ -421,17 +421,16 @@ impl VotingSystem {
     voter_id: String,
     submission_id: String,
   ) -> Result<(u32, u32), VotingSystemError> {
-    let result = VotingSystem::get_neural_governance(env.clone())?.execute_neural_governance(
+    VotingSystem::get_neural_governance(env.clone())?.execute_neural_governance(
       env.clone(),
       voter_id.clone(),
       submission_id.clone(),
-    )?;
-    Ok(result)
+    )
   }
 
   pub fn final_submissions_voting_powers(
     env: Env,
-    voters_voting_powers: Map<String, (u32, u32)>,
+    voters_voting_powers: Map<String, u32>,
     normalized_votes: Map<String, Map<String, String>>,
   ) -> Result<Map<String, (u32, u32)>, VotingSystemError> {
     let mut result: Map<String, (u32, u32)> = Map::new(&env);
@@ -441,11 +440,13 @@ impl VotingSystem {
       let mut submission_voting_power_minus: DecimalNumberWrapper = Default::default();
       for (voter_id, normalized_vote_str) in votes {
         let normalized_vote = normalized_vote_from_str(&env, normalized_vote_str)?;
-        let voter_voting_power = voters_voting_powers.get(voter_id);
+        let voter_voting_power: Option<u32> = voters_voting_powers.get(voter_id);
         if voter_voting_power.is_none() {
           return Err(VotingSystemError::UnknownVoter);
         }
-        let voter_voting_power = voter_voting_power.unwrap();
+        let voter_voting_power: u32 = voter_voting_power.unwrap();
+        let voter_voting_power: (u32, u32) =
+          DecimalNumberWrapper::from(voter_voting_power).as_tuple();
         match normalized_vote {
           NormalizedVote::Yes => {
             submission_voting_power_plus = DecimalNumberWrapper::add(
