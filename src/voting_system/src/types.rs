@@ -23,6 +23,13 @@ pub enum Vote {
   Remove,
 }
 
+#[contracttype]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum NormalizedVote {
+  Yes,
+  No,
+}
+
 pub fn vote_from_str(env: &Env, str: String) -> Vote {
   if str == String::from_slice(&env, "Yes") {
     return Vote::Yes;
@@ -37,6 +44,19 @@ pub fn vote_from_str(env: &Env, str: String) -> Vote {
     return Vote::Remove;
   }
   return Vote::Abstain;
+}
+
+pub fn normalized_vote_from_str(
+  env: &Env,
+  str: String,
+) -> Result<NormalizedVote, VotingSystemError> {
+  if str == String::from_slice(&env, "Yes") {
+    return Ok(NormalizedVote::Yes);
+  }
+  if str == String::from_slice(&env, "No") {
+    return Ok(NormalizedVote::No);
+  }
+  Err(VotingSystemError::UnknownVote)
 }
 
 #[contracttype]
@@ -103,4 +123,6 @@ pub enum VotingSystemError {
   TooManyDelegatees = 15,
   NotEnoughDelegatees = 16,
   UnknownNeuronType = 17,
+  UnknownVote = 18,
+  UnknownVoter = 19,
 }

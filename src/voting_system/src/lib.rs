@@ -12,8 +12,9 @@ use neural_governance::NeuralGovernance;
 use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Map, String, Vec};
 use types::{
-  layer_aggregator_from_str, neuron_type_from_str, vote_from_str, LayerAggregator,
-  ABSTAIN_VOTING_POWER, MAX_DELEGATEES, MIN_DELEGATEES, QUORUM_PARTICIPATION_TRESHOLD,
+  layer_aggregator_from_str, neuron_type_from_str, normalized_vote_from_str, vote_from_str,
+  LayerAggregator, NormalizedVote, ABSTAIN_VOTING_POWER, MAX_DELEGATEES, MIN_DELEGATEES,
+  QUORUM_PARTICIPATION_TRESHOLD,
 };
 
 mod external_data_provider_contract {
@@ -73,8 +74,7 @@ impl VotingSystem {
     voter_id: String,
     submission_id: String,
   ) -> Result<Vote, VotingSystemError> {
-    let external_data_provider_address =
-      VotingSystem::get_external_data_provider(env.clone())?;
+    let external_data_provider_address = VotingSystem::get_external_data_provider(env.clone())?;
     let external_data_provider_client =
       external_data_provider_contract::Client::new(&env, &external_data_provider_address);
 
@@ -376,6 +376,107 @@ impl VotingSystem {
           .as_tuple(),
       )
     }
+    Ok(result)
+  }
+
+  /**
+   * This is a breakdown of the tally function, instead of tally, you can call:
+   * 1. normalize_votes
+   * 2. voting_power_for_voter - for every user/submission (this depends on the fact whether any neurons consider submission id in calculations) - you should iterate over the result of normalize_votes
+   * 3. final_submissions_voting_powers - with the results of normalize_votes and voting_power_for_voter
+   *
+   * tally reaches the CPU Soroban limit (https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-limits) pretty quickly, with this breakdown you can run it in batches
+   */
+
+  // this will convert all the votes to either Yes or No
+  pub fn normalize_votes(env: Env) -> Result<Map<String, Map<String, String>>, VotingSystemError> {
+    // Map<project_id, Map<voter_id, Vote>>
+    let all_votes = VotingSystem::get_votes(env.clone());
+    let mut normalized_votes: Map<String, Map<String, String>> = Map::new(&env);
+    for (submission_id, submission_votes) in all_votes {
+      // Map<voter_id, NormalizedVote>
+      let mut normalized_votes_for_submission: Map<String, String> = Map::new(&env);
+      for (voter_id, mut vote) in submission_votes.clone() {
+        if vote == Vote::Delegate {
+          vote = VotingSystem::calculate_quorum_consensus(
+            env.clone(),
+            voter_id.clone(),
+            submission_id.clone(),
+          )?;
+        }
+        if vote == Vote::Abstain {
+          continue;
+        }
+        if vote == Vote::Yes {
+          normalized_votes_for_submission.set(voter_id, String::from_slice(&env, "Yes"));
+        } else if vote == Vote::No {
+          normalized_votes_for_submission.set(voter_id, String::from_slice(&env, "No"));
+        } else {
+          return Err(VotingSystemError::UnexpectedValue);
+        }
+      }
+      if !normalized_votes_for_submission.is_empty() {
+        normalized_votes.set(submission_id, normalized_votes_for_submission);
+      }
+    }
+    Ok(normalized_votes)
+  }
+
+  // this calls a neural governance for every voter and submission
+  pub fn voting_power_for_voter(
+    env: Env,
+    voter_id: String,
+    submission_id: String,
+  ) -> Result<(u32, u32), VotingSystemError> {
+    VotingSystem::get_neural_governance(env.clone())?.execute_neural_governance(
+      env.clone(),
+      voter_id.clone(),
+      submission_id.clone(),
+    )
+  }
+
+  // takes results of neural governance runs and calculates the final voting power for each submission
+  pub fn final_submissions_voting_powers(
+    env: Env,
+    voters_voting_powers: Map<String, u32>,
+    normalized_votes: Map<String, Map<String, String>>,
+  ) -> Result<Map<String, (u32, u32)>, VotingSystemError> {
+    let mut result: Map<String, (u32, u32)> = Map::new(&env);
+
+    for (submission_id, votes) in normalized_votes {
+      let mut submission_voting_power_plus: DecimalNumberWrapper = Default::default();
+      let mut submission_voting_power_minus: DecimalNumberWrapper = Default::default();
+      for (voter_id, normalized_vote_str) in votes {
+        let normalized_vote = normalized_vote_from_str(&env, normalized_vote_str)?;
+        let voter_voting_power: Option<u32> = voters_voting_powers.get(voter_id);
+        if voter_voting_power.is_none() {
+          return Err(VotingSystemError::UnknownVoter);
+        }
+        let voter_voting_power: u32 = voter_voting_power.unwrap();
+        let voter_voting_power: (u32, u32) =
+          DecimalNumberWrapper::from(voter_voting_power).as_tuple();
+        match normalized_vote {
+          NormalizedVote::Yes => {
+            submission_voting_power_plus = DecimalNumberWrapper::add(
+              submission_voting_power_plus,
+              DecimalNumberWrapper::from(voter_voting_power),
+            )
+          }
+          NormalizedVote::No => {
+            submission_voting_power_minus = DecimalNumberWrapper::add(
+              submission_voting_power_minus,
+              DecimalNumberWrapper::from(voter_voting_power),
+            )
+          }
+        };
+      }
+      result.set(
+        submission_id,
+        DecimalNumberWrapper::sub(submission_voting_power_plus, submission_voting_power_minus)
+          .as_tuple(),
+      )
+    }
+
     Ok(result)
   }
 
