@@ -379,8 +379,14 @@ impl VotingSystem {
     Ok(result)
   }
 
-  // ---------------------------------------------------------------------------
-  // This is a breakdown of the tally function
+  /**
+   * This is a breakdown of the tally function, instead of tally, you can call:
+   * 1. normalize_votes
+   * 2. voting_power_for_voter - for every user/submission (this depends on the fact whether any neurons consider submission id in calculations) - you should iterate over the result of normalize_votes
+   * 3. final_submissions_voting_powers - with the results of normalize_votes and voting_power_for_voter
+   *
+   * tally reaches the CPU Soroban limit (https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-limits) pretty quickly, with this breakdown you can run it in batches
+   */
 
   // this will convert all the votes to either Yes or No
   pub fn normalize_votes(env: Env) -> Result<Map<String, Map<String, String>>, VotingSystemError> {
@@ -416,6 +422,7 @@ impl VotingSystem {
     Ok(normalized_votes)
   }
 
+  // this calls a neural governance for every voter and submission
   pub fn voting_power_for_voter(
     env: Env,
     voter_id: String,
@@ -428,6 +435,7 @@ impl VotingSystem {
     )
   }
 
+  // takes results of neural governance runs and calculates the final voting power for each submission
   pub fn final_submissions_voting_powers(
     env: Env,
     voters_voting_powers: Map<String, u32>,
@@ -471,7 +479,6 @@ impl VotingSystem {
 
     Ok(result)
   }
-  // ---------------------------------------------------------------------------
 
   pub fn add_layer(env: Env) -> Result<u32, VotingSystemError> {
     let mut neural_governance = VotingSystem::get_neural_governance(env.clone())?;
