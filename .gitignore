@@ -4,3 +4,6 @@
 
 /scripts/.config
 /scripts/.contracts
+
+# IDE
+/.idea

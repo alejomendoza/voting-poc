@@ -234,7 +234,7 @@ impl VotingSystem {
     env: Env,
     voter_id: String,
     delegatees_for_user: Vec<String>,
-  ) -> Result<(), VotingSystemError> {
+  ) -> Result<Vec<String>, VotingSystemError> {
     if delegatees_for_user.len() > MAX_DELEGATEES {
       return Err(VotingSystemError::TooManyDelegatees);
     }
@@ -242,13 +242,17 @@ impl VotingSystem {
       return Err(VotingSystemError::NotEnoughDelegatees);
     }
     let mut all_delegatees = VotingSystem::get_delegatees(env.clone());
-    all_delegatees.set(voter_id, delegatees_for_user);
+    all_delegatees.set(voter_id.clone(), delegatees_for_user);
     env
       .storage()
       .instance()
       .set(&DataKey::Delegatees, &all_delegatees);
 
-    Ok(())
+    Ok(
+      VotingSystem::get_delegatees(env.clone())
+        .get(voter_id.clone())
+        .unwrap_or(Vec::new(&env)),
+    )
   }
 
   pub fn delegate(
@@ -537,7 +541,7 @@ impl VotingSystem {
   }
 
   pub fn set_external_data_provider(env: Env, external_data_provider_address: Address) {
-    env.storage().temporary().set(
+    env.storage().instance().set(
       &DataKey::ExternalDataProvider,
       &external_data_provider_address,
     );
@@ -546,9 +550,28 @@ impl VotingSystem {
   pub fn get_external_data_provider(env: Env) -> Result<Address, VotingSystemError> {
     env
       .storage()
-      .temporary()
+      .instance()
       .get(&DataKey::ExternalDataProvider)
       .ok_or(VotingSystemError::ExternalDataProviderNotSet)?
+  }
+
+  pub fn get_votes_trust_delegates(
+    env: Env,
+    voter_id: String,
+  ) -> Result<(Map<String, Vote>, Map<String, ()>, Vec<String>), VotingSystemError> {
+    let external_data_provider_address = VotingSystem::get_external_data_provider(env.clone())?;
+    let external_data_provider_client =
+      external_data_provider_contract::Client::new(&env, &external_data_provider_address);
+    let votes = VotingSystem::get_votes_for_user(env.clone(), voter_id.clone());
+    let trust_map = external_data_provider_client
+      .get_trust_map()
+      .get(voter_id.clone())
+      .unwrap_or(Map::new(&env));
+    let delegates = VotingSystem::get_delegatees(env.clone())
+      .get(voter_id.clone())
+      .unwrap_or(Vec::new(&env));
+
+    return Ok((votes, trust_map, delegates));
   }
 }
 

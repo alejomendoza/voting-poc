@@ -238,6 +238,23 @@ impl ExternalDataProvider {
       .temporary()
       .set(&DataKey::TrustMap, &trust_map);
   }
+  pub fn set_trust_map_for_user(
+    env: Env,
+    user_id: String,
+    user_trust_map: Map<String, ()>,
+  ) -> Map<String, ()> {
+    let mut trust_map = ExternalDataProvider::get_trust_map(env.clone());
+
+    trust_map.set(user_id.clone(), user_trust_map);
+
+    env
+      .storage()
+      .temporary()
+      .set(&DataKey::TrustMap, &trust_map);
+    ExternalDataProvider::get_trust_map(env.clone())
+      .get(user_id.clone())
+      .unwrap_or(Map::new(&env))
+  }
 }
 
 #[cfg(test)]
