@@ -35,36 +35,68 @@ impl ExternalDataProvider {}
 
 #[contractimpl]
 impl ExternalDataProvider {
-  pub fn mock_sample_data(env: Env) {
-    let user001 = String::from_slice(&env, "user001");
-    let user002 = String::from_slice(&env, "user002");
-    let user003 = String::from_slice(&env, "user003");
-    let user004 = String::from_slice(&env, "user004");
-    let user005 = String::from_slice(&env, "user005");
-    let user006 = String::from_slice(&env, "user006");
-    let user007 = String::from_slice(&env, "user007");
-    let user008 = String::from_slice(&env, "user008");
-    // for assigned reputation neuron
+  fn generate_username(env: &Env, n: u32) -> String {
+    match n {
+      1 => String::from_slice(&env, "user001"),
+      2 => String::from_slice(&env, "user002"),
+      3 => String::from_slice(&env, "user003"),
+      4 => String::from_slice(&env, "user004"),
+      5 => String::from_slice(&env, "user005"),
+      6 => String::from_slice(&env, "user006"),
+      7 => String::from_slice(&env, "user007"),
+      8 => String::from_slice(&env, "user008"),
+      9 => String::from_slice(&env, "user009"),
+      _ => String::from_slice(&env, "userXXX"),
+    }
+  }
+
+  // done
+  pub fn mock_data_assigned_reputation(env: Env) {
     let mut reputation_map: Map<String, ReputationCategory> = Map::new(&env);
-    reputation_map.set(user001.clone(), ReputationCategory::Excellent);
-    reputation_map.set(user002.clone(), ReputationCategory::VeryGood);
-    reputation_map.set(user003.clone(), ReputationCategory::Good);
-    reputation_map.set(user004.clone(), ReputationCategory::Average);
-    reputation_map.set(user005.clone(), ReputationCategory::Poor);
+    reputation_map.set(
+      ExternalDataProvider::generate_username(&env, 1),
+      ReputationCategory::Excellent,
+    );
+    reputation_map.set(
+      ExternalDataProvider::generate_username(&env, 2),
+      ReputationCategory::VeryGood,
+    );
+    reputation_map.set(
+      ExternalDataProvider::generate_username(&env, 3),
+      ReputationCategory::Good,
+    );
+    reputation_map.set(
+      ExternalDataProvider::generate_username(&env, 4),
+      ReputationCategory::Average,
+    );
+    reputation_map.set(
+      ExternalDataProvider::generate_username(&env, 5),
+      ReputationCategory::Poor,
+    );
     env
       .storage()
       .temporary()
       .set(&DataKey::Reputation, &reputation_map);
+  }
 
+  pub fn mock_prior_voting_history(env: Env) {
     // for prior history neuron
     let mut voting_history_set: Map<String, Vec<u32>> = Map::new(&env);
-    voting_history_set.set(user001.clone(), vec![&env, 2, 3]);
-    voting_history_set.set(user003.clone(), vec![&env, 2, 3, 4]);
+    voting_history_set.set(
+      ExternalDataProvider::generate_username(&env, 1),
+      vec![&env, 2, 3],
+    );
+    voting_history_set.set(
+      ExternalDataProvider::generate_username(&env, 3),
+      vec![&env, 2, 3, 4],
+    );
     env
       .storage()
       .temporary()
       .set(&DataKey::PriorVotingHistory, &voting_history_set);
+  }
 
+  pub fn mock_round_bonus_map(env: Env) {
     let mut round_bonus_map: Map<u32, (u32, u32)> = Map::new(&env);
     round_bonus_map.set(1, (0, 0));
     round_bonus_map.set(2, (0, 100));
@@ -74,21 +106,30 @@ impl ExternalDataProvider {
       .storage()
       .temporary()
       .set(&DataKey::RoundBonusMap, &round_bonus_map);
+  }
 
+  // done
+  pub fn mock_delegation_ranks(env: Env) {
     let mut delegation_ranks: Map<String, u32> = Map::new(&env);
-    delegation_ranks.set(user001.clone(), 1);
-    delegation_ranks.set(user002.clone(), 2);
-    delegation_ranks.set(user003.clone(), 3);
-    delegation_ranks.set(user004.clone(), 4);
-    delegation_ranks.set(user005.clone(), 5);
-    delegation_ranks.set(user006.clone(), 6);
-    delegation_ranks.set(user007.clone(), 7);
-    delegation_ranks.set(user008.clone(), 8);
+    delegation_ranks.set(ExternalDataProvider::generate_username(&env, 1), 1);
+    delegation_ranks.set(ExternalDataProvider::generate_username(&env, 2), 2);
+    delegation_ranks.set(ExternalDataProvider::generate_username(&env, 3), 3);
+    delegation_ranks.set(ExternalDataProvider::generate_username(&env, 4), 4);
+    delegation_ranks.set(ExternalDataProvider::generate_username(&env, 5), 5);
+    delegation_ranks.set(ExternalDataProvider::generate_username(&env, 6), 6);
+    delegation_ranks.set(ExternalDataProvider::generate_username(&env, 7), 7);
+    delegation_ranks.set(ExternalDataProvider::generate_username(&env, 8), 8);
     env
       .storage()
       .temporary()
       .set(&DataKey::DelegationRanks, &delegation_ranks);
+  }
 
+  pub fn mock_trust_map(env: Env) {
+    let user001 = ExternalDataProvider::generate_username(&env, 1);
+    let user002 = ExternalDataProvider::generate_username(&env, 2);
+    let user003 = ExternalDataProvider::generate_username(&env, 3);
+    let user004 = ExternalDataProvider::generate_username(&env, 4);
     // for trust graph neuron
     let mut trust_map: Map<String, Map<String, ()>> = Map::new(&env);
     trust_map.set(
@@ -112,6 +153,14 @@ impl ExternalDataProvider {
       .storage()
       .temporary()
       .set(&DataKey::TrustMap, &trust_map);
+  }
+
+  pub fn mock_sample_data(env: Env) {
+    ExternalDataProvider::mock_data_assigned_reputation(env.clone());
+    ExternalDataProvider::mock_prior_voting_history(env.clone());
+    ExternalDataProvider::mock_round_bonus_map(env.clone());
+    ExternalDataProvider::mock_delegation_ranks(env.clone());
+    ExternalDataProvider::mock_trust_map(env.clone());
   }
 
   // for assigned reputation neuron
