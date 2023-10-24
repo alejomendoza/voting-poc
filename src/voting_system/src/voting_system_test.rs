@@ -4,7 +4,7 @@ use crate::{
   types::{LayerAggregator, NeuronType, Vote, DEFAULT_WEIGHT},
 };
 use soroban_decimal_numbers::DecimalNumberWrapper;
-use soroban_sdk::{vec, Env, Map, String};
+use soroban_sdk::{log, testutils::Logs, vec, Env, Map, String};
 
 use crate::{VotingSystem, VotingSystemClient};
 
@@ -107,6 +107,74 @@ pub fn test_setting_up_neural_governance() {
       .unwrap()
       == DecimalNumberWrapper::from("4.7").as_raw()
   );
+}
+
+#[test]
+pub fn test_setting_up_neural_governance_batch() {
+  let env = Env::default();
+
+  let voting_system_id = env.register_contract(None, VotingSystem);
+  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+
+  let mut config: Map<String, Map<String, u32>> = Map::new(&env);
+
+  let mut neurons: Map<String, u32> = Map::new(&env);
+  neurons.set(String::from_slice(&env, "TrustGraph"), 0);
+  neurons.set(String::from_slice(&env, "Dummy"), 1100);
+  config.set(String::from_slice(&env, "Sum"), neurons);
+
+  let mut neurons: Map<String, u32> = Map::new(&env);
+  neurons.set(String::from_slice(&env, "AssignedReputation"), 2000);
+  neurons.set(String::from_slice(&env, "PriorVotingHistory"), 3000);
+  config.set(String::from_slice(&env, "Product"), neurons);
+  voting_system_client.setup_neural_governance(&config);
+
+  let neural_governance = voting_system_client.get_neural_governance();
+
+  assert!(neural_governance.layers.len() == 2);
+
+  log!(
+    &env,
+    ">>>>>>>>>>>>>>>>",
+    neural_governance.layers.get(0).unwrap().aggregator
+  );
+  log!(
+    &env,
+    ">>>>>>>>>>>>>>>>",
+    neural_governance.layers.get(1).unwrap().aggregator
+  );
+  env.logs().print();
+
+  let layer0 = neural_governance.layers.get(0).unwrap();
+  let layer1 = neural_governance.layers.get(1).unwrap();
+
+  assert!(
+    layer0.aggregator == LayerAggregator::Sum || layer0.aggregator == LayerAggregator::Product
+  );
+  assert!(
+    layer1.aggregator == LayerAggregator::Sum || layer1.aggregator == LayerAggregator::Product
+  );
+  assert!(layer0.aggregator != layer1.aggregator);
+
+  if layer0.aggregator == LayerAggregator::Sum {
+    assert!(
+      layer0.neurons.get(NeuronType::TrustGraph).unwrap()
+        == DecimalNumberWrapper::from(DEFAULT_WEIGHT).as_raw()
+    );
+    assert!(layer0.neurons.get(NeuronType::Dummy).unwrap() == 1100);
+
+    assert!(layer1.neurons.get(NeuronType::AssignedReputation).unwrap() == 2000);
+    assert!(layer1.neurons.get(NeuronType::PriorVotingHistory).unwrap() == 3000);
+  } else {
+    assert!(
+      layer1.neurons.get(NeuronType::TrustGraph).unwrap()
+        == DecimalNumberWrapper::from(DEFAULT_WEIGHT).as_raw()
+    );
+    assert!(layer1.neurons.get(NeuronType::Dummy).unwrap() == 1100);
+
+    assert!(layer0.neurons.get(NeuronType::AssignedReputation).unwrap() == 2000);
+    assert!(layer0.neurons.get(NeuronType::PriorVotingHistory).unwrap() == 3000);
+  }
 }
 
 #[test]
@@ -825,6 +893,7 @@ pub fn test_multiple_voting_operations() {
   assert!(voting_system_client.get_voters().len() == 1);
   let votes = voting_system_client.get_votes();
   assert!(votes.len() == 3);
+  assert!(voting_system_client.get_votes_length() == 3);
   assert!(
     votes
       .get(submission_id.clone())
