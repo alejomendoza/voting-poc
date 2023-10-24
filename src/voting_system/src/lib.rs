@@ -13,8 +13,8 @@ use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Map, String, Vec};
 use types::{
   layer_aggregator_from_str, neuron_type_from_str, normalized_vote_from_str, vote_from_str,
-  LayerAggregator, NormalizedVote, ABSTAIN_VOTING_POWER, MAX_DELEGATEES, MIN_DELEGATEES,
-  QUORUM_PARTICIPATION_TRESHOLD,
+  LayerAggregator, NormalizedVote, ABSTAIN_VOTING_POWER, DEFAULT_WEIGHT, MAX_DELEGATEES,
+  MIN_DELEGATEES, QUORUM_PARTICIPATION_TRESHOLD,
 };
 
 mod external_data_provider_contract {
@@ -278,6 +278,15 @@ impl VotingSystem {
       .unwrap_or(Map::new(&env))
   }
 
+  pub fn get_votes_length(env: Env) -> u32 {
+    let votes: Map<String, Map<String, Vote>> = env
+      .storage()
+      .instance()
+      .get(&DataKey::Votes)
+      .unwrap_or(Map::new(&env));
+    votes.len()
+  }
+
   pub fn get_votes_for_user(env: Env, voter_id: String) -> Map<String, Vote> {
     let all_votes: Map<String, Map<String, Vote>> = env
       .storage()
@@ -537,6 +546,27 @@ impl VotingSystem {
     let weight = DecimalNumberWrapper::from(weight).as_tuple();
     neural_governance.set_neuron_weight(layer_id, neuron, weight)?;
     VotingSystem::set_neural_governance(env, neural_governance);
+    Ok(())
+  }
+
+  // config - Map<layer_aggregator => Map<neuron => neuron_weight>>
+  pub fn setup_neural_governance(
+    env: Env,
+    config: Map<String, Map<String, u32>>,
+  ) -> Result<(), VotingSystemError> {
+    VotingSystem::initialize(env.clone());
+    for (layer_aggregator, neurons) in config {
+      let layer_id = VotingSystem::add_layer(env.clone())?;
+      VotingSystem::set_layer_aggregator(env.clone(), layer_id, layer_aggregator)?;
+      for (neuron, neuron_weight) in neurons {
+        VotingSystem::add_neuron(env.clone(), layer_id, neuron.clone())?;
+        if DecimalNumberWrapper::from(neuron_weight).as_tuple() != DEFAULT_WEIGHT
+          && neuron_weight != 0
+        {
+          VotingSystem::set_neuron_weight(env.clone(), layer_id, neuron.clone(), neuron_weight)?;
+        }
+      }
+    }
     Ok(())
   }
 
