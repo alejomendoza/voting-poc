@@ -197,6 +197,21 @@ impl ExternalDataProvider {
       .set(&DataKey::Reputation, &reputation_categories);
   }
 
+  pub fn set_users_reputation_categories(
+    env: Env,
+    users_reputation_categories: Map<String, String>,
+  ) {
+    let mut all_reputation_categories =
+      ExternalDataProvider::get_reputation_categories(env.clone());
+    for (user_id, category) in users_reputation_categories {
+      all_reputation_categories.set(user_id, reputation_category_from_str(&env, category));
+    }
+    env
+      .storage()
+      .temporary()
+      .set(&DataKey::Reputation, &all_reputation_categories);
+  }
+
   pub fn get_reputation_score(reputation_category: ReputationCategory) -> (u32, u32) {
     match reputation_category {
       ReputationCategory::Uncategorized => (0, 0),
@@ -271,6 +286,17 @@ impl ExternalDataProvider {
       .storage()
       .temporary()
       .set(&DataKey::DelegationRanks, &delegation_ranks);
+  }
+
+  pub fn set_delegation_ranks_for_users(env: Env, users_ranks: Map<String, u32>) {
+    let mut all_ranks = ExternalDataProvider::get_delegation_ranks(env.clone());
+    for (user_id, new_rank) in users_ranks {
+      all_ranks.set(user_id, new_rank);
+    }
+    env
+      .storage()
+      .temporary()
+      .set(&DataKey::DelegationRanks, &all_ranks);
   }
 
   // for trust graph neuron

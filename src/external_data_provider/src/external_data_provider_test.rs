@@ -34,6 +34,20 @@ pub fn test_reputation() {
     .set_user_reputation_category(&user_id_1, &String::from_slice(&env, "Good"));
   let reputation = external_data_provider_client.get_user_reputation_category(&user_id_1);
   assert!(reputation == ReputationCategory::Good);
+
+  let mut users_reputation_categories: Map<String, String> = Map::new(&env);
+  users_reputation_categories.set(user_id_1.clone(), String::from_slice(&env, "Poor"));
+  users_reputation_categories.set(user_id_2.clone(), String::from_slice(&env, "Good"));
+  external_data_provider_client.set_users_reputation_categories(&users_reputation_categories);
+
+  assert!(
+    external_data_provider_client.get_user_reputation_category(&user_id_1)
+      == ReputationCategory::Poor
+  );
+  assert!(
+    external_data_provider_client.get_user_reputation_category(&user_id_2)
+      == ReputationCategory::Good
+  );
 }
 
 #[test]
@@ -131,6 +145,20 @@ pub fn test_delegation_rank() {
   assert!(ranks.len() == 2);
   assert!(ranks.get(user_id_1.clone()).unwrap() == 15);
   assert!(ranks.get(user_id_99.clone()).unwrap() == 0);
+
+  let mut users_ranks: Map<String, u32> = Map::new(&env);
+  users_ranks.set(user_id_1.clone(), 3);
+  users_ranks.set(user_id_99.clone(), 6);
+  external_data_provider_client.set_delegation_ranks_for_users(&users_ranks);
+
+  let ranks = external_data_provider_client.get_delegation_ranks_for_users(&vec![
+    &env,
+    user_id_1.clone(),
+    user_id_99.clone(),
+  ]);
+  assert!(ranks.len() == 2);
+  assert!(ranks.get(user_id_1.clone()).unwrap() == 3);
+  assert!(ranks.get(user_id_99.clone()).unwrap() == 6);
 }
 
 #[test]
