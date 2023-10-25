@@ -159,13 +159,6 @@ impl VotingSystem {
     for (submission_id, vote) in votes {
       let vote: Vote = vote_from_str(&env, vote);
 
-      if vote == Vote::Delegate
-        && VotingSystem::get_delegatees(env.clone())
-          .get(voter_id.clone())
-          .is_none()
-      {
-        return Err(VotingSystemError::DelegateesNotFound);
-      }
       let mut submission_votes = all_votes
         .get(submission_id.clone())
         .unwrap_or(Map::new(&env));
