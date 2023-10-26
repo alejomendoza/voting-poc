@@ -56,8 +56,11 @@ impl Rank {
         rank = DecimalNumberWrapper::div(rank, DecimalNumberWrapper::from((total_pages, 0)));
 
         for link in links.keys() {
-          let link_count =
-            DecimalNumberWrapper::from((self.graph.get(link.clone()).unwrap().len(), 0));
+          let link_count = match self.graph.get(link.clone()) {
+            Some(val) => val.len(),
+            None => 0,
+          };
+          let link_count = DecimalNumberWrapper::from((link_count, 0));
           if link_count.as_raw() == 0 {
             // dead_end_rank += damping_factor * page_ranks[page];
           } else {

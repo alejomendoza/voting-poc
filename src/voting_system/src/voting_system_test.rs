@@ -418,6 +418,109 @@ pub fn test_graph_bonus() {
 }
 
 #[test]
+pub fn test_graph_bonus_2() {
+  let env = Env::default();
+
+  let voting_system_id = env.register_contract(None, VotingSystem);
+  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+
+  voting_system_client.initialize();
+  assert!(voting_system_client.add_layer() == 0);
+
+  voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
+
+  voting_system_client.add_neuron(&0, &String::from_slice(&env, "TrustGraph"));
+
+  let external_data_provider_id =
+    env.register_contract_wasm(None, external_data_provider_contract::WASM);
+  let external_data_provider_client =
+    external_data_provider_contract::Client::new(&env, &external_data_provider_id);
+  external_data_provider_client.mock_sample_data();
+
+  let voter_id_1 = String::from_slice(&env, "user001");
+  let voter_id_2 = String::from_slice(&env, "user002");
+  let voter_id_3 = String::from_slice(&env, "user003");
+  let voter_id_4 = String::from_slice(&env, "user004");
+  let voter_id_5 = String::from_slice(&env, "user005");
+
+  let mut new_trust_map: Map<String, Map<String, ()>> = Map::new(&env);
+
+  new_trust_map.set(
+    voter_id_1.clone(),
+    Map::from_array(
+      &env,
+      [
+        (voter_id_2.clone(), ()),
+        (voter_id_3.clone(), ()),
+        (voter_id_4.clone(), ()),
+        (voter_id_5.clone(), ()),
+      ],
+    ),
+  );
+
+  new_trust_map.set(
+    voter_id_2.clone(),
+    Map::from_array(
+      &env,
+      [
+        (voter_id_3.clone(), ()),
+        (voter_id_4.clone(), ()),
+        (voter_id_5.clone(), ()),
+      ],
+    ),
+  );
+
+  new_trust_map.set(
+    voter_id_3.clone(),
+    Map::from_array(&env, [(voter_id_4.clone(), ()), (voter_id_5.clone(), ())]),
+  );
+
+  new_trust_map.set(
+    voter_id_4.clone(),
+    Map::from_array(&env, [(voter_id_5.clone(), ())]),
+  );
+
+  external_data_provider_client.set_trust_map(&new_trust_map);
+
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
+
+  let submission_id = String::from_slice(&env, "submission001");
+
+  voting_system_client.add_submission(&submission_id);
+  voting_system_client.vote(
+    &voter_id_1,
+    &submission_id,
+    &String::from_slice(&env, "Yes"),
+  );
+  voting_system_client.vote(&voter_id_2, &submission_id, &String::from_slice(&env, "No"));
+
+  let tm = external_data_provider_client.get_trust_map();
+  let rank = Rank::from_pages(&env, tm);
+  let calculated = rank.calculate(&env);
+
+  assert!(
+    calculated
+      == Map::from_array(
+        &env,
+        [
+          (String::from_slice(&env, "user001"), (0, 123)),
+          (String::from_slice(&env, "user002"), (0, 96)),
+          (String::from_slice(&env, "user003"), (0, 68)),
+          (String::from_slice(&env, "user004"), (0, 37)),
+        ]
+      )
+  );
+
+  assert!(
+    voting_system_client
+      .tally()
+      .get(submission_id.clone())
+      .unwrap()
+      == (0, 27)
+  );
+}
+
+#[test]
 pub fn test_delegation_more_yes_votes() {
   let env = Env::default();
 
