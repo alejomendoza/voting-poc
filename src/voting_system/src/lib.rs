@@ -34,7 +34,7 @@ pub enum DataKey {
   // storage type: instance
   // Map<UserUUID, Vec<UserUUID>> - users to the vector of users they delegated their votes to
   Delegatees,
-  // storage type: temporary
+  // storage type: instance
   ExternalDataProvider,
 }
 
@@ -395,12 +395,13 @@ impl VotingSystem {
    */
 
   // this will convert all the votes to either Yes or No
+  // returns Map<submission_id, Map<voter_id, normalized_vote>>
   pub fn normalize_votes(env: Env) -> Result<Map<String, Map<String, String>>, VotingSystemError> {
-    // Map<project_id, Map<voter_id, Vote>>
+    // Map<submission_id, Map<voter_id, Vote>>
     let all_votes = VotingSystem::get_votes(env.clone());
     let mut normalized_votes: Map<String, Map<String, String>> = Map::new(&env);
     for (submission_id, submission_votes) in all_votes {
-      // Map<voter_id, NormalizedVote>
+      // Map<voter_id, normalized_vote>
       let mut normalized_votes_for_submission: Map<String, String> = Map::new(&env);
       for (voter_id, mut vote) in submission_votes.clone() {
         if vote == Vote::Delegate {
@@ -444,7 +445,9 @@ impl VotingSystem {
   // takes results of neural governance runs and calculates the final voting power for each submission
   pub fn final_submissions_voting_powers(
     env: Env,
+    // Map<user_id, voting_power>
     voters_voting_powers: Map<String, u32>,
+    // Map<submission_id, Map<user_id, normalized_vote>>
     normalized_votes: Map<String, Map<String, String>>,
   ) -> Result<Map<String, (u32, u32)>, VotingSystemError> {
     let mut result: Map<String, (u32, u32)> = Map::new(&env);

@@ -11,19 +11,19 @@ use types::{reputation_category_from_str, ReputationCategory};
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
-  // storage type: temporary
+  // storage type: instance
   // Map<UserUUID, ReputationCategory> - users to their categories
   Reputation,
-  // storage type: temporary
+  // storage type: instance
   // Map<UserUUID, Vec<u32>> - users to the vector of rounds they participated in
   PriorVotingHistory,
-  // storage type: temporary
+  // storage type: instance
   // Map<u32, DecimalNumber> - (connected to PRIOR_VOTING_HISTORY) rounds to their bonus (for participation)
   RoundBonusMap,
-  // storage type: temporary
+  // storage type: instance
   // Map<UserUUID, u32> - users to their delegation rank
   DelegationRanks,
-  // storage type: temporary
+  // storage type: instance
   // Map<String, Map<String, ()>> - users to their delegation rank
   TrustMap,
 }
@@ -75,7 +75,7 @@ impl ExternalDataProvider {
     );
     env
       .storage()
-      .temporary()
+      .instance()
       .set(&DataKey::Reputation, &reputation_map);
   }
 
@@ -92,7 +92,7 @@ impl ExternalDataProvider {
     );
     env
       .storage()
-      .temporary()
+      .instance()
       .set(&DataKey::PriorVotingHistory, &voting_history_set);
   }
 
@@ -104,7 +104,7 @@ impl ExternalDataProvider {
     round_bonus_map.set(4, (0, 300));
     env
       .storage()
-      .temporary()
+      .instance()
       .set(&DataKey::RoundBonusMap, &round_bonus_map);
   }
 
@@ -121,7 +121,7 @@ impl ExternalDataProvider {
     delegation_ranks.set(ExternalDataProvider::generate_username(&env, 8), 8);
     env
       .storage()
-      .temporary()
+      .instance()
       .set(&DataKey::DelegationRanks, &delegation_ranks);
   }
 
@@ -149,10 +149,7 @@ impl ExternalDataProvider {
       user004.clone(),
       Map::from_array(&env, [(user003.clone(), ())]),
     );
-    env
-      .storage()
-      .temporary()
-      .set(&DataKey::TrustMap, &trust_map);
+    env.storage().instance().set(&DataKey::TrustMap, &trust_map);
   }
 
   pub fn mock_sample_data(env: Env) {
@@ -167,7 +164,7 @@ impl ExternalDataProvider {
   pub fn get_reputation_categories(env: Env) -> Map<String, ReputationCategory> {
     env
       .storage()
-      .temporary()
+      .instance()
       .get(&DataKey::Reputation)
       .unwrap_or(Map::new(&env))
   }
@@ -181,7 +178,7 @@ impl ExternalDataProvider {
   pub fn set_user_reputation_categories(env: Env, reputation_map: Map<String, ReputationCategory>) {
     env
       .storage()
-      .temporary()
+      .instance()
       .set(&DataKey::Reputation, &reputation_map);
   }
 
@@ -193,7 +190,7 @@ impl ExternalDataProvider {
     );
     env
       .storage()
-      .temporary()
+      .instance()
       .set(&DataKey::Reputation, &reputation_categories);
   }
 
@@ -208,7 +205,7 @@ impl ExternalDataProvider {
     }
     env
       .storage()
-      .temporary()
+      .instance()
       .set(&DataKey::Reputation, &all_reputation_categories);
   }
 
@@ -225,7 +222,7 @@ impl ExternalDataProvider {
   pub fn get_prior_voting_history(env: Env) -> Map<String, Vec<u32>> {
     env
       .storage()
-      .temporary()
+      .instance()
       .get(&DataKey::PriorVotingHistory)
       .unwrap_or(Map::new(&env))
   }
@@ -241,14 +238,14 @@ impl ExternalDataProvider {
     voting_history.set(user_id, new_voting_history);
     env
       .storage()
-      .temporary()
+      .instance()
       .set(&DataKey::PriorVotingHistory, &voting_history);
   }
 
   pub fn get_round_bonus_map(env: Env) -> Map<u32, (u32, u32)> {
     let round_bonus_map: Map<u32, (u32, u32)> = env
       .storage()
-      .temporary()
+      .instance()
       .get(&DataKey::RoundBonusMap)
       .unwrap_or(Map::new(&env));
     round_bonus_map
@@ -257,7 +254,7 @@ impl ExternalDataProvider {
   pub fn set_round_bonus_map(env: Env, round_bonus_map: Map<u32, (u32, u32)>) {
     env
       .storage()
-      .temporary()
+      .instance()
       .set(&DataKey::RoundBonusMap, &round_bonus_map);
   }
 
@@ -265,7 +262,7 @@ impl ExternalDataProvider {
   pub fn get_delegation_ranks(env: Env) -> Map<String, u32> {
     env
       .storage()
-      .temporary()
+      .instance()
       .get(&DataKey::DelegationRanks)
       .unwrap_or(Map::new(&env))
   }
@@ -284,7 +281,7 @@ impl ExternalDataProvider {
     delegation_ranks.set(user_id, new_rank);
     env
       .storage()
-      .temporary()
+      .instance()
       .set(&DataKey::DelegationRanks, &delegation_ranks);
   }
 
@@ -295,7 +292,7 @@ impl ExternalDataProvider {
     }
     env
       .storage()
-      .temporary()
+      .instance()
       .set(&DataKey::DelegationRanks, &all_ranks);
   }
 
@@ -303,15 +300,12 @@ impl ExternalDataProvider {
   pub fn get_trust_map(env: Env) -> Map<String, Map<String, ()>> {
     env
       .storage()
-      .temporary()
+      .instance()
       .get(&DataKey::TrustMap)
       .unwrap_or(Map::new(&env))
   }
   pub fn set_trust_map(env: Env, trust_map: Map<String, Map<String, ()>>) {
-    env
-      .storage()
-      .temporary()
-      .set(&DataKey::TrustMap, &trust_map);
+    env.storage().instance().set(&DataKey::TrustMap, &trust_map);
   }
   pub fn set_trust_map_for_user(
     env: Env,
@@ -322,10 +316,7 @@ impl ExternalDataProvider {
 
     trust_map.set(user_id.clone(), user_trust_map);
 
-    env
-      .storage()
-      .temporary()
-      .set(&DataKey::TrustMap, &trust_map);
+    env.storage().instance().set(&DataKey::TrustMap, &trust_map);
     ExternalDataProvider::get_trust_map(env.clone())
       .get(user_id.clone())
       .unwrap_or(Map::new(&env))
