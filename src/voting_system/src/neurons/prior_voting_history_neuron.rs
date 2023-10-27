@@ -14,9 +14,7 @@ pub fn oracle_function(env: Env, voter_id: String) -> Result<(u32, u32), VotingS
   let round_bonus_map = external_data_provider_client.get_round_bonus_map();
   let mut bonus_result = DecimalNumberWrapper::new("0.0");
   for round in voter_active_rounds {
-    let bonus: (u32, u32) = round_bonus_map
-      .get(round)
-      .ok_or(VotingSystemError::RoundNotFoundInRoundBonusMap)?;
+    let bonus: (u32, u32) = round_bonus_map.get(round).unwrap_or((0, 0));
     bonus_result = DecimalNumberWrapper::add(
       DecimalNumberWrapper::from(bonus_result),
       DecimalNumberWrapper::from(bonus),
