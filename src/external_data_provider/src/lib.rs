@@ -5,6 +5,7 @@ pub mod types;
 
 // This contract's going to be responsible for fetching the data from any external resources
 
+use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{contract, contractimpl, contracttype, vec, Env, Map, String, Vec};
 use types::{reputation_category_from_str, ReputationCategory};
 
@@ -256,6 +257,17 @@ impl ExternalDataProvider {
       .storage()
       .instance()
       .set(&DataKey::RoundBonusMap, &round_bonus_map);
+  }
+
+  pub fn set_round_bonus_map_raw(env: Env, round_bonus_map: Map<u32, u32>) {
+    let mut round_bonus_map_converted = Map::new(&env);
+    for (key, val) in round_bonus_map {
+      round_bonus_map_converted.set(key, DecimalNumberWrapper::from(val).as_tuple());
+    }
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::RoundBonusMap, &round_bonus_map_converted);
   }
 
   // for delegation
