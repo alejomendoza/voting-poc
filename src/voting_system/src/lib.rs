@@ -153,7 +153,7 @@ impl VotingSystem {
   pub fn multiple_vote_operations(
     env: Env,
     voter_id: String,
-    votes: Map<String, String>,
+    votes: Vec<(String, String)>,
   ) -> Result<Map<String, Vote>, VotingSystemError> {
     let mut all_votes = VotingSystem::get_votes(env.clone());
     for (submission_id, vote) in votes {
@@ -269,15 +269,6 @@ impl VotingSystem {
       .instance()
       .get(&DataKey::Votes)
       .unwrap_or(Map::new(&env))
-  }
-
-  pub fn get_votes_length(env: Env) -> u32 {
-    let votes: Map<String, Map<String, Vote>> = env
-      .storage()
-      .instance()
-      .get(&DataKey::Votes)
-      .unwrap_or(Map::new(&env));
-    votes.len()
   }
 
   pub fn get_votes_for_user(env: Env, voter_id: String) -> Map<String, Vote> {

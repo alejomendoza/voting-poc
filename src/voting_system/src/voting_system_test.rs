@@ -4,7 +4,7 @@ use crate::{
   types::{LayerAggregator, NeuronType, Vote, DEFAULT_WEIGHT},
 };
 use soroban_decimal_numbers::DecimalNumberWrapper;
-use soroban_sdk::{log, testutils::Logs, vec, Env, Map, String};
+use soroban_sdk::{log, testutils::Logs, vec, Env, Map, String, Vec};
 
 use crate::{VotingSystem, VotingSystemClient};
 
@@ -982,7 +982,7 @@ pub fn test_multiple_voting_operations() {
   let submission_id_3 = String::from_slice(&env, "submission003");
   let current_user_votes = voting_system_client.multiple_vote_operations(
     &voter_id,
-    &Map::from_array(
+    &Vec::from_array(
       &env,
       [
         (submission_id.clone(), String::from_slice(&env, "No")),
@@ -996,7 +996,6 @@ pub fn test_multiple_voting_operations() {
   assert!(voting_system_client.get_voters().len() == 1);
   let votes = voting_system_client.get_votes();
   assert!(votes.len() == 3);
-  assert!(voting_system_client.get_votes_length() == 3);
   assert!(
     votes
       .get(submission_id.clone())
@@ -1025,7 +1024,7 @@ pub fn test_multiple_voting_operations() {
   //
   let current_user_votes = voting_system_client.multiple_vote_operations(
     &voter_id,
-    &Map::from_array(
+    &Vec::from_array(
       &env,
       [
         (submission_id.clone(), String::from_slice(&env, "Remove")),
@@ -1050,7 +1049,7 @@ pub fn test_multiple_voting_operations() {
 
   let current_user_votes = voting_system_client.multiple_vote_operations(
     &voter_id,
-    &Map::from_array(
+    &Vec::from_array(
       &env,
       [(submission_id_3.clone(), String::from_slice(&env, "Remove"))],
     ),
