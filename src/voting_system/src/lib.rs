@@ -271,6 +271,15 @@ impl VotingSystem {
       .unwrap_or(Map::new(&env))
   }
 
+  pub fn get_votes_length(env: Env) -> u32 {
+    let votes: Map<String, Map<String, Vote>> = env
+      .storage()
+      .instance()
+      .get(&DataKey::Votes)
+      .unwrap_or(Map::new(&env));
+    votes.len()
+  }
+
   pub fn get_votes_for_user(env: Env, voter_id: String) -> Map<String, Vote> {
     let all_votes: Map<String, Map<String, Vote>> = env
       .storage()
