@@ -149,19 +149,11 @@ impl VotingSystem {
     Ok(Vote::No)
   }
 
-  // votes: Map<submission_id, vote>
   pub fn multiple_vote_operations(
     env: Env,
     voter_id: String,
-    // TODO this should be a map but soroban's maps are buggy so we use vector of tuples
-    // map would not work when used as an argument for specific keys and would just throw errors
-    votes_vec: Vec<(String, String)>,
+    votes: Map<String, String>,
   ) -> Result<Map<String, Vote>, VotingSystemError> {
-    let mut votes: Map<String, String> = Map::new(&env);
-    for (submission_id, vote) in votes_vec {
-      votes.set(submission_id, vote);
-    }
-
     let mut all_votes = VotingSystem::get_votes(env.clone());
     for (submission_id, vote) in votes {
       let vote: Vote = vote_from_str(&env, vote);
@@ -184,6 +176,21 @@ impl VotingSystem {
 
     env.storage().instance().set(&DataKey::Votes, &all_votes);
     Ok(VotingSystem::get_votes_for_user(env, voter_id))
+  }
+
+  // votes: Map<submission_id, vote>
+  pub fn multiple_vote_operations_vec(
+    env: Env,
+    voter_id: String,
+    // TODO this should be a map but soroban's maps are buggy so we use vector of tuples
+    // map would not work when used as an argument for specific keys and would just throw errors
+    votes_vec: Vec<(String, String)>,
+  ) -> Result<Map<String, Vote>, VotingSystemError> {
+    let mut votes: Map<String, String> = Map::new(&env);
+    for (submission_id, vote) in votes_vec {
+      votes.set(submission_id, vote);
+    }
+    VotingSystem::multiple_vote_operations(env, voter_id, votes)
   }
 
   pub fn vote(
@@ -396,7 +403,7 @@ impl VotingSystem {
    * This is a breakdown of the tally function, instead of tally, you can call:
    * 1. normalize_votes
    * 2. voting_power_for_voter - for every user/submission (this depends on the fact whether any neurons consider submission id in calculations) - you should iterate over the result of normalize_votes
-   * 3. final_submissions_voting_powers - with the results of normalize_votes and voting_power_for_voter
+   * 3. submissions_voting_powers - with the results of normalize_votes and voting_power_for_voter
    *
    * tally reaches the CPU Soroban limit (https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-limits) pretty quickly, with this breakdown you can run it in batches
    */
@@ -449,8 +456,7 @@ impl VotingSystem {
     )
   }
 
-  // takes results of neural governance runs and calculates the final voting power for each submission
-  pub fn final_submissions_voting_powers(
+  pub fn submissions_voting_powers(
     env: Env,
     // Map<user_id, voting_power>
     voters_voting_powers: Map<String, u32>,
@@ -494,6 +500,31 @@ impl VotingSystem {
     }
 
     Ok(result)
+  }
+
+  // takes results of neural governance runs and calculates the final voting power for each submission
+  pub fn submissions_voting_powers_vec(
+    env: Env,
+    // Map<user_id, voting_power>
+    voters_voting_powers_vec: Vec<(String, u32)>,
+    // Map<submission_id, Map<user_id, normalized_vote>>
+    normalized_votes_vec: Vec<(String, String, String)>,
+  ) -> Result<Map<String, (u32, u32)>, VotingSystemError> {
+    let mut voters_voting_powers: Map<String, u32> = Map::new(&env);
+    for (user_id, voting_power) in voters_voting_powers_vec {
+      voters_voting_powers.set(user_id, voting_power);
+    }
+
+    let mut normalized_votes: Map<String, Map<String, String>> = Map::new(&env);
+    for (submission_id, voter_id, vote) in normalized_votes_vec {
+      if normalized_votes.get(submission_id.clone()).is_none() {
+        normalized_votes.set(submission_id.clone(), Map::new(&env));
+      }
+      let mut current = normalized_votes.get(submission_id.clone()).unwrap();
+      current.set(voter_id.clone(), vote.clone());
+      normalized_votes.set(submission_id.clone(), current);
+    }
+    VotingSystem::submissions_voting_powers(env, voters_voting_powers, normalized_votes)
   }
 
   pub fn add_layer(env: Env) -> Result<u32, VotingSystemError> {
