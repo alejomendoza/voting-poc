@@ -153,8 +153,15 @@ impl VotingSystem {
   pub fn multiple_vote_operations(
     env: Env,
     voter_id: String,
-    votes: Vec<(String, String)>,
+    // TODO this should be a map but soroban's maps are buggy so we use vector of tuples
+    // map would not work when used as an argument for specific keys and would just throw errors
+    votes_vec: Vec<(String, String)>,
   ) -> Result<Map<String, Vote>, VotingSystemError> {
+    let mut votes: Map<String, String> = Map::new(&env);
+    for (submission_id, vote) in votes_vec {
+      votes.set(submission_id, vote);
+    }
+
     let mut all_votes = VotingSystem::get_votes(env.clone());
     for (submission_id, vote) in votes {
       let vote: Vote = vote_from_str(&env, vote);
