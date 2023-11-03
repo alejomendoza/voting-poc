@@ -316,9 +316,11 @@ impl ExternalDataProvider {
       .get(&DataKey::TrustMap)
       .unwrap_or(Map::new(&env))
   }
+
   pub fn set_trust_map(env: Env, trust_map: Map<String, Map<String, ()>>) {
     env.storage().instance().set(&DataKey::TrustMap, &trust_map);
   }
+
   pub fn set_trust_map_for_user(
     env: Env,
     user_id: String,

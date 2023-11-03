@@ -45,6 +45,8 @@ With such a setup, you should be able to tally the votes. You can of course add 
 
 You can also define your own neurons, deploy the Voting System contract, and add them where you want.
 
+Neurons that already exist in the system are described in [this doc](./docs/neurons.md).
+
 #### Custom Neurons
 
 The system is open for any number of Neurons. They can be easily added and used. In order to add a new Neuron, you need to:
@@ -70,10 +72,9 @@ A good example of how to properly prepare the whole infrastructure to work can b
 
 ## Neuron template
 
-There is a neuron template in `src/template_neuron`. In order to add a new neuron, please do the following things:
-- copy-paste the template neuron folder
-- rename the folder and all the names inside it (from template neuron to [your_neuron_name])
-- add its entry (workspace member) to the `Cargo.toml` in the root folder of the project
+There is a neuron template in `src/voting_system/src/neurons/dummy_neuron.rs`. In order to add a new neuron, please do the following things:
+- copy-paste the template neuron file
+- rename this file from template neuron to `[your_neuron_name]`
 - implement your neuron's logic
 
 ## Useful commands:
