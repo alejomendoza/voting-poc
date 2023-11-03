@@ -195,9 +195,21 @@ impl ExternalDataProvider {
       .set(&DataKey::Reputation, &reputation_categories);
   }
 
-  pub fn set_users_reputation_categories(
+  pub fn set_users_rep_categories(env: Env, users_reputation_categories: Map<String, String>) {
+    let mut all_reputation_categories =
+      ExternalDataProvider::get_reputation_categories(env.clone());
+    for (user_id, category) in users_reputation_categories {
+      all_reputation_categories.set(user_id, reputation_category_from_str(&env, category));
+    }
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::Reputation, &all_reputation_categories);
+  }
+
+  pub fn set_users_rep_categories_vec(
     env: Env,
-    users_reputation_categories: Map<String, String>,
+    users_reputation_categories: Vec<(String, String)>,
   ) {
     let mut all_reputation_categories =
       ExternalDataProvider::get_reputation_categories(env.clone());
@@ -259,7 +271,7 @@ impl ExternalDataProvider {
       .set(&DataKey::RoundBonusMap, &round_bonus_map);
   }
 
-  pub fn set_round_bonus_map_raw(env: Env, round_bonus_map: Map<u32, u32>) {
+  pub fn set_round_bonus_map_vec(env: Env, round_bonus_map: Vec<(u32, u32)>) {
     let mut round_bonus_map_converted = Map::new(&env);
     for (key, val) in round_bonus_map {
       round_bonus_map_converted.set(key, DecimalNumberWrapper::from(val).as_tuple());
@@ -297,7 +309,18 @@ impl ExternalDataProvider {
       .set(&DataKey::DelegationRanks, &delegation_ranks);
   }
 
-  pub fn set_delegation_ranks_for_users(env: Env, users_ranks: Map<String, u32>) {
+  pub fn set_users_delegation_ranks(env: Env, users_ranks: Map<String, u32>) {
+    let mut all_ranks = ExternalDataProvider::get_delegation_ranks(env.clone());
+    for (user_id, new_rank) in users_ranks {
+      all_ranks.set(user_id, new_rank);
+    }
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::DelegationRanks, &all_ranks);
+  }
+
+  pub fn set_users_delegation_ranks_vec(env: Env, users_ranks: Vec<(String, u32)>) {
     let mut all_ranks = ExternalDataProvider::get_delegation_ranks(env.clone());
     for (user_id, new_rank) in users_ranks {
       all_ranks.set(user_id, new_rank);
@@ -329,6 +352,26 @@ impl ExternalDataProvider {
     let mut trust_map = ExternalDataProvider::get_trust_map(env.clone());
 
     trust_map.set(user_id.clone(), user_trust_map);
+
+    env.storage().instance().set(&DataKey::TrustMap, &trust_map);
+    ExternalDataProvider::get_trust_map(env.clone())
+      .get(user_id.clone())
+      .unwrap_or(Map::new(&env))
+  }
+
+  pub fn set_trust_map_for_user_vec(
+    env: Env,
+    user_id: String,
+    user_trust_map: Vec<String>,
+  ) -> Map<String, ()> {
+    let mut trust_map = ExternalDataProvider::get_trust_map(env.clone());
+
+    let mut new_map = Map::new(&env);
+    for item in user_trust_map {
+      new_map.set(item, ());
+    }
+
+    trust_map.set(user_id.clone(), new_map);
 
     env.storage().instance().set(&DataKey::TrustMap, &trust_map);
     ExternalDataProvider::get_trust_map(env.clone())
