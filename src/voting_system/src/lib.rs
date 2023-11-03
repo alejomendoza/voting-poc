@@ -443,6 +443,44 @@ impl VotingSystem {
     Ok(normalized_votes)
   }
 
+  // normalize votes but just override the collection in place (in the storage) and do not return anything
+  // they will be referred to in submissions_voting_powers (maybe normalized can be saved in a separate collection in storage)
+
+  // todo test this method
+  // returns Map<voter_id, normalized_vote>
+  pub fn normalize_votes_for_submission(
+    env: Env,
+    submission_id: String,
+  ) -> Result<Map<String, String>, VotingSystemError> {
+    let submission_votes = VotingSystem::get_votes(env.clone())
+      .get(submission_id.clone())
+      .unwrap_or(Map::new(&env));
+
+    let mut result: Map<String, String> = Map::new(&env);
+
+    for (voter_id, mut vote) in submission_votes {
+      if vote == Vote::Delegate {
+        vote = VotingSystem::calculate_quorum_consensus(
+          env.clone(),
+          voter_id.clone(),
+          submission_id.clone(),
+        )?;
+      }
+      if vote == Vote::Abstain {
+        continue;
+      }
+      if vote == Vote::Yes {
+        result.set(voter_id, String::from_slice(&env, "Yes"));
+      } else if vote == Vote::No {
+        result.set(voter_id, String::from_slice(&env, "No"));
+      } else {
+        return Err(VotingSystemError::UnexpectedValue);
+      }
+    }
+
+    Ok(result)
+  }
+
   // this calls a neural governance for every voter and submission
   pub fn voting_power_for_voter(
     env: Env,
@@ -583,22 +621,21 @@ impl VotingSystem {
     Ok(())
   }
 
-  // config - Map<layer_aggregator => Map<neuron => neuron_weight>>
-  pub fn setup_neural_governance(
+  // todo test this method
+  pub fn setup_layer(
     env: Env,
-    config: Map<String, Map<String, u32>>,
+    layer_aggregator: String,
+    neurons: Vec<(String, u32)>,
   ) -> Result<(), VotingSystemError> {
-    VotingSystem::initialize(env.clone());
-    for (layer_aggregator, neurons) in config {
-      let layer_id = VotingSystem::add_layer(env.clone())?;
-      VotingSystem::set_layer_aggregator(env.clone(), layer_id, layer_aggregator)?;
-      for (neuron, neuron_weight) in neurons {
-        VotingSystem::add_neuron(env.clone(), layer_id, neuron.clone())?;
-        if DecimalNumberWrapper::from(neuron_weight).as_tuple() != DEFAULT_WEIGHT
-          && neuron_weight != 0
-        {
-          VotingSystem::set_neuron_weight(env.clone(), layer_id, neuron.clone(), neuron_weight)?;
-        }
+    let layer_id = VotingSystem::add_layer(env.clone())?;
+    VotingSystem::set_layer_aggregator(env.clone(), layer_id, layer_aggregator)?;
+
+    for (neuron, neuron_weight) in neurons {
+      VotingSystem::add_neuron(env.clone(), layer_id, neuron.clone())?;
+      if DecimalNumberWrapper::from(neuron_weight).as_tuple() != DEFAULT_WEIGHT
+        && neuron_weight != 0
+      {
+        VotingSystem::set_neuron_weight(env.clone(), layer_id, neuron.clone(), neuron_weight)?;
       }
     }
     Ok(())
