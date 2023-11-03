@@ -27,6 +27,9 @@ pub enum DataKey {
   // storage type: instance
   // Map<String, Map<String, ()>> - users to their delegation rank
   TrustMap,
+  // storage type: instance
+  // (u32, u32)
+  PageRankResult,
 }
 
 #[contract]
@@ -377,6 +380,28 @@ impl ExternalDataProvider {
     ExternalDataProvider::get_trust_map(env.clone())
       .get(user_id.clone())
       .unwrap_or(Map::new(&env))
+  }
+
+  // for page rank
+  pub fn get_page_rank_results(env: Env) -> Map<String, (u32, u32)> {
+    env
+      .storage()
+      .instance()
+      .get(&DataKey::PageRankResult)
+      .unwrap_or(Map::new(&env))
+  }
+
+  pub fn get_page_rank_result_for_user(env: Env, user_id: String) -> (u32, u32) {
+    ExternalDataProvider::get_page_rank_results(env.clone())
+      .get(user_id)
+      .unwrap_or((0, 0))
+  }
+
+  pub fn set_page_rank_result(env: Env, new_result: Map<String, (u32, u32)>) {
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::PageRankResult, &new_result);
   }
 }
 

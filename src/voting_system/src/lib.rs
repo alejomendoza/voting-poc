@@ -9,6 +9,7 @@ mod types;
 
 use crate::types::{Vote, VotingSystemError, QUORUM_SIZE};
 use neural_governance::NeuralGovernance;
+use page_rank::Rank;
 use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Map, String, Vec};
 use types::{
@@ -673,6 +674,26 @@ impl VotingSystem {
       .unwrap_or(Vec::new(&env));
 
     return Ok((votes, trust_map, delegates));
+  }
+
+  pub fn calculate_page_rank(env: Env) -> Result<(), VotingSystemError> {
+    let external_data_provider_address = VotingSystem::get_external_data_provider(env.clone())?;
+    let external_data_provider_client =
+      external_data_provider_contract::Client::new(&env, &external_data_provider_address);
+
+    let trust_map = external_data_provider_client.get_trust_map();
+
+    let page_rank_result = match trust_map.len() {
+      0 => Map::new(&env),
+      _ => {
+        let rank = Rank::from_pages(&env, trust_map);
+        rank.calculate(&env)
+      }
+    };
+
+    external_data_provider_client.set_page_rank_result(&page_rank_result);
+
+    Ok(())
   }
 }
 
