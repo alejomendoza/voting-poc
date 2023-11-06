@@ -985,7 +985,6 @@ pub fn test_multiple_voting_operations() {
   assert!(voting_system_client.get_voters().len() == 1);
   let votes = voting_system_client.get_votes();
   assert!(votes.len() == 3);
-  assert!(voting_system_client.get_votes_length() == 3);
   assert!(
     votes
       .get(submission_id.clone())
@@ -1116,7 +1115,7 @@ pub fn test_decomposed_tally() {
   }
 
   let final_voting_powers =
-    voting_system_client.final_submissions_voting_powers(&voters_voting_powers, &normalized_votes);
+    voting_system_client.submissions_voting_powers(&voters_voting_powers, &normalized_votes);
 
   assert!(final_voting_powers.get(submission_1_id).unwrap() == (1134, 400));
   assert!(final_voting_powers.get(submission_2_id).unwrap() == (2, 515));

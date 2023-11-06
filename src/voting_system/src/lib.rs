@@ -9,6 +9,7 @@ mod types;
 
 use crate::types::{Vote, VotingSystemError, QUORUM_SIZE};
 use neural_governance::NeuralGovernance;
+use page_rank::Rank;
 use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, Map, String, Vec};
 use types::{
@@ -149,7 +150,6 @@ impl VotingSystem {
     Ok(Vote::No)
   }
 
-  // votes: Map<submission_id, vote>
   pub fn multiple_vote_operations(
     env: Env,
     voter_id: String,
@@ -177,6 +177,21 @@ impl VotingSystem {
 
     env.storage().instance().set(&DataKey::Votes, &all_votes);
     Ok(VotingSystem::get_votes_for_user(env, voter_id))
+  }
+
+  // votes: Map<submission_id, vote>
+  pub fn multiple_vote_operations_vec(
+    env: Env,
+    voter_id: String,
+    // TODO this should be a map but soroban's maps are buggy so we use vector of tuples
+    // map would not work when used as an argument for specific keys and would just throw errors
+    votes_vec: Vec<(String, String)>,
+  ) -> Result<Map<String, Vote>, VotingSystemError> {
+    let mut votes: Map<String, String> = Map::new(&env);
+    for (submission_id, vote) in votes_vec {
+      votes.set(submission_id, vote);
+    }
+    VotingSystem::multiple_vote_operations(env, voter_id, votes)
   }
 
   pub fn vote(
@@ -389,7 +404,7 @@ impl VotingSystem {
    * This is a breakdown of the tally function, instead of tally, you can call:
    * 1. normalize_votes
    * 2. voting_power_for_voter - for every user/submission (this depends on the fact whether any neurons consider submission id in calculations) - you should iterate over the result of normalize_votes
-   * 3. final_submissions_voting_powers - with the results of normalize_votes and voting_power_for_voter
+   * 3. submissions_voting_powers - with the results of normalize_votes and voting_power_for_voter
    *
    * tally reaches the CPU Soroban limit (https://soroban.stellar.org/docs/fundamentals-and-concepts/fees-and-metering#resource-limits) pretty quickly, with this breakdown you can run it in batches
    */
@@ -429,6 +444,44 @@ impl VotingSystem {
     Ok(normalized_votes)
   }
 
+  // normalize votes but just override the collection in place (in the storage) and do not return anything
+  // they will be referred to in submissions_voting_powers (maybe normalized can be saved in a separate collection in storage)
+
+  // todo test this method
+  // returns Map<voter_id, normalized_vote>
+  pub fn normalize_votes_for_submission(
+    env: Env,
+    submission_id: String,
+  ) -> Result<Map<String, String>, VotingSystemError> {
+    let submission_votes = VotingSystem::get_votes(env.clone())
+      .get(submission_id.clone())
+      .unwrap_or(Map::new(&env));
+
+    let mut result: Map<String, String> = Map::new(&env);
+
+    for (voter_id, mut vote) in submission_votes {
+      if vote == Vote::Delegate {
+        vote = VotingSystem::calculate_quorum_consensus(
+          env.clone(),
+          voter_id.clone(),
+          submission_id.clone(),
+        )?;
+      }
+      if vote == Vote::Abstain {
+        continue;
+      }
+      if vote == Vote::Yes {
+        result.set(voter_id, String::from_slice(&env, "Yes"));
+      } else if vote == Vote::No {
+        result.set(voter_id, String::from_slice(&env, "No"));
+      } else {
+        return Err(VotingSystemError::UnexpectedValue);
+      }
+    }
+
+    Ok(result)
+  }
+
   // this calls a neural governance for every voter and submission
   pub fn voting_power_for_voter(
     env: Env,
@@ -442,8 +495,7 @@ impl VotingSystem {
     )
   }
 
-  // takes results of neural governance runs and calculates the final voting power for each submission
-  pub fn final_submissions_voting_powers(
+  pub fn submissions_voting_powers(
     env: Env,
     // Map<user_id, voting_power>
     voters_voting_powers: Map<String, u32>,
@@ -487,6 +539,31 @@ impl VotingSystem {
     }
 
     Ok(result)
+  }
+
+  // takes results of neural governance runs and calculates the final voting power for each submission
+  pub fn submissions_voting_powers_vec(
+    env: Env,
+    // Map<user_id, voting_power>
+    voters_voting_powers_vec: Vec<(String, u32)>,
+    // Map<submission_id, Map<user_id, normalized_vote>>
+    normalized_votes_vec: Vec<(String, String, String)>,
+  ) -> Result<Map<String, (u32, u32)>, VotingSystemError> {
+    let mut voters_voting_powers: Map<String, u32> = Map::new(&env);
+    for (user_id, voting_power) in voters_voting_powers_vec {
+      voters_voting_powers.set(user_id, voting_power);
+    }
+
+    let mut normalized_votes: Map<String, Map<String, String>> = Map::new(&env);
+    for (submission_id, voter_id, vote) in normalized_votes_vec {
+      if normalized_votes.get(submission_id.clone()).is_none() {
+        normalized_votes.set(submission_id.clone(), Map::new(&env));
+      }
+      let mut current = normalized_votes.get(submission_id.clone()).unwrap();
+      current.set(voter_id.clone(), vote.clone());
+      normalized_votes.set(submission_id.clone(), current);
+    }
+    VotingSystem::submissions_voting_powers(env, voters_voting_powers, normalized_votes)
   }
 
   pub fn add_layer(env: Env) -> Result<u32, VotingSystemError> {
@@ -545,22 +622,21 @@ impl VotingSystem {
     Ok(())
   }
 
-  // config - Map<layer_aggregator => Map<neuron => neuron_weight>>
-  pub fn setup_neural_governance(
+  // todo test this method
+  pub fn setup_layer(
     env: Env,
-    config: Map<String, Map<String, u32>>,
+    layer_aggregator: String,
+    neurons: Vec<(String, u32)>,
   ) -> Result<(), VotingSystemError> {
-    VotingSystem::initialize(env.clone());
-    for (layer_aggregator, neurons) in config {
-      let layer_id = VotingSystem::add_layer(env.clone())?;
-      VotingSystem::set_layer_aggregator(env.clone(), layer_id, layer_aggregator)?;
-      for (neuron, neuron_weight) in neurons {
-        VotingSystem::add_neuron(env.clone(), layer_id, neuron.clone())?;
-        if DecimalNumberWrapper::from(neuron_weight).as_tuple() != DEFAULT_WEIGHT
-          && neuron_weight != 0
-        {
-          VotingSystem::set_neuron_weight(env.clone(), layer_id, neuron.clone(), neuron_weight)?;
-        }
+    let layer_id = VotingSystem::add_layer(env.clone())?;
+    VotingSystem::set_layer_aggregator(env.clone(), layer_id, layer_aggregator)?;
+
+    for (neuron, neuron_weight) in neurons {
+      VotingSystem::add_neuron(env.clone(), layer_id, neuron.clone())?;
+      if DecimalNumberWrapper::from(neuron_weight).as_tuple() != DEFAULT_WEIGHT
+        && neuron_weight != 0
+      {
+        VotingSystem::set_neuron_weight(env.clone(), layer_id, neuron.clone(), neuron_weight)?;
       }
     }
     Ok(())
@@ -598,6 +674,26 @@ impl VotingSystem {
       .unwrap_or(Vec::new(&env));
 
     return Ok((votes, trust_map, delegates));
+  }
+
+  pub fn calculate_page_rank(env: Env) -> Result<(), VotingSystemError> {
+    let external_data_provider_address = VotingSystem::get_external_data_provider(env.clone())?;
+    let external_data_provider_client =
+      external_data_provider_contract::Client::new(&env, &external_data_provider_address);
+
+    let trust_map = external_data_provider_client.get_trust_map();
+
+    let page_rank_result = match trust_map.len() {
+      0 => Map::new(&env),
+      _ => {
+        let rank = Rank::from_pages(&env, trust_map);
+        rank.calculate(&env)
+      }
+    };
+
+    external_data_provider_client.set_page_rank_result(&page_rank_result);
+
+    Ok(())
   }
 }
 
