@@ -4,7 +4,7 @@ use crate::{
   types::{LayerAggregator, NeuronType, Vote, DEFAULT_WEIGHT},
 };
 use soroban_decimal_numbers::DecimalNumberWrapper;
-use soroban_sdk::{log, testutils::Logs, vec, Env, Map, String};
+use soroban_sdk::{vec, Env, Map, String, Vec};
 
 use crate::{VotingSystem, VotingSystemClient};
 
@@ -116,34 +116,23 @@ pub fn test_setting_up_neural_governance_batch() {
   let voting_system_id = env.register_contract(None, VotingSystem);
   let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
 
-  let mut config: Map<String, Map<String, u32>> = Map::new(&env);
+  voting_system_client.initialize();
 
-  let mut neurons: Map<String, u32> = Map::new(&env);
-  neurons.set(String::from_slice(&env, "TrustGraph"), 0);
-  neurons.set(String::from_slice(&env, "Dummy"), 1100);
-  config.set(String::from_slice(&env, "Sum"), neurons);
+  let mut neurons: Vec<(String, u32)> = Vec::new(&env);
+  neurons.push_back((String::from_slice(&env, "TrustGraph"), 0));
+  neurons.push_back((String::from_slice(&env, "Dummy"), 1100));
 
-  let mut neurons: Map<String, u32> = Map::new(&env);
-  neurons.set(String::from_slice(&env, "AssignedReputation"), 2000);
-  neurons.set(String::from_slice(&env, "PriorVotingHistory"), 3000);
-  config.set(String::from_slice(&env, "Product"), neurons);
-  voting_system_client.setup_neural_governance(&config);
+  voting_system_client.setup_layer(&String::from_slice(&env, "Sum"), &neurons);
+
+  let mut neurons: Vec<(String, u32)> = Vec::new(&env);
+  neurons.push_back((String::from_slice(&env, "AssignedReputation"), 2000));
+  neurons.push_back((String::from_slice(&env, "PriorVotingHistory"), 3000));
+
+  voting_system_client.setup_layer(&String::from_slice(&env, "Product"), &neurons);
 
   let neural_governance = voting_system_client.get_neural_governance();
 
   assert!(neural_governance.layers.len() == 2);
-
-  log!(
-    &env,
-    ">>>>>>>>>>>>>>>>",
-    neural_governance.layers.get(0).unwrap().aggregator
-  );
-  log!(
-    &env,
-    ">>>>>>>>>>>>>>>>",
-    neural_governance.layers.get(1).unwrap().aggregator
-  );
-  env.logs().print();
 
   let layer0 = neural_governance.layers.get(0).unwrap();
   let layer1 = neural_governance.layers.get(1).unwrap();

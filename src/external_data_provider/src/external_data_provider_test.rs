@@ -38,7 +38,7 @@ pub fn test_reputation() {
   let mut users_reputation_categories: Map<String, String> = Map::new(&env);
   users_reputation_categories.set(user_id_1.clone(), String::from_slice(&env, "Poor"));
   users_reputation_categories.set(user_id_2.clone(), String::from_slice(&env, "Good"));
-  external_data_provider_client.set_users_reputation_categories(&users_reputation_categories);
+  external_data_provider_client.set_users_rep_categories(&users_reputation_categories);
 
   assert!(
     external_data_provider_client.get_user_reputation_category(&user_id_1)
@@ -149,7 +149,7 @@ pub fn test_delegation_rank() {
   let mut users_ranks: Map<String, u32> = Map::new(&env);
   users_ranks.set(user_id_1.clone(), 3);
   users_ranks.set(user_id_99.clone(), 6);
-  external_data_provider_client.set_delegation_ranks_for_users(&users_ranks);
+  external_data_provider_client.set_users_delegation_ranks(&users_ranks);
 
   let ranks = external_data_provider_client.get_delegation_ranks_for_users(&vec![
     &env,
