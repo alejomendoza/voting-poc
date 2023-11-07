@@ -1,8 +1,8 @@
-use crate::{external_data_provider_contract, types::VotingSystemError, VotingSystem};
+use crate::{external_data_provider_contract, types::VotingSystemError};
 use soroban_sdk::{Env, String};
 
 pub fn oracle_function(
-  env: Env,
+  _env: Env,
   voter_id: String,
   external_data_provider_client: &external_data_provider_contract::Client,
 ) -> Result<(u32, u32), VotingSystemError> {

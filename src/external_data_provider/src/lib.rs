@@ -1,8 +1,8 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
-pub mod types;
 mod page_rank;
+pub mod types;
 
 use page_rank::Rank;
 

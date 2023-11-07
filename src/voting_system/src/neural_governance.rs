@@ -1,9 +1,13 @@
 #![allow(non_upper_case_globals)]
 
-use crate::{types::{
-  DecimalNumber, LayerAggregator, NeuronType, VotingSystemError, DEFAULT_WEIGHT,
-  INITIAL_VOTING_POWER,
-}, VotingSystem, external_data_provider_contract};
+use crate::{
+  external_data_provider_contract,
+  types::{
+    DecimalNumber, LayerAggregator, NeuronType, VotingSystemError, DEFAULT_WEIGHT,
+    INITIAL_VOTING_POWER,
+  },
+  VotingSystem,
+};
 
 use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{contracttype, Env, Map, String, Vec};
