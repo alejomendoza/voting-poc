@@ -1,5 +1,7 @@
 use soroban_sdk::{contracterror, contracttype, Env, String};
 
+pub type DecimalNumber = (u32, u32);
+
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub enum ExternalDataProviderError {

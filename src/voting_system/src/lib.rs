@@ -33,10 +33,13 @@ pub enum DataKey {
   // storage type: instance
   NeuralGovernance,
   // storage type: instance
-  // Map<UserUUID, Vec<UserUUID>> - users to the vector of users they delegated their votes to
+  // Map<user_id, Vec<user_id>> - users to the vector of users they delegated their votes to
   Delegatees,
   // storage type: instance
   ExternalDataProvider,
+  // storage type: instance
+  // Map<user_id, (u32, u32)>
+  VotingPowers,
 }
 
 #[contract]
@@ -488,11 +491,35 @@ impl VotingSystem {
     voter_id: String,
     submission_id: String,
   ) -> Result<(u32, u32), VotingSystemError> {
-    VotingSystem::get_neural_governance(env.clone())?.execute_neural_governance(
-      env.clone(),
-      voter_id.clone(),
-      submission_id.clone(),
-    )
+    let voting_power = VotingSystem::get_neural_governance(env.clone())?
+      .execute_neural_governance(env.clone(), voter_id.clone(), submission_id.clone())?;
+
+    VotingSystem::set_voting_power_for_user(env, voter_id, voting_power);
+
+    Ok(voting_power)
+  }
+
+  pub fn get_voting_powers(env: Env) -> Map<String, (u32, u32)> {
+    env
+      .storage()
+      .instance()
+      .get(&DataKey::VotingPowers)
+      .unwrap_or(Map::new(&env))
+  }
+
+  pub fn set_voting_power_for_user(env: Env, voter_id: String, voting_power: (u32, u32)) {
+    let mut voting_powers: Map<String, (u32, u32)> = env
+      .storage()
+      .instance()
+      .get(&DataKey::VotingPowers)
+      .unwrap_or(Map::new(&env));
+
+    voting_powers.set(voter_id.clone(), voting_power);
+
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::VotingPowers, &voting_powers);
   }
 
   pub fn submissions_voting_powers(

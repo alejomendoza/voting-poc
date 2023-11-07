@@ -2,6 +2,9 @@
 #![allow(non_upper_case_globals)]
 
 pub mod types;
+mod page_rank;
+
+use page_rank::Rank;
 
 // This contract's going to be responsible for fetching the data from any external resources
 
@@ -402,6 +405,20 @@ impl ExternalDataProvider {
       .storage()
       .instance()
       .set(&DataKey::PageRankResult, &new_result);
+  }
+
+  pub fn calculate_page_rank(env: Env) {
+    let trust_map = ExternalDataProvider::get_trust_map(env.clone());
+
+    let page_rank_result = match trust_map.len() {
+      0 => Map::new(&env),
+      _ => {
+        let rank = Rank::from_pages(&env, trust_map);
+        rank.calculate(&env)
+      }
+    };
+
+    ExternalDataProvider::set_page_rank_result(env.clone(), page_rank_result);
   }
 }
 
