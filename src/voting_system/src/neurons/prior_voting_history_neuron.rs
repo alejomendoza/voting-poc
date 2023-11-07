@@ -2,11 +2,11 @@ use crate::{external_data_provider_contract, types::VotingSystemError, VotingSys
 use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{Env, String};
 
-pub fn oracle_function(env: Env, voter_id: String) -> Result<(u32, u32), VotingSystemError> {
-  let external_data_provider_address = VotingSystem::get_external_data_provider(env.clone())?;
-  let external_data_provider_client =
-    external_data_provider_contract::Client::new(&env, &external_data_provider_address);
-
+pub fn oracle_function(
+  env: Env,
+  voter_id: String,
+  external_data_provider_client: &external_data_provider_contract::Client,
+) -> Result<(u32, u32), VotingSystemError> {
   let voter_active_rounds = external_data_provider_client.get_user_prior_voting_history(&voter_id);
   if voter_active_rounds.is_empty() {
     return Ok((0, 0));

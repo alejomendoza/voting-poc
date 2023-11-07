@@ -1,4 +1,4 @@
-use crate::types::{DecimalNumber, LayerAggregator, NeuronType, VotingSystemError};
+use crate::{types::{DecimalNumber, LayerAggregator, NeuronType, VotingSystemError}, VotingSystem, external_data_provider_contract};
 use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{contracttype, Env, Map, String, Vec};
 
@@ -22,6 +22,7 @@ impl Layer {
     voter_id: String,
     _submission_id: String,
     previous_layer_vote: (u32, u32),
+    external_data_provider_client: &external_data_provider_contract::Client,
   ) -> Result<Vec<(u32, u32)>, VotingSystemError> {
     if self.aggregator == LayerAggregator::Unknown {
       return Err(VotingSystemError::LayerAggregatorNotSet);
@@ -31,17 +32,18 @@ impl Layer {
     if self.neurons.is_empty() {
       return Err(VotingSystemError::NoNeuronsExist);
     }
+
     for (neuron, raw_weight) in self.neurons.iter() {
       let raw_neuron_vote: DecimalNumber = match neuron {
         NeuronType::Dummy => dummy_neuron::oracle_function(env.clone(), voter_id.clone())?,
         NeuronType::AssignedReputation => {
-          assigned_reputation_neuron::oracle_function(env.clone(), voter_id.clone())?
+          assigned_reputation_neuron::oracle_function(env.clone(), voter_id.clone(), &external_data_provider_client)?
         }
         NeuronType::PriorVotingHistory => {
-          prior_voting_history_neuron::oracle_function(env.clone(), voter_id.clone())?
+          prior_voting_history_neuron::oracle_function(env.clone(), voter_id.clone(), &external_data_provider_client)?
         }
         NeuronType::TrustGraph => {
-          trust_graph_neuron::oracle_function(env.clone(), voter_id.clone())?
+          trust_graph_neuron::oracle_function(env.clone(), voter_id.clone(), &external_data_provider_client)?
         }
       };
       let neuron_vote = self.run_neuron_weight_function(
