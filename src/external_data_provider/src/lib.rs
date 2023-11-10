@@ -1,7 +1,10 @@
 #![no_std]
 #![allow(non_upper_case_globals)]
 
+mod page_rank;
 pub mod types;
+
+use page_rank::Rank;
 
 // This contract's going to be responsible for fetching the data from any external resources
 
@@ -234,6 +237,17 @@ impl ExternalDataProvider {
     }
   }
 
+  pub fn get_reputation_scores(env: Env) -> Map<u32, (u32, u32)> {
+    return Map::from_array(&env, [
+      (0, (0, 0)),
+      (1, (0, 100)),
+      (2, (0, 100)),
+      (3, (0, 200)),
+      (4, (0, 200)),
+      (5, (0, 300)),
+    ])
+  }
+
   // for prior history neuron
   pub fn get_prior_voting_history(env: Env) -> Map<String, Vec<u32>> {
     env
@@ -402,6 +416,20 @@ impl ExternalDataProvider {
       .storage()
       .instance()
       .set(&DataKey::PageRankResult, &new_result);
+  }
+
+  pub fn calculate_page_rank(env: Env) {
+    let trust_map = ExternalDataProvider::get_trust_map(env.clone());
+
+    let page_rank_result = match trust_map.len() {
+      0 => Map::new(&env),
+      _ => {
+        let rank = Rank::from_pages(&env, trust_map);
+        rank.calculate(&env)
+      }
+    };
+
+    ExternalDataProvider::set_page_rank_result(env.clone(), page_rank_result);
   }
 }
 

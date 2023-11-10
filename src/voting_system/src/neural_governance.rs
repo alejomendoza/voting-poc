@@ -1,8 +1,12 @@
 #![allow(non_upper_case_globals)]
 
-use crate::types::{
-  DecimalNumber, LayerAggregator, NeuronType, VotingSystemError, DEFAULT_WEIGHT,
-  INITIAL_VOTING_POWER,
+use crate::{
+  external_data_provider_contract,
+  types::{
+    DecimalNumber, LayerAggregator, NeuronType, VotingSystemError, DEFAULT_WEIGHT,
+    INITIAL_VOTING_POWER,
+  },
+  VotingSystem,
 };
 
 use soroban_decimal_numbers::DecimalNumberWrapper;
@@ -114,12 +118,16 @@ impl NeuralGovernance {
     if self.layers.is_empty() {
       return Err(VotingSystemError::NoLayersExist);
     }
+    let external_data_provider_address = VotingSystem::get_external_data_provider(env.clone())?;
+    let external_data_provider_client =
+      external_data_provider_contract::Client::new(&env, &external_data_provider_address);
     for layer in self.layers.clone() {
       let layer_result: Vec<(u32, u32)> = layer.execute_layer(
         env.clone(),
         voter_id.clone(),
         submission_id.clone(),
         current_layer_result,
+        &external_data_provider_client,
       )?;
       current_layer_result = layer.run_layer_aggregator(layer_result)?;
     }
