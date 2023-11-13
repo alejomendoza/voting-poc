@@ -174,6 +174,13 @@ pub fn test_simple_voting() {
   let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
   voting_system_client.initialize();
 
+  let external_data_provider_id =
+    env.register_contract_wasm(None, external_data_provider_contract::WASM);
+  let external_data_provider_client =
+    external_data_provider_contract::Client::new(&env, &external_data_provider_id);
+  external_data_provider_client.mock_sample_data();
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
+
   assert!(voting_system_client.add_layer() == 0);
   assert!(voting_system_client.add_layer() == 1);
 
@@ -249,6 +256,7 @@ pub fn test_simple_voting() {
 #[test]
 pub fn test_assigned_reputation_neuron() {
   let env = Env::default();
+  env.budget().reset_unlimited();
 
   let voting_system_id = env.register_contract(None, VotingSystem);
   let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
@@ -397,6 +405,8 @@ pub fn test_graph_bonus() {
       )
   );
 
+  voting_system_client.calculate_page_rank();
+
   assert!(
     voting_system_client
       .tally()
@@ -499,6 +509,8 @@ pub fn test_graph_bonus_2() {
         ]
       )
   );
+
+  voting_system_client.calculate_page_rank();
 
   assert!(
     voting_system_client
@@ -1035,6 +1047,32 @@ pub fn test_multiple_voting_operations() {
       .unwrap()
       == Vote::No
   );
+  // test multiple_vote_operations_vec
+  // let current_user_votes = voting_system_client.multiple_vote_operations_vec(
+  //   &voter_id,
+  //   &Vec::from_array(
+  //     &env,
+  //     [
+  //       (submission_id.clone(), String::from_slice(&env, "Remove")),
+  //       (submission_id_2.clone(), String::from_slice(&env, "Remove")),
+  //       (submission_id_3.clone(), String::from_slice(&env, "No")),
+  //     ],
+  //   ),
+  // );
+  // assert!(current_user_votes.len() == 1);
+  // assert!(voting_system_client.get_voters().len() == 1);
+  // let votes = voting_system_client.get_votes();
+
+  // assert!(votes.len() == 1);
+  // assert!(
+  //   votes
+  //     .get(submission_id_3.clone())
+  //     .unwrap()
+  //     .get(voter_id.clone())
+  //     .unwrap()
+  //     == Vote::No
+  // );
+  //
 
   let current_user_votes = voting_system_client.multiple_vote_operations(
     &voter_id,
@@ -1102,6 +1140,8 @@ pub fn test_decomposed_tally() {
     external_data_provider_contract::Client::new(&env, &external_data_provider_id);
   external_data_provider_client.mock_sample_data();
   voting_system_client.set_external_data_provider(&external_data_provider_id);
+
+  voting_system_client.calculate_page_rank();
 
   let normalized_votes: Map<String, Map<String, String>> = voting_system_client.normalize_votes();
   let mut voters_voting_powers: Map<String, u32> = Map::new(&env);

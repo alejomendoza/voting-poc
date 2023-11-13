@@ -238,14 +238,17 @@ impl ExternalDataProvider {
   }
 
   pub fn get_reputation_scores(env: Env) -> Map<u32, (u32, u32)> {
-    return Map::from_array(&env, [
-      (0, (0, 0)),
-      (1, (0, 100)),
-      (2, (0, 100)),
-      (3, (0, 200)),
-      (4, (0, 200)),
-      (5, (0, 300)),
-    ])
+    return Map::from_array(
+      &env,
+      [
+        (0, (0, 0)),
+        (1, (0, 100)),
+        (2, (0, 100)),
+        (3, (0, 200)),
+        (4, (0, 200)),
+        (5, (0, 300)),
+      ],
+    );
   }
 
   // for prior history neuron

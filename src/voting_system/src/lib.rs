@@ -66,7 +66,7 @@ impl VotingSystem {
       .ok_or(VotingSystemError::NeuralGovernanceNotSet)
   }
 
-  pub fn set_neural_governance(env: Env, neural_governance: NeuralGovernance) {
+  fn set_neural_governance(env: Env, neural_governance: NeuralGovernance) {
     env
       .storage()
       .instance()
@@ -511,10 +511,16 @@ impl VotingSystem {
     let mut voting_powers = VotingSystem::get_voting_powers(env.clone());
 
     for (voter_id, voting_power) in new_voting_powers {
-      voting_powers.set(voter_id, DecimalNumberWrapper::from(voting_power).as_tuple());
+      voting_powers.set(
+        voter_id,
+        DecimalNumberWrapper::from(voting_power).as_tuple(),
+      );
     }
 
-    env.storage().instance().set(&DataKey::VotingPowers, &voting_powers);
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::VotingPowers, &voting_powers);
   }
 
   pub fn set_voting_power_for_user(env: Env, voter_id: String, voting_power: (u32, u32)) {
