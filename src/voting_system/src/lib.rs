@@ -450,7 +450,6 @@ impl VotingSystem {
   // normalize votes but just override the collection in place (in the storage) and do not return anything
   // they will be referred to in submissions_voting_powers (maybe normalized can be saved in a separate collection in storage)
 
-  // todo test this method
   // returns Map<voter_id, normalized_vote>
   pub fn normalize_votes_for_submission(
     env: Env,
@@ -698,25 +697,6 @@ impl VotingSystem {
       .instance()
       .get(&DataKey::ExternalDataProvider)
       .ok_or(VotingSystemError::ExternalDataProviderNotSet)?
-  }
-
-  pub fn get_votes_trust_delegates(
-    env: Env,
-    voter_id: String,
-  ) -> Result<(Map<String, Vote>, Map<String, ()>, Vec<String>), VotingSystemError> {
-    let external_data_provider_address = VotingSystem::get_external_data_provider(env.clone())?;
-    let external_data_provider_client =
-      external_data_provider_contract::Client::new(&env, &external_data_provider_address);
-    let votes = VotingSystem::get_votes_for_user(env.clone(), voter_id.clone());
-    let trust_map = external_data_provider_client
-      .get_trust_map()
-      .get(voter_id.clone())
-      .unwrap_or(Map::new(&env));
-    let delegates = VotingSystem::get_delegatees(env.clone())
-      .get(voter_id.clone())
-      .unwrap_or(Vec::new(&env));
-
-    return Ok((votes, trust_map, delegates));
   }
 
   pub fn calculate_page_rank(env: Env) -> Result<(), VotingSystemError> {
