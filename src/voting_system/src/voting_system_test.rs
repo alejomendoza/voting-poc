@@ -180,6 +180,7 @@ pub fn test_simple_voting() {
     external_data_provider_contract::Client::new(&env, &external_data_provider_id);
   external_data_provider_client.mock_sample_data();
   voting_system_client.set_external_data_provider(&external_data_provider_id);
+  voting_system_client.get_external_data_provider();
 
   assert!(voting_system_client.add_layer() == 0);
   assert!(voting_system_client.add_layer() == 1);
@@ -561,6 +562,7 @@ pub fn test_delegation_more_yes_votes() {
     voter_id_8.clone(),
   ];
   voting_system_client.delegate(&voter_id_1, &submission_id, &delegatees);
+  assert!(voting_system_client.get_delegatees().len() == 1);
   voting_system_client.vote(&voter_id_2, &submission_id, &String::from_slice(&env, "No")); // not considered - low rank
   voting_system_client.vote(&voter_id_3, &submission_id, &String::from_slice(&env, "No"));
   voting_system_client.vote(&voter_id_4, &submission_id, &String::from_slice(&env, "No"));
@@ -997,6 +999,7 @@ pub fn test_multiple_voting_operations() {
   assert!(voting_system_client.get_voters().len() == 1);
   let votes = voting_system_client.get_votes();
   assert!(votes.len() == 3);
+  assert!(voting_system_client.get_votes_length() == 3);
   assert!(
     votes
       .get(submission_id.clone())
@@ -1048,31 +1051,30 @@ pub fn test_multiple_voting_operations() {
       == Vote::No
   );
   // test multiple_vote_operations_vec
-  // let current_user_votes = voting_system_client.multiple_vote_operations_vec(
-  //   &voter_id,
-  //   &Vec::from_array(
-  //     &env,
-  //     [
-  //       (submission_id.clone(), String::from_slice(&env, "Remove")),
-  //       (submission_id_2.clone(), String::from_slice(&env, "Remove")),
-  //       (submission_id_3.clone(), String::from_slice(&env, "No")),
-  //     ],
-  //   ),
-  // );
-  // assert!(current_user_votes.len() == 1);
-  // assert!(voting_system_client.get_voters().len() == 1);
-  // let votes = voting_system_client.get_votes();
+  let current_user_votes = voting_system_client.multiple_vote_operations_vec(
+    &voter_id,
+    &Vec::from_array(
+      &env,
+      [
+        (submission_id.clone(), String::from_slice(&env, "Remove")),
+        (submission_id_2.clone(), String::from_slice(&env, "Remove")),
+        (submission_id_3.clone(), String::from_slice(&env, "No")),
+      ],
+    ),
+  );
+  assert!(current_user_votes.len() == 1);
+  assert!(voting_system_client.get_voters().len() == 1);
+  let votes = voting_system_client.get_votes();
 
-  // assert!(votes.len() == 1);
-  // assert!(
-  //   votes
-  //     .get(submission_id_3.clone())
-  //     .unwrap()
-  //     .get(voter_id.clone())
-  //     .unwrap()
-  //     == Vote::No
-  // );
-  //
+  assert!(votes.len() == 1);
+  assert!(
+    votes
+      .get(submission_id_3.clone())
+      .unwrap()
+      .get(voter_id.clone())
+      .unwrap()
+      == Vote::No
+  );
 
   let current_user_votes = voting_system_client.multiple_vote_operations(
     &voter_id,
@@ -1154,9 +1156,47 @@ pub fn test_decomposed_tally() {
     }
   }
 
+  // test normalize_votes_for_submission
+  let submission_1_normalized_votes =
+    voting_system_client.normalize_votes_for_submission(&submission_1_id);
+  assert!(submission_1_normalized_votes.len() == 2);
+
   let final_voting_powers =
     voting_system_client.submissions_voting_powers(&voters_voting_powers, &normalized_votes);
 
+  let fetched_voting_powers = voting_system_client.get_voting_powers();
+
+  assert!(fetched_voting_powers.get(voter_id_1.clone()).unwrap() == (1136, 915));
+  assert!(fetched_voting_powers.get(voter_id_2.clone()).unwrap() == (2, 515));
+
+  voting_system_client.set_voting_power_for_user(&voter_id_1.clone(), &(1, 0));
+
+  assert!(
+    voting_system_client
+      .get_voting_powers()
+      .get(voter_id_1.clone())
+      .unwrap()
+      == (1, 0)
+  );
+
   assert!(final_voting_powers.get(submission_1_id).unwrap() == (1134, 400));
   assert!(final_voting_powers.get(submission_2_id).unwrap() == (2, 515));
+
+  let mut voters_voting_powers_vec: Vec<(String, u32)> = Vec::new(&env);
+  let mut normalized_votes_vec: Vec<(String, String, String)> = Vec::new(&env);
+
+  for (voter_id, power) in voters_voting_powers {
+    voters_voting_powers_vec.push_back((voter_id, power));
+  }
+
+  for (submission_id, normalized_votes_map) in normalized_votes {
+    for (voter_id, normalized_vote) in normalized_votes_map {
+      normalized_votes_vec.push_back((submission_id.clone(), voter_id, normalized_vote));
+    }
+  }
+
+  let final_voting_powers_from_vec = voting_system_client
+    .submissions_voting_powers_vec(&voters_voting_powers_vec, &normalized_votes_vec);
+
+  assert!(final_voting_powers == final_voting_powers_from_vec);
 }
