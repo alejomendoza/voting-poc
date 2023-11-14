@@ -8,13 +8,19 @@ use soroban_sdk::{vec, Env, Map, String, Vec};
 
 use crate::{VotingSystem, VotingSystemClient};
 
+fn initialize_voting_system(env: &Env) -> VotingSystemClient {
+  let voting_system_id = env.register_contract(None, VotingSystem);
+  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+  voting_system_client.initialize();
+
+  voting_system_client
+}
+
 #[test]
 pub fn test_setting_up_neural_governance() {
   let env = Env::default();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
-  voting_system_client.initialize();
+  let voting_system_client = initialize_voting_system(&env);
 
   assert!(voting_system_client.add_layer() == 0);
   assert!(voting_system_client.add_layer() == 1);
@@ -113,10 +119,7 @@ pub fn test_setting_up_neural_governance() {
 pub fn test_setting_up_neural_governance_batch() {
   let env = Env::default();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
-
-  voting_system_client.initialize();
+  let voting_system_client = initialize_voting_system(&env);
 
   let mut neurons: Vec<(String, u32)> = Vec::new(&env);
   neurons.push_back((String::from_slice(&env, "TrustGraph"), 0));
@@ -170,9 +173,7 @@ pub fn test_setting_up_neural_governance_batch() {
 pub fn test_simple_voting() {
   let env = Env::default();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
-  voting_system_client.initialize();
+  let voting_system_client = initialize_voting_system(&env);
 
   let external_data_provider_id =
     env.register_contract_wasm(None, external_data_provider_contract::WASM);
@@ -259,10 +260,8 @@ pub fn test_assigned_reputation_neuron() {
   let env = Env::default();
   env.budget().reset_unlimited();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+  let voting_system_client = initialize_voting_system(&env);
 
-  voting_system_client.initialize();
   assert!(voting_system_client.add_layer() == 0);
 
   voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
@@ -318,10 +317,8 @@ pub fn test_assigned_reputation_neuron() {
 pub fn test_prior_voting_history_neuron() {
   let env = Env::default();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+  let voting_system_client = initialize_voting_system(&env);
 
-  voting_system_client.initialize();
   assert!(voting_system_client.add_layer() == 0);
 
   voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
@@ -360,10 +357,8 @@ pub fn test_prior_voting_history_neuron() {
 pub fn test_graph_bonus() {
   let env = Env::default();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+  let voting_system_client = initialize_voting_system(&env);
 
-  voting_system_client.initialize();
   assert!(voting_system_client.add_layer() == 0);
 
   voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
@@ -421,10 +416,8 @@ pub fn test_graph_bonus() {
 pub fn test_graph_bonus_2() {
   let env = Env::default();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+  let voting_system_client = initialize_voting_system(&env);
 
-  voting_system_client.initialize();
   assert!(voting_system_client.add_layer() == 0);
 
   voting_system_client.set_layer_aggregator(&0, &String::from_slice(&env, "Sum"));
@@ -526,9 +519,7 @@ pub fn test_graph_bonus_2() {
 pub fn test_delegation_more_yes_votes() {
   let env = Env::default();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
-  voting_system_client.initialize();
+  let voting_system_client = initialize_voting_system(&env);
 
   let external_data_provider_id =
     env.register_contract_wasm(None, external_data_provider_contract::WASM);
@@ -591,9 +582,7 @@ pub fn test_delegation_more_yes_votes() {
 pub fn test_delegation_more_no_votes() {
   let env = Env::default();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
-  voting_system_client.initialize();
+  let voting_system_client = initialize_voting_system(&env);
 
   let external_data_provider_id =
     env.register_contract_wasm(None, external_data_provider_contract::WASM);
@@ -655,9 +644,7 @@ pub fn test_delegation_more_no_votes() {
 pub fn test_delegation_too_many_abstain_votes() {
   let env = Env::default();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
-  voting_system_client.initialize();
+  let voting_system_client = initialize_voting_system(&env);
 
   let external_data_provider_id =
     env.register_contract_wasm(None, external_data_provider_contract::WASM);
@@ -723,9 +710,7 @@ pub fn test_delegation_too_many_abstain_votes() {
 pub fn test_delegation_too_many_delegate_votes() {
   let env = Env::default();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
-  voting_system_client.initialize();
+  let voting_system_client = initialize_voting_system(&env);
 
   let external_data_provider_id =
     env.register_contract_wasm(None, external_data_provider_contract::WASM);
@@ -814,9 +799,7 @@ pub fn test_delegation_too_many_delegate_votes() {
 pub fn test_delegation_yes_no_equal() {
   let env = Env::default();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
-  voting_system_client.initialize();
+  let voting_system_client = initialize_voting_system(&env);
 
   let external_data_provider_id =
     env.register_contract_wasm(None, external_data_provider_contract::WASM);
@@ -891,9 +874,7 @@ pub fn test_delegation_yes_no_equal() {
 pub fn test_delegation_in_practice() {
   let env = Env::default();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
-  voting_system_client.initialize();
+  let voting_system_client = initialize_voting_system(&env);
 
   let external_data_provider_id =
     env.register_contract_wasm(None, external_data_provider_contract::WASM);
@@ -966,9 +947,7 @@ pub fn test_delegation_in_practice() {
 pub fn test_multiple_voting_operations() {
   let env = Env::default();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
-  voting_system_client.initialize();
+  let voting_system_client = initialize_voting_system(&env);
 
   assert!(voting_system_client.add_layer() == 0);
   assert!(voting_system_client.add_layer() == 1);
@@ -1092,8 +1071,7 @@ pub fn test_decomposed_tally() {
   let env = Env::default();
   env.budget().reset_unlimited();
 
-  let voting_system_id = env.register_contract(None, VotingSystem);
-  let voting_system_client = VotingSystemClient::new(&env, &voting_system_id);
+  let voting_system_client = initialize_voting_system(&env);
 
   let voter_id_1 = String::from_slice(&env, "user001");
   let voter_id_2 = String::from_slice(&env, "user002");
@@ -1118,8 +1096,6 @@ pub fn test_decomposed_tally() {
     &submission_2_id,
     &String::from_slice(&env, "Yes"),
   );
-
-  voting_system_client.initialize();
 
   let n_layers = 5;
 
