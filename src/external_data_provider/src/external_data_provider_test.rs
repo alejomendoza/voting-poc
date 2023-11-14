@@ -3,13 +3,19 @@ use soroban_sdk::{vec, Env, Map, String, Vec};
 
 use crate::{ExternalDataProvider, ExternalDataProviderClient, ReputationCategory};
 
+fn initialize_external_data_provider(env: &Env) -> ExternalDataProviderClient {
+  let external_data_provider_id = env.register_contract(None, ExternalDataProvider);
+  let external_data_provider_client =
+    ExternalDataProviderClient::new(&env, &external_data_provider_id);
+
+  external_data_provider_client
+}
+
 #[test]
 pub fn test_reputation() {
   let env = Env::default();
 
-  let external_data_provider_id = env.register_contract(None, ExternalDataProvider);
-  let external_data_provider_client =
-    ExternalDataProviderClient::new(&env, &external_data_provider_id);
+  let external_data_provider_client = initialize_external_data_provider(&env);
 
   let user_id_1 = String::from_slice(&env, "user001");
   let user_id_2 = String::from_slice(&env, "user002");
@@ -98,9 +104,7 @@ pub fn test_reputation() {
 pub fn test_history() {
   let env = Env::default();
 
-  let external_data_provider_id = env.register_contract(None, ExternalDataProvider);
-  let external_data_provider_client =
-    ExternalDataProviderClient::new(&env, &external_data_provider_id);
+  let external_data_provider_client = initialize_external_data_provider(&env);
 
   let user_id_1 = String::from_slice(&env, "user001");
   let user_id_2 = String::from_slice(&env, "user002");
@@ -161,9 +165,7 @@ pub fn test_history() {
 pub fn test_delegation_rank() {
   let env = Env::default();
 
-  let external_data_provider_id = env.register_contract(None, ExternalDataProvider);
-  let external_data_provider_client =
-    ExternalDataProviderClient::new(&env, &external_data_provider_id);
+  let external_data_provider_client = initialize_external_data_provider(&env);
 
   let user_id_1 = String::from_slice(&env, "user001");
   let user_id_2 = String::from_slice(&env, "user002");
@@ -234,9 +236,7 @@ pub fn test_delegation_rank() {
 pub fn test_trust_map() {
   let env = Env::default();
 
-  let external_data_provider_id = env.register_contract(None, ExternalDataProvider);
-  let external_data_provider_client =
-    ExternalDataProviderClient::new(&env, &external_data_provider_id);
+  let external_data_provider_client = initialize_external_data_provider(&env);
 
   let user_id_1 = String::from_slice(&env, "user001");
   let user_id_2 = String::from_slice(&env, "user002");
@@ -268,9 +268,7 @@ pub fn test_trust_map() {
 pub fn test_set_trust_map() {
   let env = Env::default();
 
-  let external_data_provider_id = env.register_contract(None, ExternalDataProvider);
-  let external_data_provider_client =
-    ExternalDataProviderClient::new(&env, &external_data_provider_id);
+  let external_data_provider_client = initialize_external_data_provider(&env);
 
   let user_id_1 = String::from_slice(&env, "user001");
   let user_id_2 = String::from_slice(&env, "user002");
@@ -294,9 +292,7 @@ pub fn test_set_trust_map() {
 pub fn test_page_rank() {
   let env = Env::default();
 
-  let external_data_provider_id = env.register_contract(None, ExternalDataProvider);
-  let external_data_provider_client =
-    ExternalDataProviderClient::new(&env, &external_data_provider_id);
+  let external_data_provider_client = initialize_external_data_provider(&env);
 
   let user_id_1 = String::from_slice(&env, "user001");
   let user_id_2 = String::from_slice(&env, "user002");
@@ -356,9 +352,7 @@ pub fn test_page_rank() {
 pub fn test_set_trust_map_for_user() {
   let env = Env::default();
 
-  let external_data_provider_id = env.register_contract(None, ExternalDataProvider);
-  let external_data_provider_client =
-    ExternalDataProviderClient::new(&env, &external_data_provider_id);
+  let external_data_provider_client = initialize_external_data_provider(&env);
 
   let user_id_1 = String::from_slice(&env, "user001");
   let user_id_2 = String::from_slice(&env, "user002");
