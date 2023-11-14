@@ -1,3 +1,4 @@
+use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{vec, Env, Map, String, Vec};
 
 use crate::{ExternalDataProvider, ExternalDataProviderClient, ReputationCategory};
@@ -15,6 +16,34 @@ pub fn test_reputation() {
 
   let reputation = external_data_provider_client.get_user_reputation_category(&user_id_1);
   assert!(reputation == ReputationCategory::Uncategorized);
+
+  assert!(
+    external_data_provider_client.get_reputation_score(&ReputationCategory::Uncategorized)
+      == (0, 0)
+  );
+  assert!(
+    external_data_provider_client.get_reputation_score(&ReputationCategory::Poor) == (0, 100)
+  );
+  assert!(
+    external_data_provider_client.get_reputation_score(&ReputationCategory::Average) == (0, 100)
+  );
+  assert!(
+    external_data_provider_client.get_reputation_score(&ReputationCategory::Good) == (0, 200)
+  );
+  assert!(
+    external_data_provider_client.get_reputation_score(&ReputationCategory::VeryGood) == (0, 200)
+  );
+  assert!(
+    external_data_provider_client.get_reputation_score(&ReputationCategory::Excellent) == (0, 300)
+  );
+
+  let reputation_scores = external_data_provider_client.get_reputation_scores();
+  assert!(reputation_scores.get(0).unwrap() == (0, 0));
+  assert!(reputation_scores.get(1).unwrap() == (0, 100));
+  assert!(reputation_scores.get(2).unwrap() == (0, 100));
+  assert!(reputation_scores.get(3).unwrap() == (0, 200));
+  assert!(reputation_scores.get(4).unwrap() == (0, 200));
+  assert!(reputation_scores.get(5).unwrap() == (0, 300));
 
   external_data_provider_client.mock_sample_data();
 
@@ -40,6 +69,21 @@ pub fn test_reputation() {
   users_reputation_categories.set(user_id_2.clone(), String::from_slice(&env, "Good"));
   external_data_provider_client.set_users_rep_categories(&users_reputation_categories);
 
+  assert!(
+    external_data_provider_client.get_user_reputation_category(&user_id_1)
+      == ReputationCategory::Poor
+  );
+  assert!(
+    external_data_provider_client.get_user_reputation_category(&user_id_2)
+      == ReputationCategory::Good
+  );
+
+  // test set_users_rep_categories_vec
+  let mut users_reputation_categories_vec: Vec<(String, String)> = Vec::new(&env);
+  for (user_id, rep_category) in users_reputation_categories {
+    users_reputation_categories_vec.push_back((user_id.clone(), rep_category.clone()));
+  }
+  external_data_provider_client.set_users_rep_categories_vec(&users_reputation_categories_vec);
   assert!(
     external_data_provider_client.get_user_reputation_category(&user_id_1)
       == ReputationCategory::Poor
@@ -74,7 +118,17 @@ pub fn test_history() {
   assert!(round_bonus_map.len() == 4);
   round_bonus_map.set(5, (0, 400));
   external_data_provider_client.set_round_bonus_map(&round_bonus_map);
-  assert!(external_data_provider_client.get_round_bonus_map().len() == 5);
+  let fetched_bonus_map = external_data_provider_client.get_round_bonus_map();
+  assert!(fetched_bonus_map.len() == 5);
+
+  // test set_round_bonus_map_vec
+  let mut round_bonus_map_vec: Vec<(u32, u32)> = Vec::new(&env);
+  for (round, bonus) in round_bonus_map {
+    round_bonus_map_vec.push_back((round.clone(), DecimalNumberWrapper::from(bonus).as_raw()));
+  }
+  external_data_provider_client.set_round_bonus_map_vec(&round_bonus_map_vec);
+  let fetched_bonus_map2 = external_data_provider_client.get_round_bonus_map();
+  assert!(fetched_bonus_map == fetched_bonus_map2);
 
   assert!(
     external_data_provider_client
@@ -159,6 +213,21 @@ pub fn test_delegation_rank() {
   assert!(ranks.len() == 2);
   assert!(ranks.get(user_id_1.clone()).unwrap() == 3);
   assert!(ranks.get(user_id_99.clone()).unwrap() == 6);
+
+  // test set_users_delegation_ranks_vec
+  let mut users_ranks_vec: Vec<(String, u32)> = Vec::new(&env);
+  for (user_id, rank) in users_ranks {
+    users_ranks_vec.push_back((user_id.clone(), rank.clone()));
+  }
+  external_data_provider_client.set_users_delegation_ranks_vec(&users_ranks_vec);
+  let ranks = external_data_provider_client.get_delegation_ranks_for_users(&vec![
+    &env,
+    user_id_1.clone(),
+    user_id_99.clone(),
+  ]);
+  assert!(ranks.len() == 2);
+  assert!(ranks.get(user_id_1.clone()).unwrap() == 3);
+  assert!(ranks.get(user_id_99.clone()).unwrap() == 6);
 }
 
 #[test]
@@ -222,6 +291,68 @@ pub fn test_set_trust_map() {
 }
 
 #[test]
+pub fn test_page_rank() {
+  let env = Env::default();
+
+  let external_data_provider_id = env.register_contract(None, ExternalDataProvider);
+  let external_data_provider_client =
+    ExternalDataProviderClient::new(&env, &external_data_provider_id);
+
+  let user_id_1 = String::from_slice(&env, "user001");
+  let user_id_2 = String::from_slice(&env, "user002");
+  let user_id_3 = String::from_slice(&env, "user003");
+  let user_id_4 = String::from_slice(&env, "user004");
+
+  let mut new_trust_map: Map<String, Map<String, ()>> = Map::new(&env);
+  new_trust_map.set(
+    user_id_1.clone(),
+    Map::from_array(&env, [(user_id_2.clone(), ())]),
+  );
+  new_trust_map.set(
+    user_id_2.clone(),
+    Map::from_array(&env, [(user_id_3.clone(), ()), (user_id_4.clone(), ())]),
+  );
+  new_trust_map.set(
+    user_id_3.clone(),
+    Map::from_array(&env, [(user_id_1.clone(), ()), (user_id_4.clone(), ())]),
+  );
+  new_trust_map.set(
+    user_id_4.clone(),
+    Map::from_array(&env, [(user_id_2.clone(), ())]),
+  );
+  external_data_provider_client.set_trust_map(&new_trust_map);
+
+  external_data_provider_client.calculate_page_rank();
+  let results = external_data_provider_client.get_page_rank_results();
+
+  assert!(results.get(user_id_1.clone()).unwrap() == (0, 177));
+  assert!(results.get(user_id_2.clone()).unwrap() == (0, 331));
+  assert!(results.get(user_id_3.clone()).unwrap() == (0, 337));
+  assert!(results.get(user_id_4.clone()).unwrap() == (0, 177));
+
+  assert!(external_data_provider_client.get_page_rank_result_for_user(&user_id_1) == (0, 177));
+
+  external_data_provider_client.set_page_rank_result(&Map::from_array(
+    &env,
+    [
+      (user_id_1.clone(), (0, 100)),
+      (user_id_2.clone(), (0, 200)),
+      (user_id_3.clone(), (0, 300)),
+      (user_id_4.clone(), (0, 400)),
+    ],
+  ));
+
+  assert!(
+    external_data_provider_client
+      .get_page_rank_results()
+      .get(user_id_1.clone())
+      .unwrap()
+      == (0, 100)
+  );
+  assert!(external_data_provider_client.get_page_rank_result_for_user(&user_id_2) == (0, 200));
+}
+
+#[test]
 pub fn test_set_trust_map_for_user() {
   let env = Env::default();
 
@@ -242,5 +373,16 @@ pub fn test_set_trust_map_for_user() {
   let user_2_map = trust_map.get(user_id_2.clone());
 
   assert!(user_1_map == Some(Map::from_array(&env, [(user_id_2.clone(), ()),])));
-  assert!(user_2_map.is_none())
+  assert!(user_2_map.is_none());
+
+  // test set_trust_map_for_user_vec
+  external_data_provider_client
+    .set_trust_map_for_user_vec(&user_id_1, &Vec::from_array(&env, [user_id_2.clone()]));
+
+  let trust_map = external_data_provider_client.get_trust_map();
+  let user_1_map = trust_map.get(user_id_1.clone());
+  let user_2_map = trust_map.get(user_id_2.clone());
+
+  assert!(user_1_map == Some(Map::from_array(&env, [(user_id_2.clone(), ()),])));
+  assert!(user_2_map.is_none());
 }
