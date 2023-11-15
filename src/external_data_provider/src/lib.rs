@@ -419,7 +419,7 @@ impl ExternalDataProvider {
       .set(&DataKey::PageRankResult, &new_result);
   }
 
-  pub fn calculate_page_rank(env: Env) {
+  pub fn calculate_page_rank(env: Env) -> Map<String, (u32, u32)> {
     let trust_map = ExternalDataProvider::get_trust_map(env.clone());
 
     let page_rank_result = match trust_map.len() {
@@ -430,7 +430,9 @@ impl ExternalDataProvider {
       }
     };
 
-    ExternalDataProvider::set_page_rank_result(env.clone(), page_rank_result);
+    ExternalDataProvider::set_page_rank_result(env.clone(), page_rank_result.clone());
+
+    page_rank_result
   }
 }
 

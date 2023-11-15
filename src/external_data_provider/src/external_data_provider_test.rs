@@ -298,35 +298,52 @@ pub fn test_page_rank() {
   let user_id_2 = String::from_slice(&env, "user002");
   let user_id_3 = String::from_slice(&env, "user003");
   let user_id_4 = String::from_slice(&env, "user004");
+  /*
+  1->2
+  1->3
+  2->1
+  3->1
+  3->2
+  4->1
 
+  1 -trusted by 3 users
+  2 -trusted by 2 users
+  3 -trusted by 1 users
+  4 -trusted by 0 users
+    */
   let mut new_trust_map: Map<String, Map<String, ()>> = Map::new(&env);
   new_trust_map.set(
     user_id_1.clone(),
-    Map::from_array(&env, [(user_id_2.clone(), ())]),
+    Map::from_array(&env, [(user_id_2.clone(), ()), (user_id_3.clone(), ())]),
   );
   new_trust_map.set(
     user_id_2.clone(),
-    Map::from_array(&env, [(user_id_3.clone(), ()), (user_id_4.clone(), ())]),
+    Map::from_array(&env, [(user_id_1.clone(), ())]),
   );
   new_trust_map.set(
     user_id_3.clone(),
-    Map::from_array(&env, [(user_id_1.clone(), ()), (user_id_4.clone(), ())]),
+    Map::from_array(&env, [(user_id_1.clone(), ()), (user_id_2.clone(), ())]),
   );
   new_trust_map.set(
     user_id_4.clone(),
-    Map::from_array(&env, [(user_id_2.clone(), ())]),
+    Map::from_array(&env, [(user_id_1.clone(), ())]),
   );
   external_data_provider_client.set_trust_map(&new_trust_map);
 
   external_data_provider_client.calculate_page_rank();
   let results = external_data_provider_client.get_page_rank_results();
 
-  assert!(results.get(user_id_1.clone()).unwrap() == (0, 177));
-  assert!(results.get(user_id_2.clone()).unwrap() == (0, 331));
-  assert!(results.get(user_id_3.clone()).unwrap() == (0, 337));
-  assert!(results.get(user_id_4.clone()).unwrap() == (0, 177));
+  assert!(results.get(user_id_1.clone()).unwrap() == (0, 415));
+  assert!(results.get(user_id_2.clone()).unwrap() == (0, 303));
+  assert!(results.get(user_id_3.clone()).unwrap() == (0, 213));
+  assert!(results.get(user_id_4.clone()).unwrap() == (0, 37));
 
-  assert!(external_data_provider_client.get_page_rank_result_for_user(&user_id_1) == (0, 177));
+  // values above might change if you modify the algorithm but the stuff below should always remain the same
+  assert!(results.get(user_id_1.clone()).unwrap() > results.get(user_id_2.clone()).unwrap());
+  assert!(results.get(user_id_2.clone()).unwrap() > results.get(user_id_3.clone()).unwrap());
+  assert!(results.get(user_id_3.clone()).unwrap() > results.get(user_id_4.clone()).unwrap());
+
+  assert!(external_data_provider_client.get_page_rank_result_for_user(&user_id_1) == (0, 415));
 
   external_data_provider_client.set_page_rank_result(&Map::from_array(
     &env,
