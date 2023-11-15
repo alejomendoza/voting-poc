@@ -1,7 +1,6 @@
 use crate::{
   external_data_provider_contract,
-  page_rank::Rank,
-  types::{LayerAggregator, NeuronType, Vote, DEFAULT_WEIGHT},
+  types::{LayerAggregator, NeuronType, Vote, DEFAULT_WEIGHT}
 };
 use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{vec, Env, Map, String, Vec};
@@ -379,9 +378,8 @@ pub fn test_graph_bonus() {
   );
   voting_system_client.vote(&voter_id_2, &submission_id, &String::from_slice(&env, "No"));
 
-  let tm = external_data_provider_client.get_trust_map();
-  let rank = Rank::from_pages(&env, tm);
-  let calculated = rank.calculate(&env);
+  voting_system_client.calculate_page_rank();
+  let calculated = external_data_provider_client.get_page_rank_results();
 
   assert!(
     calculated
@@ -395,8 +393,6 @@ pub fn test_graph_bonus() {
         ]
       )
   );
-
-  voting_system_client.calculate_page_rank();
 
   assert!(
     voting_system_client
@@ -477,9 +473,8 @@ pub fn test_graph_bonus_2() {
   );
   voting_system_client.vote(&voter_id_2, &submission_id, &String::from_slice(&env, "No"));
 
-  let tm = external_data_provider_client.get_trust_map();
-  let rank = Rank::from_pages(&env, tm);
-  let calculated = rank.calculate(&env);
+  voting_system_client.calculate_page_rank();
+  let calculated = external_data_provider_client.get_page_rank_results();
 
   assert!(
     calculated
@@ -494,7 +489,6 @@ pub fn test_graph_bonus_2() {
       )
   );
 
-  voting_system_client.calculate_page_rank();
 
   assert!(
     voting_system_client
