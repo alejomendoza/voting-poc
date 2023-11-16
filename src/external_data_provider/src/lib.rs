@@ -57,7 +57,6 @@ impl ExternalDataProvider {
     }
   }
 
-  // done
   pub fn mock_data_assigned_reputation(env: Env) {
     let mut reputation_map: Map<String, ReputationCategory> = Map::new(&env);
     reputation_map.set(
@@ -115,7 +114,6 @@ impl ExternalDataProvider {
       .set(&DataKey::RoundBonusMap, &round_bonus_map);
   }
 
-  // done
   pub fn mock_delegation_ranks(env: Env) {
     let mut delegation_ranks: Map<String, u32> = Map::new(&env);
     delegation_ranks.set(ExternalDataProvider::generate_username(&env, 1), 1);
@@ -238,14 +236,17 @@ impl ExternalDataProvider {
   }
 
   pub fn get_reputation_scores(env: Env) -> Map<u32, (u32, u32)> {
-    return Map::from_array(&env, [
-      (0, (0, 0)),
-      (1, (0, 100)),
-      (2, (0, 100)),
-      (3, (0, 200)),
-      (4, (0, 200)),
-      (5, (0, 300)),
-    ])
+    return Map::from_array(
+      &env,
+      [
+        (0, (0, 0)),
+        (1, (0, 100)),
+        (2, (0, 100)),
+        (3, (0, 200)),
+        (4, (0, 200)),
+        (5, (0, 300)),
+      ],
+    );
   }
 
   // for prior history neuron
