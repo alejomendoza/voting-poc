@@ -363,6 +363,25 @@ pub fn test_page_rank() {
       == (0, 100)
   );
   assert!(external_data_provider_client.get_page_rank_result_for_user(&user_id_2) == (0, 200));
+
+  external_data_provider_client.set_page_rank_result_vec(&Vec::from_array(
+    &env,
+    [
+      (user_id_1.clone(), 100),
+      (user_id_2.clone(), 200),
+      (user_id_3.clone(), 300),
+      (user_id_4.clone(), 400),
+    ],
+  ));
+
+  assert!(
+    external_data_provider_client
+      .get_page_rank_results()
+      .get(user_id_1.clone())
+      .unwrap()
+      == (0, 100)
+  );
+  assert!(external_data_provider_client.get_page_rank_result_for_user(&user_id_2) == (0, 200));
 }
 
 #[test]
