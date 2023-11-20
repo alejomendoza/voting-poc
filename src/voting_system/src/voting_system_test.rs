@@ -1,6 +1,6 @@
 use crate::{
   external_data_provider_contract,
-  types::{LayerAggregator, NeuronType, Vote, DEFAULT_WEIGHT}
+  types::{LayerAggregator, NeuronType, Vote, DEFAULT_WEIGHT},
 };
 use soroban_decimal_numbers::DecimalNumberWrapper;
 use soroban_sdk::{vec, Env, Map, String, Vec};
@@ -191,6 +191,13 @@ pub fn test_simple_voting() {
   initialize_external_data_provider(&env, &voting_system_client);
   voting_system_client.get_external_data_provider();
 
+  let external_data_provider_id =
+    env.register_contract_wasm(None, external_data_provider_contract::WASM);
+  let external_data_provider_client =
+    external_data_provider_contract::Client::new(&env, &external_data_provider_id);
+  external_data_provider_client.mock_sample_data();
+  voting_system_client.set_external_data_provider(&external_data_provider_id);
+
   assert!(voting_system_client.add_layer() == 0);
   assert!(voting_system_client.add_layer() == 1);
 
@@ -319,6 +326,7 @@ pub fn test_assigned_reputation_neuron() {
 #[test]
 pub fn test_prior_voting_history_neuron() {
   let env = Env::default();
+  env.budget().reset_unlimited();
 
   let voting_system_client = initialize_voting_system(&env);
 
@@ -354,6 +362,7 @@ pub fn test_prior_voting_history_neuron() {
 #[test]
 pub fn test_graph_bonus() {
   let env = Env::default();
+  env.budget().reset_unlimited();
 
   let voting_system_client = initialize_voting_system(&env);
 
@@ -378,18 +387,17 @@ pub fn test_graph_bonus() {
   );
   voting_system_client.vote(&voter_id_2, &submission_id, &String::from_slice(&env, "No"));
 
-  voting_system_client.calculate_page_rank();
-  let calculated = external_data_provider_client.get_page_rank_results();
+  let calculated = external_data_provider_client.calculate_page_rank();
 
   assert!(
     calculated
       == Map::from_array(
         &env,
         [
-          (String::from_slice(&env, "user001"), (0, 344)),
-          (String::from_slice(&env, "user002"), (0, 185)),
-          (String::from_slice(&env, "user003"), (0, 339)),
-          (String::from_slice(&env, "user004"), (0, 181)),
+          (String::from_slice(&env, "user001"), (0, 338)),
+          (String::from_slice(&env, "user002"), (0, 260)),
+          (String::from_slice(&env, "user003"), (0, 190)),
+          (String::from_slice(&env, "user004"), (0, 180)),
         ]
       )
   );
@@ -399,13 +407,14 @@ pub fn test_graph_bonus() {
       .tally()
       .get(submission_id.clone())
       .unwrap()
-      == (0, 159)
+      == (0, 78)
   );
 }
 
 #[test]
 pub fn test_graph_bonus_2() {
   let env = Env::default();
+  env.budget().reset_unlimited();
 
   let voting_system_client = initialize_voting_system(&env);
 
@@ -466,36 +475,35 @@ pub fn test_graph_bonus_2() {
   let submission_id = String::from_slice(&env, "submission001");
 
   voting_system_client.add_submission(&submission_id);
+  voting_system_client.vote(&voter_id_1, &submission_id, &String::from_slice(&env, "No"));
   voting_system_client.vote(
-    &voter_id_1,
+    &voter_id_2,
     &submission_id,
     &String::from_slice(&env, "Yes"),
   );
-  voting_system_client.vote(&voter_id_2, &submission_id, &String::from_slice(&env, "No"));
 
-  voting_system_client.calculate_page_rank();
-  let calculated = external_data_provider_client.get_page_rank_results();
+  let calculated = external_data_provider_client.calculate_page_rank();
 
   assert!(
     calculated
       == Map::from_array(
         &env,
         [
-          (String::from_slice(&env, "user001"), (0, 123)),
-          (String::from_slice(&env, "user002"), (0, 96)),
-          (String::from_slice(&env, "user003"), (0, 68)),
-          (String::from_slice(&env, "user004"), (0, 37)),
+          (String::from_slice(&env, "user001"), (0, 30)),
+          (String::from_slice(&env, "user002"), (0, 36)),
+          (String::from_slice(&env, "user003"), (0, 46)),
+          (String::from_slice(&env, "user004"), (0, 65)),
+          (String::from_slice(&env, "user005"), (0, 120)),
         ]
       )
   );
-
 
   assert!(
     voting_system_client
       .tally()
       .get(submission_id.clone())
       .unwrap()
-      == (0, 27)
+      == (0, 6)
   );
 }
 
@@ -1091,8 +1099,8 @@ pub fn test_decomposed_tally() {
 
   let fetched_voting_powers = voting_system_client.get_voting_powers();
 
-  assert!(fetched_voting_powers.get(voter_id_1.clone()).unwrap() == (1136, 915));
-  assert!(fetched_voting_powers.get(voter_id_2.clone()).unwrap() == (2, 515));
+  assert!(fetched_voting_powers.get(voter_id_1.clone()).unwrap() == (1080, 416));
+  assert!(fetched_voting_powers.get(voter_id_2.clone()).unwrap() == (6, 490));
 
   voting_system_client.set_voting_power_for_user(&voter_id_1.clone(), &(1, 0));
 
@@ -1104,8 +1112,8 @@ pub fn test_decomposed_tally() {
       == (1, 0)
   );
 
-  assert!(final_voting_powers.get(submission_1_id).unwrap() == (1134, 400));
-  assert!(final_voting_powers.get(submission_2_id).unwrap() == (2, 515));
+  assert!(final_voting_powers.get(submission_1_id).unwrap() == (1073, 926));
+  assert!(final_voting_powers.get(submission_2_id).unwrap() == (6, 490));
 
   let mut voters_voting_powers_vec: Vec<(String, u32)> = Vec::new(&env);
   let mut normalized_votes_vec: Vec<(String, String, String)> = Vec::new(&env);

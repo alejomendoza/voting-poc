@@ -419,7 +419,19 @@ impl ExternalDataProvider {
       .set(&DataKey::PageRankResult, &new_result);
   }
 
-  pub fn calculate_page_rank(env: Env) {
+  pub fn set_page_rank_result_vec(env: Env, new_result: Vec<(String, u32)>) {
+    let mut new_map: Map<String, (u32, u32)> = Map::new(&env);
+    for (node, value) in new_result {
+      new_map.set(node, DecimalNumberWrapper::from(value).as_tuple());
+    }
+
+    env
+      .storage()
+      .instance()
+      .set(&DataKey::PageRankResult, &new_map);
+  }
+
+  pub fn calculate_page_rank(env: Env) -> Map<String, (u32, u32)> {
     let trust_map = ExternalDataProvider::get_trust_map(env.clone());
 
     let page_rank_result = match trust_map.len() {
@@ -430,7 +442,9 @@ impl ExternalDataProvider {
       }
     };
 
-    ExternalDataProvider::set_page_rank_result(env.clone(), page_rank_result);
+    ExternalDataProvider::set_page_rank_result(env.clone(), page_rank_result.clone());
+
+    page_rank_result
   }
 }
 
